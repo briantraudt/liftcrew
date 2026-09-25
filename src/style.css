@@ -28,3 +28,11 @@
 @media(max-width:380px){.hero{background-size:auto 470px}.hero-inner{padding-top:530px}.trust-row{grid-template-columns:1fr}.trust-row>div:last-child{grid-column:auto}}
 @media(max-width:600px){.hero{background-size:100% auto;background-position:center 76px}.hero-shade{background:linear-gradient(0deg,#07151d 0%,#07151d 55%,rgba(7,21,29,.08) 85%)}.hero-inner{padding-top:calc(76px + 56.28vw + 24px)}}
 @media(max-width:380px){.hero{background-size:100% auto}.hero-inner{padding-top:calc(76px + 56.28vw + 24px)}}
+
+/* Booking entry stays below the full hero photograph */
+@media(min-width:851px){.hero{min-height:clamp(615px,calc(100svh - 148px),780px)}.hero-inner{min-height:inherit}.hero h1{font-size:clamp(3.1rem,4vw,4.85rem)}.trust-row{margin-top:35px}}
+.booking-section{background:#fff;position:relative;z-index:2;border-bottom:1px solid #e1e7ea;box-shadow:0 -10px 38px #07151d12}.booking-form{display:grid;grid-template-columns:1.1fr 1.35fr 1fr 1fr 1fr auto;align-items:end;gap:14px;padding:22px 0}.booking-title{align-self:center}.booking-title span{display:block;text-transform:uppercase;letter-spacing:.12em;color:#ff5b13;font-size:.72rem;font-weight:800;margin-bottom:4px}.booking-title strong{display:block;font:800 1.25rem Manrope;letter-spacing:-.04em;white-space:nowrap}.booking-field label{display:block;font-size:.78rem;font-weight:800;margin-bottom:7px}.booking-field input,.booking-field select{width:100%;min-width:0;height:49px;padding:0 12px;border:1px solid #cbd4dc;border-radius:7px;background:#fff;color:#14212b;font-size:.93rem}.booking-field :is(input,select):focus{outline:2px solid #ff5b13;outline-offset:1px}.booking-go{height:49px;min-width:85px}
+@media(max-width:1150px){.booking-form{grid-template-columns:1fr 1fr 1fr;gap:14px}.booking-title{grid-column:1/-1}.booking-go{width:100%}}
+@media(max-width:850px){.booking-form{grid-template-columns:repeat(2,minmax(0,1fr))}.booking-title{grid-column:1/-1}.booking-go{width:100%}}
+@media(max-width:600px){.booking-form{grid-template-columns:1fr 1fr;padding:24px 0}.booking-field:nth-of-type(2),.booking-field:nth-of-type(5){grid-column:1/-1}.booking-go{grid-column:1/-1}.booking-title strong{font-size:1.45rem}.booking-field input,.booking-field select{font-size:1rem}}
+@media(max-width:380px){.booking-form{grid-template-columns:1fr}.booking-field{grid-column:1/-1}}
