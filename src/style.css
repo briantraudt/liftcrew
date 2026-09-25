@@ -44,3 +44,11 @@
 @media(max-width:850px){.hero{background-size:auto 650px;background-position:65% 76px}.hero-inner{display:flex;flex-direction:column;align-items:stretch;padding-top:680px;gap:35px}.hero-copy{max-width:680px}.hero-booking{width:min(100%,600px);align-self:center}.hero-shade{background:linear-gradient(0deg,#07151d 12%,rgba(7,21,29,.8) 55%,rgba(7,21,29,.2) 87%)}}
 @media(max-width:600px){.hero{background-size:100% auto;background-position:center 76px}.hero-inner{padding-top:calc(76px + 56.28vw + 24px);gap:28px}.hero-booking{padding:20px;grid-template-columns:1fr 1fr;gap:12px}.hero-booking .booking-title strong{font-size:1.5rem}.hero-booking .booking-field input,.hero-booking .booking-field select{font-size:1rem}.hero-shade{background:linear-gradient(0deg,#07151d 5%,#07151d 45%,rgba(7,21,29,.08) 85%)}}
 @media(max-width:380px){.hero-booking{grid-template-columns:1fr}.hero-booking .booking-field{grid-column:1/-1}}
+/* Hero audit: equal card insets and a clear lane for the operator */
+.hero-booking{width:100%;min-width:0;box-sizing:border-box;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;padding:25px;justify-self:end}
+.hero-booking .booking-field{min-width:0;max-width:100%}
+.hero-booking .booking-field input,.hero-booking .booking-field select{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+.hero-booking .booking-go{box-sizing:border-box;max-width:100%}
+@media(min-width:1501px){.hero{background-position:right 150px center}}
+@media(min-width:1151px) and (max-width:1500px){.hero{background-position:right 120px center}}
+@media(max-width:380px){.hero-booking{grid-template-columns:minmax(0,1fr)}}
