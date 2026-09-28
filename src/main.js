@@ -93,8 +93,8 @@ function enhanceDates(target){
     if(restoreFocus&&activeTrigger)activeTrigger.focus({preventScroll:true});
   }
   function open(kind){
-    mode=kind;
-    activeTrigger=target.querySelector('[data-calendar="'+kind+'"]');
+    mode=kind==='end'&&!start.value?'start':kind;
+    activeTrigger=target.querySelector('[data-calendar="'+mode+'"]');
     const selected=(kind==='end'?end.value:start.value)||start.value||today;
     const parts=selected.split('-').map(Number);
     year=parts[0];month=parts[1]-1;
@@ -103,8 +103,21 @@ function enhanceDates(target){
     target.querySelectorAll('.calendar-trigger').forEach(button=>button.setAttribute('aria-expanded',String(button===activeTrigger)));
     calendar.setAttribute('aria-label','Choose '+kind+' date');
     render();
+    placeCalendar();
     (calendar.querySelector('[data-date="'+selected+'"]:not(:disabled)')||calendar.querySelector('.calendar-day:not(:disabled)'))?.focus({preventScroll:true});
   }
+  function placeCalendar(){
+    if(calendar.hidden)return;
+    const rect=target.getBoundingClientRect();
+    const width=calendar.getBoundingClientRect().width;
+    const height=calendar.getBoundingClientRect().height;
+    const x=Math.max(width/2+12,Math.min(rect.left+rect.width/2,window.innerWidth-width/2-12));
+    const y=Math.max(height/2+12,Math.min(rect.top+rect.height/2,window.innerHeight-height/2-12));
+    calendar.style.left=x+'px';
+    calendar.style.top=y+'px';
+  }
+  window.addEventListener('resize',placeCalendar);
+  window.addEventListener('scroll',placeCalendar,{passive:true});
   function render(focusDate){
     const first=new Date(year,month,1);
     const count=new Date(year,month+1,0).getDate();
@@ -122,7 +135,7 @@ function enhanceDates(target){
       const label=new Intl.DateTimeFormat('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).format(new Date(year,month,day));
       days+='<button type="button" class="'+classes+'" data-date="'+value+'" aria-label="'+label+'" aria-pressed="'+selected+'" '+(disabled?'disabled':'')+'>'+day+'</button>';
     }
-    calendar.innerHTML='<div class="calendar-top"><div><span class="calendar-kicker">'+(mode==='start'?'START DATE':'END DATE')+'</span><strong aria-live="polite">'+heading+'</strong></div><div class="calendar-nav"><button type="button" data-action="prev" aria-label="Previous month" '+(currentMonth<=minMonth?'disabled':'')+'>‹</button><button type="button" data-action="next" aria-label="Next month">›</button><button type="button" data-action="close" aria-label="Close calendar">×</button></div></div><div class="calendar-weekdays" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div><div class="calendar-days">'+days+'</div><div class="calendar-bottom"><button type="button" data-action="clear">Clear dates</button><button type="button" data-action="today" '+(mode==='end'&&start.value>today?'disabled':'')+'>Today</button></div>';
+    calendar.innerHTML='<div class="calendar-top"><div><span class="calendar-kicker">'+(mode==='start'?'CHOOSE START DATE':'NOW CHOOSE END DATE')+'</span><strong aria-live="polite">'+heading+'</strong></div><div class="calendar-nav"><button type="button" data-action="prev" aria-label="Previous month" '+(currentMonth<=minMonth?'disabled':'')+'>‹</button><button type="button" data-action="next" aria-label="Next month">›</button><button type="button" data-action="close" aria-label="Close calendar">×</button></div></div><div class="calendar-weekdays" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div><div class="calendar-days">'+days+'</div><div class="calendar-bottom"><button type="button" data-action="clear">Clear dates</button><button type="button" data-action="today" '+(mode==='end'&&start.value>today?'disabled':'')+'>Today</button></div>';
     if(focusDate)calendar.querySelector('[data-date="'+focusDate+'"]')?.focus({preventScroll:true});
   }
   function choose(value){
@@ -137,6 +150,7 @@ function enhanceDates(target){
         target.querySelectorAll('.calendar-trigger').forEach(button=>button.setAttribute('aria-expanded',String(button===activeTrigger)));
         calendar.setAttribute('aria-label','Choose end date');
         render(start.value);
+        placeCalendar();
         calendar.querySelector('[data-date="'+start.value+'"]')?.focus({preventScroll:true});
       }else close(true);
     }else{

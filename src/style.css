@@ -157,3 +157,5 @@
 .lift-calendar{position:fixed;z-index:100;top:50%;left:50%;transform:translate(-50%,-50%);width:min(380px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto}
 .lift-calendar .calendar-top{position:sticky;top:-17px;z-index:1;padding:0 0 12px;background:#fff}
 @media(max-width:380px){.lift-calendar .calendar-top{top:-12px}}
+/* The date panel tracks the booking card and stays inside the viewport. */
+.lift-calendar{top:50%;left:50%}
