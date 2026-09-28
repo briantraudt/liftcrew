@@ -78,7 +78,7 @@
 }
 
 /* A compact close to the desktop hero. */
-.hero-footer{display:none}
+.hero-footer{display:none;padding:0}
 @media (min-width:851px){
   .hero-inner{padding-bottom:105px}
   .hero-footer{display:block;position:absolute;right:0;bottom:0;left:0;z-index:2;border-top:1px solid rgba(255,255,255,.16);background:rgba(7,21,29,.72);backdrop-filter:blur(10px);color:#d5dee3}
