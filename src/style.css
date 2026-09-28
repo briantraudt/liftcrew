@@ -176,3 +176,14 @@
 .quote-modal-close:hover{background:#f2f5f6}
 .quote-modal-close:focus-visible{outline:2px solid #ff5b13;outline-offset:2px}
 @media(max-width:600px){.quote-modal{padding:12px}.quote-modal-panel .hero-quote{padding:22px 18px}.quote-modal-close{top:12px;right:12px}}
+
+/* Step two starts with the new job questions; initial choices are one editable summary. */
+.booking-summary{display:flex;align-items:center;gap:10px;margin:0 0 8px;padding:11px 13px;border-radius:9px;background:#f2f5f6}
+.booking-summary .request-summary{flex:1;min-width:0;margin:0;padding:0;background:transparent}
+.summary-edit,.summary-done{flex:none;border:1px solid #f1a17b;border-radius:7px;background:#fff;color:#c6460c;font-size:.78rem;font-weight:800;padding:8px 11px}
+.summary-edit:hover,.summary-done:hover{background:#fff1e9}
+.booking-edit[hidden]{display:none}
+.booking-edit{margin:14px 0 20px;padding:16px;border:1px solid #dce4e8;border-radius:9px;background:#fbfcfc}
+.booking-edit .summary-done{margin-top:14px}
+.quote-modal .form-divider{margin-top:15px}
+@media(max-width:600px){.booking-summary{align-items:flex-start}.summary-edit{margin-top:1px}.quote-modal .form-divider{margin-top:14px}}

@@ -205,6 +205,40 @@ const bookingForm=document.querySelector('#booking-form');
 const quoteModal=document.querySelector('#quote-modal');
 if(bookingForm&&quoteModal&&form){
   const closeButton=quoteModal.querySelector('.quote-modal-close');
+  const editButton=quoteModal.querySelector('.summary-edit');
+  const editPanel=quoteModal.querySelector('#booking-edit');
+  const summary=quoteModal.querySelector('#request-summary');
+  function refreshBookingSummary(){
+    summary.textContent=[form.elements.service.value,form.elements.location.value,
+      prettyDate(form.elements.date.value)+' – '+prettyDate(form.elements.endDate.value)].join(' · ');
+  }
+  function setEditing(open){
+    editPanel.hidden=!open;
+    editButton.setAttribute('aria-expanded',String(open));
+    editButton.textContent=open?'Cancel editing':'Edit';
+  }
+  editButton.addEventListener('click',()=>{
+    const opening=editPanel.hidden;
+    setEditing(opening);
+    if(opening)form.elements.service.focus({preventScroll:true});
+    else{
+      for(const key of ['service','location','date','endDate'])form.elements[key].value=bookingForm.elements[key].value;
+      syncCalendarForm(form);
+      refreshBookingSummary();
+      editButton.focus({preventScroll:true});
+    }
+  });
+  quoteModal.querySelector('.summary-done').addEventListener('click',()=>{
+    const fields=[form.elements.service,form.elements.location];
+    const invalid=fields.find(field=>!field.checkValidity());
+    if(invalid){invalid.reportValidity();return;}
+    if(!validateCalendarForm(form))return;
+    for(const key of ['service','location','date','endDate'])bookingForm.elements[key].value=form.elements[key].value;
+    syncCalendarForm(bookingForm);
+    refreshBookingSummary();
+    setEditing(false);
+    editButton.focus({preventScroll:true});
+  });
   const closeQuote=()=>{
     quoteModal.hidden=true;
     bookingForm.querySelector('.booking-go').focus({preventScroll:true});
@@ -216,11 +250,8 @@ if(bookingForm&&quoteModal&&form){
       form.elements[key].value=bookingForm.elements[key].value;
     }
     syncCalendarForm(form);
-    document.querySelector('#request-summary').textContent=[
-      form.elements.service.value,
-      form.elements.location.value,
-      prettyDate(form.elements.date.value)+' – '+prettyDate(form.elements.endDate.value)
-    ].join(' · ');
+    refreshBookingSummary();
+    setEditing(false);
     quoteModal.hidden=false;
     quoteModal.scrollTop=0;
     closeButton.focus({preventScroll:true});
