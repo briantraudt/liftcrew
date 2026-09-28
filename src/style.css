@@ -189,3 +189,18 @@
 @media(max-width:600px){.booking-summary{align-items:flex-start}.summary-edit{margin-top:1px}.quote-modal .form-divider{margin-top:14px}}
 .equipment-example{display:inline-flex;margin-top:12px;color:#bf430d;font-size:.82rem;font-weight:800;text-decoration:underline;text-underline-offset:3px}
 .equipment-example[hidden]{display:none}
+
+/* Equipment review is a separate step after the job details. */
+#quote-form[hidden],.equipment-review[hidden]{display:none}
+.equipment-review{padding-top:12px}
+.equipment-review h3{font-size:1.65rem;line-height:1.18;color:#14212b;margin:12px 0}
+.review-intro{color:#586670;margin-bottom:17px}
+.review-summary{background:#f2f5f6;border-radius:9px;padding:14px 16px;color:#35444c;font-weight:700;line-height:1.6;margin-bottom:20px}
+.review-confirm{display:flex;align-items:flex-start;gap:11px;margin:24px 0 20px;color:#26343d;line-height:1.5;font-weight:600;cursor:pointer}
+.review-confirm input{flex:none;width:20px;height:20px;margin:2px 0 0;accent-color:#fb5b14}
+.review-actions{display:flex;gap:12px;align-items:center}
+.review-actions .review-back{padding:15px 16px}
+.review-actions .review-book{flex:1;margin:0}
+.review-actions button[hidden]{display:none}
+.equipment-review .form-note{margin-top:12px}
+@media(max-width:600px){.review-actions{flex-direction:column-reverse;align-items:stretch}.review-actions .review-book{width:100%}.review-actions .review-back{width:100%}}

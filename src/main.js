@@ -1,5 +1,51 @@
 import { suggestEquipment } from './catalog-data.js';
-const toggle=document.querySelector('.menu-toggle');const nav=document.querySelector('.nav');toggle.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')==='true';toggle.setAttribute('aria-expanded',String(!open));toggle.setAttribute('aria-label',open?'Open navigation':'Close navigation');nav.classList.toggle('open',!open)});document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('open');toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Open navigation')}));const year=document.querySelector('#year');if(year)year.textContent=new Date().getFullYear();const form=document.querySelector('#quote-form');form?.addEventListener('submit',async e=>{e.preventDefault();if(!validateCalendarForm(form)||!form.reportValidity())return;syncDuration(form);const match=await updateRecommendation();if(!match)return;const button=form.querySelector('button[type=submit]');const note=document.querySelector('#form-note');button.disabled=true;button.textContent='Sending…';note.textContent='Sending your request…';try{const response=await fetch('/api/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...Object.fromEntries(new FormData(form)),recommendation:match.title,recommendationReason:match.reason})});const result=await response.json();if(!response.ok)throw new Error(result.error||'Unable to send your request.');form.reset();syncCalendarForm(form);updateRecommendation();note.textContent='Thanks. Your request was sent. We’ll be in touch.';note.classList.add('success')}catch(error){note.textContent=error.message;note.classList.remove('success')}finally{button.disabled=false;button.innerHTML='Request Availability & Quote <span aria-hidden="true">→</span>'}});
+const toggle=document.querySelector('.menu-toggle');const nav=document.querySelector('.nav');toggle.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')==='true';toggle.setAttribute('aria-expanded',String(!open));toggle.setAttribute('aria-label',open?'Open navigation':'Close navigation');nav.classList.toggle('open',!open)});document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('open');toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Open navigation')}));const year=document.querySelector('#year');if(year)year.textContent=new Date().getFullYear();const form=document.querySelector('#quote-form');
+const review=document.querySelector('#equipment-review');
+let selectedMatch=null;
+form?.addEventListener('submit',async event=>{
+  event.preventDefault();
+  if(!validateCalendarForm(form)||!form.reportValidity())return;
+  syncDuration(form);
+  const button=form.querySelector('button[type=submit]');
+  button.disabled=true;button.textContent='Finding equipment…';
+  try{
+    const match=await updateRecommendation();
+    if(!match)return;
+    selectedMatch=match;
+    const data=Object.fromEntries(new FormData(form));
+    review.querySelector('#review-summary').textContent=[data.service,prettyDate(data.date),data.durationDays+' '+(data.durationDays==='1'?'day':'days'),data.location+' ZIP',Number(data.loadWeight).toLocaleString()+' lb load',data.liftHeight+' ft lift'].join(' · ');
+    review.querySelector('#equipment-confirmed').checked=false;
+    review.querySelector('#form-note').textContent='Your booking is a request. Our team will confirm the equipment and quote before scheduling.';
+    form.hidden=true;review.hidden=false;
+    const heading=review.parentElement.querySelector(':scope > h2');
+    if(heading){heading.dataset.originalTitle ||= heading.textContent;heading.textContent='Your equipment match.';}
+    review.scrollIntoView({block:'start',behavior:'smooth'});
+    review.querySelector('#review-title').focus({preventScroll:true});
+  }finally{button.disabled=false;button.innerHTML='See Recommended Equipment <span aria-hidden="true">→</span>';}
+});
+review?.querySelector('.review-back').addEventListener('click',()=>{
+  review.hidden=true;form.hidden=false;selectedMatch=null;
+  const heading=review.parentElement.querySelector(':scope > h2');
+  if(heading?.dataset.originalTitle)heading.textContent=heading.dataset.originalTitle;
+  form.scrollIntoView({block:'start',behavior:'smooth'});
+  form.querySelector('#loadDescription')?.focus({preventScroll:true});
+});
+review?.querySelector('.review-book').addEventListener('click',async()=>{
+  const confirmed=review.querySelector('#equipment-confirmed');
+  if(!confirmed.checked){confirmed.focus();confirmed.setCustomValidity('Please confirm you reviewed the equipment suggestion.');confirmed.reportValidity();return;}
+  confirmed.setCustomValidity('');
+  const button=review.querySelector('.review-book');
+  const note=review.querySelector('#form-note');
+  button.disabled=true;button.textContent='Sending…';note.textContent='Sending your booking request…';
+  try{
+    const response=await fetch('/api/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...Object.fromEntries(new FormData(form)),equipmentConfirmed:true,recommendation:selectedMatch?.title})});
+    const result=await response.json();
+    if(!response.ok)throw new Error(result.error||'Unable to send your request.');
+    note.textContent='Your booking request was sent. We’ll follow up to confirm equipment, availability, and price.';
+    note.classList.add('success');button.hidden=true;review.querySelector('.review-back').hidden=true;
+  }catch(error){note.textContent=error.message;note.classList.remove('success');button.disabled=false;button.innerHTML='Request Booking <span aria-hidden="true">→</span>';}
+});
+review?.querySelector('#equipment-confirmed').addEventListener('change',event=>event.target.setCustomValidity(''));
 
 let recommendationRequest=0;
 async function updateRecommendation(){
@@ -14,8 +60,7 @@ async function updateRecommendation(){
   if(example){example.hidden=!match?.sourceUrl;if(match?.sourceUrl)example.href=match.sourceUrl;}
   return match;
 }
-form?.addEventListener('input',updateRecommendation);
-form?.addEventListener('change',updateRecommendation);
+
 const params=new URLSearchParams(location.search);if(document.querySelector('#quote-form')&&params.size){for(const key of ['service','date','durationDays','location']){const field=document.querySelector(`#quote-form [name="${key}"]`);if(field&&params.has(key))field.value=params.get(key)}const summary=document.querySelector('#request-summary');if(summary){const values=[params.get('service'),params.get('location'),params.get('date')?prettyDate(params.get('date')):null,params.get('durationDays')?params.get('durationDays')+' days':null].filter(Boolean);summary.textContent=values.join(' · ')}}
 
 function localISO(date){
@@ -166,7 +211,7 @@ function enhanceDates(target){
   target.elements.durationDays.addEventListener('change',()=>syncDuration(target));
 }
 enhanceDates(document.querySelector('#booking-form'));
-enhanceDates(document.querySelector('#quote-form'));updateRecommendation();
+enhanceDates(document.querySelector('#quote-form'));
 
 const bookingForm=document.querySelector('#booking-form');
 const quoteModal=document.querySelector('#quote-modal');
@@ -208,6 +253,10 @@ if(bookingForm&&quoteModal&&form){
   });
   const closeQuote=()=>{
     quoteModal.hidden=true;
+    review.hidden=true;form.hidden=false;selectedMatch=null;
+    review.querySelector('.review-book').hidden=false;review.querySelector('.review-back').hidden=false;
+    const heading=review.parentElement.querySelector(':scope > h2');
+    if(heading?.dataset.originalTitle)heading.textContent=heading.dataset.originalTitle;
     bookingForm.querySelector('.booking-go').focus({preventScroll:true});
   };
   bookingForm.addEventListener('submit',event=>{
@@ -219,6 +268,7 @@ if(bookingForm&&quoteModal&&form){
     syncCalendarForm(form);
     refreshBookingSummary();
     setEditing(false);
+    review.hidden=true;form.hidden=false;
     quoteModal.hidden=false;
     quoteModal.scrollTop=0;
     closeButton.focus({preventScroll:true});
