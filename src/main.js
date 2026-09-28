@@ -135,7 +135,7 @@ function enhanceDates(target){
       const label=new Intl.DateTimeFormat('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).format(new Date(year,month,day));
       days+='<button type="button" class="'+classes+'" data-date="'+value+'" aria-label="'+label+'" aria-pressed="'+selected+'" '+(disabled?'disabled':'')+'>'+day+'</button>';
     }
-    calendar.innerHTML='<div class="calendar-top"><div><span class="calendar-kicker">'+(mode==='start'?'CHOOSE START DATE':'NOW CHOOSE END DATE')+'</span><strong aria-live="polite">'+heading+'</strong></div><div class="calendar-nav"><button type="button" data-action="prev" aria-label="Previous month" '+(currentMonth<=minMonth?'disabled':'')+'>‹</button><button type="button" data-action="next" aria-label="Next month">›</button><button type="button" data-action="close" aria-label="Close calendar">×</button></div></div><div class="calendar-weekdays" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div><div class="calendar-days">'+days+'</div><div class="calendar-bottom"><button type="button" data-action="clear">Clear dates</button><button type="button" data-action="today" '+(mode==='end'&&start.value>today?'disabled':'')+'>Today</button></div>';
+    calendar.innerHTML='<div class="calendar-top"><div><span class="calendar-kicker">'+(mode==='start'?'STEP 1 OF 2 · START DATE':'STEP 2 OF 2 · END DATE')+'</span><span class="calendar-instruction" aria-live="polite">'+(mode==='start'?'Select your start date':'Select your end date')+'</span><span class="calendar-context">'+(mode==='end'&&start.value?'Starts '+prettyDate(start.value):'Choose when you need the forklift')+'</span><strong class="calendar-month" aria-live="polite">'+heading+'</strong></div><div class="calendar-nav"><button type="button" data-action="prev" aria-label="Previous month" '+(currentMonth<=minMonth?'disabled':'')+'>‹</button><button type="button" data-action="next" aria-label="Next month">›</button><button type="button" data-action="close" aria-label="Close calendar">×</button></div></div><div class="calendar-weekdays" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div><div class="calendar-days">'+days+'</div><div class="calendar-bottom"><button type="button" data-action="clear">Clear dates</button><button type="button" data-action="today" '+(mode==='end'&&start.value>today?'disabled':'')+'>Today</button></div>';
     if(focusDate)calendar.querySelector('[data-date="'+focusDate+'"]')?.focus({preventScroll:true});
   }
   function choose(value){
@@ -200,3 +200,39 @@ function enhanceDates(target){
 }
 enhanceDates(document.querySelector('#booking-form'));
 enhanceDates(document.querySelector('#quote-form'));updateRecommendation();
+
+const bookingForm=document.querySelector('#booking-form');
+const quoteModal=document.querySelector('#quote-modal');
+if(bookingForm&&quoteModal&&form){
+  const closeButton=quoteModal.querySelector('.quote-modal-close');
+  const closeQuote=()=>{
+    quoteModal.hidden=true;
+    bookingForm.querySelector('.booking-go').focus({preventScroll:true});
+  };
+  bookingForm.addEventListener('submit',event=>{
+    event.preventDefault();
+    if(!bookingForm.reportValidity()||!validateCalendarForm(bookingForm))return;
+    for(const key of ['service','location','date','endDate']){
+      form.elements[key].value=bookingForm.elements[key].value;
+    }
+    syncCalendarForm(form);
+    document.querySelector('#request-summary').textContent=[
+      form.elements.service.value,
+      form.elements.location.value,
+      prettyDate(form.elements.date.value)+' – '+prettyDate(form.elements.endDate.value)
+    ].join(' · ');
+    quoteModal.hidden=false;
+    quoteModal.scrollTop=0;
+    closeButton.focus({preventScroll:true});
+  });
+  closeButton.addEventListener('click',closeQuote);
+  quoteModal.addEventListener('click',event=>{if(event.target===quoteModal)closeQuote()});
+  quoteModal.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){event.preventDefault();closeQuote();return;}
+    if(event.key!=='Tab')return;
+    const focusable=[...quoteModal.querySelectorAll('button:not(:disabled),input:not([type=hidden]):not(.honeypot),select,textarea')].filter(el=>el.getClientRects().length);
+    const first=focusable[0],last=focusable[focusable.length-1];
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+  });
+}
