@@ -52,3 +52,27 @@
 @media(min-width:1501px){.hero{background-position:right 150px center}}
 @media(min-width:1151px) and (max-width:1500px){.hero{background-position:right 120px center}}
 @media(max-width:380px){.hero-booking{grid-template-columns:minmax(0,1fr)}}
+
+/* Mobile booking path: keep the photo, message, and form close together. */
+@media (min-width:601px) and (max-width:850px){
+  .hero{min-height:0;background-size:100% auto;background-position:center 76px}
+  .hero-inner{padding-top:calc(76px + 56.25vw + 28px);padding-bottom:48px}
+  .hero-shade{background:linear-gradient(0deg,#07151d 0%,#07151d 30%,rgba(7,21,29,.08) 72%)}
+}
+@media (max-width:600px){
+  .menu-toggle{width:48px;height:48px;align-content:center;justify-items:center;padding:0}
+  .hero-inner{gap:22px;padding-bottom:36px}
+  .hero-copy{width:100%}
+  .hero .eyebrow{font-size:.67rem;letter-spacing:.13em;gap:10px;margin-bottom:17px}
+  .hero .eyebrow i{width:25px}
+  .hero h1{font-size:clamp(2.4rem,8.5vw,3.25rem);line-height:1.1;margin-bottom:16px}
+  .hero-sub{font-size:1rem;line-height:1.5;margin-bottom:22px}
+  .hero-actions .button-outline{display:none}
+  .hero-actions .button-large{min-height:54px;padding:13px 20px}
+  .trust-row{display:none}
+  .hero-booking{margin-top:0}
+}
+@media (max-width:480px){
+  .hero-booking{grid-template-columns:minmax(0,1fr)}
+  .hero-booking .booking-field{grid-column:1/-1}
+}
