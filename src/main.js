@@ -17,67 +17,52 @@ function validateStep(step){
   return true;
 }
 function showJob(){
-  jobStep.hidden=false;contactStep.hidden=true;review.hidden=true;form.hidden=false;
+  jobStep.hidden=false;contactStep.hidden=true;form.hidden=false;
+  form.parentElement.classList.remove('contact-view');
   setQuoteHeading('Tell us about the job.','These details help us suggest equipment that fits your load and worksite.');
   form.scrollIntoView({block:'start',behavior:'smooth'});
   form.querySelector('#loadDescription')?.focus({preventScroll:true});
 }
-function showContact(){
-  jobStep.hidden=true;contactStep.hidden=false;review.hidden=true;form.hidden=false;
-  setQuoteHeading('Contact details','Where should we send your equipment recommendation and booking follow-up?');
+async function showContact(){
+  selectedMatch=await updateRecommendation();
+  if(!selectedMatch)return;
+  jobStep.hidden=true;contactStep.hidden=false;form.hidden=false;
+  form.parentElement.classList.add('contact-view');
   form.scrollIntoView({block:'start',behavior:'smooth'});
-  contactStep.querySelector('#name').focus({preventScroll:true});
+  review.querySelector('#review-title').focus({preventScroll:true});
 }
 form?.addEventListener('submit',event=>{
   event.preventDefault();
   if(!contactStep.hidden){contactStep.querySelector('.contact-next').click();return;}
   if(!validateCalendarForm(form)||!validateStep(jobStep))return;
   syncDuration(form);
-  showContact();
+  void showContact();
 });
 contactStep?.querySelector('.contact-back').addEventListener('click',showJob);
 contactStep?.querySelector('.contact-next').addEventListener('click',async()=>{
   if(!validateStep(contactStep))return;
-  const button=contactStep.querySelector('.contact-next');
-  button.disabled=true;button.textContent='Finding equipment…';
-  try{
-    const match=await updateRecommendation();
-    if(!match)return;
-    selectedMatch=match;
-    const data=Object.fromEntries(new FormData(form));
-    review.querySelector('#review-summary').textContent=[data.service,prettyDate(data.date),data.durationDays+' '+(data.durationDays==='1'?'day':'days'),data.location+' ZIP',Number(data.loadWeight).toLocaleString()+' lb load',data.liftHeight+' ft lift'].join(' · ');
-    review.querySelectorAll('[name="equipmentChoice"]').forEach(field=>field.checked=false);
-    review.querySelector('#equipment-confirmed').checked=false;
-    review.querySelector('#form-note').textContent='Select an option, then request your booking.';
-    review.querySelector('#form-note').classList.remove('success');
-    form.hidden=true;review.hidden=false;
-    setQuoteHeading('Select your equipment.','Review the suggested machine, then send your booking request.');
-    review.scrollIntoView({block:'start',behavior:'smooth'});
-    review.querySelector('#review-title').focus({preventScroll:true});
-  }finally{button.disabled=false;button.innerHTML='See Recommended Equipment <span aria-hidden="true">→</span>';}
-});
-review?.querySelector('.review-back').addEventListener('click',()=>{
-  review.hidden=true;form.hidden=false;selectedMatch=null;
-  showContact();
-});
-review?.querySelector('.review-book').addEventListener('click',async()=>{
   const choice=review.querySelector('[name="equipmentChoice"]:checked');
-  if(!choice){review.querySelector('[name="equipmentChoice"]').focus();review.querySelector('#form-note').textContent='Select a recommendation or ask LiftCrew to choose for you.';return;}
-  const confirmed=review.querySelector('#equipment-confirmed');
+  if(!choice){review.querySelector('[name="equipmentChoice"]').focus();contactStep.querySelector('#form-note').textContent='Choose the recommendation or ask LiftCrew to choose for you.';return;}
+  const confirmed=contactStep.querySelector('#equipment-confirmed');
   if(!confirmed.checked){confirmed.focus();confirmed.setCustomValidity('Please confirm you reviewed the equipment options.');confirmed.reportValidity();return;}
   confirmed.setCustomValidity('');
-  const button=review.querySelector('.review-book');
-  const note=review.querySelector('#form-note');
+  const button=contactStep.querySelector('.contact-next');
+  const note=contactStep.querySelector('#form-note');
   button.disabled=true;button.textContent='Sending…';note.textContent='Sending your booking request…';
   try{
     const response=await fetch('/api/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...Object.fromEntries(new FormData(form)),equipmentConfirmed:true,equipmentChoice:choice.value,recommendation:selectedMatch?.title})});
     const result=await response.json();
     if(!response.ok)throw new Error(result.error||'Unable to send your request.');
-    note.textContent='Your booking request was sent. We’ll follow up to confirm equipment, availability, and price.';
-    note.classList.add('success');button.hidden=true;review.querySelector('.review-back').hidden=true;
+    form.hidden=true;
+    const success=form.parentElement.querySelector('.booking-success');
+    success.hidden=false;
+    form.parentElement.classList.remove('contact-view');
+    form.parentElement.classList.add('success-view');
+    setQuoteHeading('Request received');
+    success.scrollIntoView({block:'nearest',behavior:'smooth'});
   }catch(error){note.textContent=error.message;note.classList.remove('success');button.disabled=false;button.innerHTML='Request Booking <span aria-hidden="true">→</span>';}
 });
-review?.querySelector('#equipment-confirmed').addEventListener('change',event=>event.target.setCustomValidity(''));
+contactStep?.querySelector('#equipment-confirmed').addEventListener('change',event=>event.target.setCustomValidity(''));
 
 let recommendationRequest=0;
 async function updateRecommendation(){
@@ -285,10 +270,14 @@ if(bookingForm&&quoteModal&&form){
   });
   const closeQuote=()=>{
     quoteModal.hidden=true;
-    review.hidden=true;form.hidden=false;selectedMatch=null;
+    form.hidden=false;selectedMatch=null;
     jobStep.hidden=false;contactStep.hidden=true;
-    review.querySelector('.review-book').hidden=false;review.querySelector('.review-back').hidden=false;
-    const heading=review.parentElement.querySelector(':scope > h2');
+    form.parentElement.classList.remove('contact-view');
+    form.parentElement.classList.remove('success-view');
+    form.parentElement.querySelector('.booking-success').hidden=true;
+    contactStep.querySelector('.contact-next').disabled=false;
+    contactStep.querySelector('.contact-next').innerHTML='Request Booking <span aria-hidden="true">→</span>';
+    const heading=form.parentElement.querySelector(':scope > h2');
     if(heading?.dataset.originalTitle)heading.textContent=heading.dataset.originalTitle;
     const intro=heading?.nextElementSibling;
     if(intro?.dataset.originalText)intro.textContent=intro.dataset.originalText;
@@ -303,7 +292,10 @@ if(bookingForm&&quoteModal&&form){
     syncCalendarForm(form);
     refreshBookingSummary();
     setEditing(false);
-    review.hidden=true;form.hidden=false;jobStep.hidden=false;contactStep.hidden=true;
+    form.hidden=false;jobStep.hidden=false;contactStep.hidden=true;
+    form.parentElement.classList.remove('contact-view');
+    form.parentElement.classList.remove('success-view');
+    form.parentElement.querySelector('.booking-success').hidden=true;
     quoteModal.hidden=false;
     quoteModal.scrollTop=0;
     closeButton.focus({preventScroll:true});

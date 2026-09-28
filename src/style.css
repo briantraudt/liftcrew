@@ -238,3 +238,18 @@
 .field-label:hover .help-bubble,.field-label:focus-within .help-bubble{display:block}
 .quote-modal-panel .hero-quote>h2{margin-top:0}
 .quote-modal-panel .hero-quote>p{margin-bottom:16px}
+
+.phone-badge{display:grid;grid-template-columns:auto 1fr;column-gap:11px;row-gap:3px;justify-items:center}
+.phone-badge svg{grid-column:1;grid-row:1}
+.phone-badge-copy{display:contents}
+.phone-badge-copy strong{grid-column:2;grid-row:1}
+.phone-badge-copy small{grid-column:1/-1;grid-row:2;text-align:center}
+@media(max-width:600px){.phone-badge{column-gap:7px;row-gap:2px}}
+
+.hero-quote.contact-view>h2,.hero-quote.contact-view>p{display:none}
+.hero-quote.success-view>p{display:none}
+.hero-quote .booking-success{padding:16px 0 8px}
+.hero-quote .booking-success h3{margin:0 0 10px;font:800 1.7rem Manrope,sans-serif;color:#14212b}
+.hero-quote .booking-success p{color:#52616b;line-height:1.55}
+.contact-view .equipment-review{margin:0 0 24px}
+.contact-view .equipment-review h3{font:800 1.35rem Manrope,sans-serif;margin:0 0 6px}
