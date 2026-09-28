@@ -294,3 +294,11 @@
 .text-link:hover,.text-link:focus-visible{color:#14212b}
 .seo-links .text-link{margin-right:8px}
 @media(max-width:600px){.usecase-grid{grid-template-columns:1fr}.usecase-grid article{padding:20px}}
+
+/* Keep the desktop brand aligned with each page's content gutter. */
+@media(min-width:851px){
+  body:not(:has(.hero)) .header-inner{max-width:1450px;padding-right:6%;padding-left:6%}
+}
+@media(min-width:1151px){
+  body:has(.hero) .header-inner{max-width:none;padding-right:5.7%;padding-left:5.7%}
+}
