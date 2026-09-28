@@ -7,6 +7,8 @@ function updateRecommendation(){
   const box=document.querySelector('#recommendation');
   box.querySelector('strong').textContent=match?match.title:'Complete the job details to see a suggested forklift.';
   box.querySelector('p').textContent=match?match.reason+' LiftCrew will confirm the equipment before scheduling.':'We’ll review the site and load requirements before confirming equipment and availability.';
+  const example=box.querySelector('#equipment-example');
+  if(example){example.hidden=!match;if(match)example.href=match.sourceUrl;}
   return match;
 }
 form?.addEventListener('input',updateRecommendation);
