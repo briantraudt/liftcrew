@@ -274,7 +274,7 @@
 @media(max-width:600px){.hero-booking .booking-title{padding-top:8px}.hero-booking .booking-title strong{font-size:1.7rem}}
 @media(max-width:600px){
   .hero{background:#07151d}
-  .hero:before{content:"";position:absolute;top:76px;left:0;right:0;height:56.25vw;background:url('/hero-forklift.webp') right center / 125% auto no-repeat}
+  .hero:before{content:"";position:absolute;top:76px;left:0;right:0;height:56.25vw;background:url('/hero-forklift.webp') right center / 150% auto no-repeat}
   .hero-inner{padding-top:calc(76px + 56.25vw + 20px)}
   .hero-booking{padding:16px;gap:10px}
   .hero-booking .booking-title{padding:3px 0 2px}
