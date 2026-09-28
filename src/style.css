@@ -49,8 +49,8 @@
 .hero-booking .booking-field{min-width:0;max-width:100%}
 .hero-booking .booking-field input,.hero-booking .booking-field select{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box}
 .hero-booking .booking-go{box-sizing:border-box;max-width:100%}
-@media(min-width:1501px){.hero{background-position:right 150px center}}
-@media(min-width:1151px) and (max-width:1500px){.hero{background-position:right 120px center}}
+@media(min-width:1501px){.hero{background-position:right 320px center}}
+@media(min-width:1151px) and (max-width:1500px){.hero{background-position:right 220px center}}
 @media(max-width:380px){.hero-booking{grid-template-columns:minmax(0,1fr)}}
 
 /* Mobile booking path: keep the photo, message, and form close together. */
