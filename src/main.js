@@ -4,9 +4,11 @@ const review=document.querySelector('#equipment-review');
 const jobStep=form?.querySelector('#job-step');
 const contactStep=form?.querySelector('#contact-step');
 let selectedMatch=null;
-function setQuoteHeading(title){
+function setQuoteHeading(title,description){
   const heading=form?.parentElement.querySelector(':scope > h2');
   if(heading){heading.dataset.originalTitle ||= heading.textContent;heading.textContent=title;}
+  const intro=heading?.nextElementSibling;
+  if(intro?.tagName==='P' && description){intro.dataset.originalText ||= intro.textContent;intro.textContent=description;}
 }
 function validateStep(step){
   for(const field of step.querySelectorAll('input[required],select[required],textarea[required]')){
@@ -16,13 +18,13 @@ function validateStep(step){
 }
 function showJob(){
   jobStep.hidden=false;contactStep.hidden=true;review.hidden=true;form.hidden=false;
-  setQuoteHeading('Tell us about the job.');
+  setQuoteHeading('Tell us about the job.','These details help us suggest equipment that fits your load and worksite.');
   form.scrollIntoView({block:'start',behavior:'smooth'});
   form.querySelector('#loadDescription')?.focus({preventScroll:true});
 }
 function showContact(){
   jobStep.hidden=true;contactStep.hidden=false;review.hidden=true;form.hidden=false;
-  setQuoteHeading('Where can we reach you?');
+  setQuoteHeading('Contact details','Where should we send your equipment recommendation and booking follow-up?');
   form.scrollIntoView({block:'start',behavior:'smooth'});
   contactStep.querySelector('#name').focus({preventScroll:true});
 }
@@ -49,7 +51,7 @@ contactStep?.querySelector('.contact-next').addEventListener('click',async()=>{
     review.querySelector('#form-note').textContent='Select an option, then request your booking.';
     review.querySelector('#form-note').classList.remove('success');
     form.hidden=true;review.hidden=false;
-    setQuoteHeading('Select your equipment.');
+    setQuoteHeading('Select your equipment.','Review the suggested machine, then send your booking request.');
     review.scrollIntoView({block:'start',behavior:'smooth'});
     review.querySelector('#review-title').focus({preventScroll:true});
   }finally{button.disabled=false;button.innerHTML='See Recommended Equipment <span aria-hidden="true">→</span>';}
@@ -186,7 +188,7 @@ function enhanceDates(target){
       const label=new Intl.DateTimeFormat('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).format(new Date(year,month,day));
       days+='<button type="button" class="calendar-day'+(selected?' selected':'')+(value===today?' today':'')+'" data-date="'+value+'" aria-label="'+label+'" aria-pressed="'+selected+'" '+(value<today?'disabled':'')+'>'+day+'</button>';
     }
-    calendar.innerHTML='<div class="calendar-top"><div><span class="calendar-kicker">CHOOSE YOUR DATE</span><span class="calendar-instruction">When do you need it?</span><strong class="calendar-month" aria-live="polite">'+heading+'</strong></div><div class="calendar-nav"><button type="button" data-action="prev" aria-label="Previous month" '+(localISO(first).slice(0,7)<=today.slice(0,7)?'disabled':'')+'>‹</button><button type="button" data-action="next" aria-label="Next month">›</button><button type="button" data-action="close" aria-label="Close calendar">×</button></div></div><div class="calendar-weekdays" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div><div class="calendar-days">'+days+'</div><div class="calendar-bottom"><button type="button" data-action="clear">Clear date</button><button type="button" data-action="today">Today</button></div>';
+    calendar.innerHTML='<div class="calendar-top"><div><span class="calendar-kicker">CHOOSE DATE</span><strong class="calendar-month" aria-live="polite">'+heading+'</strong></div><div class="calendar-nav"><button type="button" data-action="prev" aria-label="Previous month" '+(localISO(first).slice(0,7)<=today.slice(0,7)?'disabled':'')+'>‹</button><button type="button" data-action="next" aria-label="Next month">›</button><button type="button" data-action="close" aria-label="Close calendar">×</button></div></div><div class="calendar-weekdays" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div><div class="calendar-days">'+days+'</div><div class="calendar-bottom"><button type="button" data-action="clear">Clear date</button><button type="button" data-action="today">Today</button></div>';
     if(focusDate)calendar.querySelector('[data-date="'+focusDate+'"]')?.focus({preventScroll:true});
   }
   function open(){
@@ -288,6 +290,8 @@ if(bookingForm&&quoteModal&&form){
     review.querySelector('.review-book').hidden=false;review.querySelector('.review-back').hidden=false;
     const heading=review.parentElement.querySelector(':scope > h2');
     if(heading?.dataset.originalTitle)heading.textContent=heading.dataset.originalTitle;
+    const intro=heading?.nextElementSibling;
+    if(intro?.dataset.originalText)intro.textContent=intro.dataset.originalText;
     bookingForm.querySelector('.booking-go').focus({preventScroll:true});
   };
   bookingForm.addEventListener('submit',event=>{

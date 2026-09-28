@@ -120,7 +120,7 @@
 .calendar-day.selected,.calendar-day.selected:hover{background:#ff5b13;color:#fff;box-shadow:none}
 .calendar-day:disabled{color:#bbc5ca;cursor:default}
 .calendar-bottom{display:flex;justify-content:space-between;margin-top:14px;padding-top:13px;border-top:1px solid #e8edef}
-.calendar-bottom button{border:0;background:transparent;color:#a84618;font-size:.78rem;font-weight:800}
+.calendar-bottom button{border:0;background:transparent;color:#14212b;font-size:.78rem;font-weight:800}
 .calendar-bottom button:hover:not(:disabled){text-decoration:underline}
 .calendar-bottom button:disabled{opacity:.35;cursor:default}
 .hero-inner{z-index:3}
@@ -220,3 +220,21 @@
 .expert-choice strong,.expert-choice small{display:block}
 .expert-choice small{color:#61717b;font-size:.84rem;line-height:1.45;margin-top:4px}
 @media(max-width:600px){.step-actions{flex-direction:column-reverse;align-items:stretch}.step-actions .contact-back,.step-actions .contact-next{width:100%}.hero{background:#07151d}.hero .hero-shade{display:none}.hero-inner{padding-top:94px;display:flex;flex-direction:column;gap:28px}.hero-booking{order:-1;margin:0 auto;box-shadow:0 18px 42px #0005}.hero-copy{order:1}.hero-actions{display:none}.trust-row{margin-top:28px}}
+
+/* Compact calendar header: label above the active month. */
+.lift-calendar .calendar-top{align-items:center;padding-bottom:14px}
+.lift-calendar .calendar-kicker{margin-bottom:7px}
+.lift-calendar .calendar-month{font:800 1.35rem Manrope,sans-serif;line-height:1.2;letter-spacing:-.04em;white-space:nowrap}
+.lift-calendar .calendar-nav{padding-top:0}
+.lift-calendar .calendar-bottom button{color:#14212b}
+@media(max-width:380px){.lift-calendar .calendar-month{font-size:1.12rem}}
+
+/* Field help stays available to pointer, keyboard, and touch users. */
+.hero-quote .field-label{display:flex;align-items:center;gap:6px;position:relative;width:max-content;max-width:100%;margin-top:12px}
+.hero-quote .field-label label{margin:0}
+.field-help{display:inline-grid;place-items:center;flex:none;width:21px;height:21px;padding:0;border:1px solid #9cabb4;border-radius:50%;background:#f4f7f8;color:#344650;font:800 .73rem Manrope,sans-serif;cursor:help}
+.field-help:hover,.field-help:focus-visible{border-color:#14212b;background:#14212b;color:#fff;outline-offset:2px}
+.help-bubble{display:none;position:absolute;left:0;top:calc(100% + 7px);z-index:8;width:min(290px,calc(100vw - 52px));padding:11px 13px;border-radius:8px;background:#14212b;color:#fff;font:600 .78rem/1.45 'DM Sans',sans-serif;box-shadow:0 8px 22px #0003}
+.field-label:hover .help-bubble,.field-label:focus-within .help-bubble{display:block}
+.quote-modal-panel .hero-quote>h2{margin-top:0}
+.quote-modal-panel .hero-quote>p{margin-bottom:16px}
