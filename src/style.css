@@ -150,3 +150,10 @@
 .phone-badge-copy small{font-size:.58rem;letter-spacing:.1em;font-weight:800;color:#fff5ee}
 .phone-badge-copy strong{font-size:1rem;color:#fff}
 @media(max-width:600px){.phone-badge{padding:9px 12px;gap:8px}.phone-badge svg{width:19px;height:19px}.phone-badge-copy small{font-size:.49rem}.phone-badge-copy strong{font-size:.82rem}}
+
+/* Calendar opens in a stable viewport layer, clear of the header and booking card. */
+.calendar-backdrop{position:fixed;inset:0;z-index:99;background:rgba(5,18,26,.62)}
+.calendar-backdrop[hidden]{display:none}
+.lift-calendar{position:fixed;z-index:100;top:50%;left:50%;transform:translate(-50%,-50%);width:min(380px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto}
+.lift-calendar .calendar-top{position:sticky;top:-17px;z-index:1;padding:0 0 12px;background:#fff}
+@media(max-width:380px){.lift-calendar .calendar-top{top:-12px}}

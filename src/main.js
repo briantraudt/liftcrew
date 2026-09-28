@@ -60,8 +60,12 @@ function enhanceDates(target){
   calendar.className='lift-calendar';
   calendar.setAttribute('role','dialog');
   calendar.setAttribute('aria-label','Choose a date');
+  calendar.setAttribute('aria-modal','true');
   calendar.hidden=true;
-  target.append(calendar);
+  const backdrop=document.createElement('div');
+  backdrop.className='calendar-backdrop';
+  backdrop.hidden=true;
+  document.body.append(backdrop,calendar);
   for(const [kind,input] of [['start',start],['end',end]]){
     const button=document.createElement('button');
     button.type='button';
@@ -84,6 +88,7 @@ function enhanceDates(target){
 
   function close(restoreFocus=false){
     calendar.hidden=true;
+    backdrop.hidden=true;
     target.querySelectorAll('.calendar-trigger').forEach(button=>button.setAttribute('aria-expanded','false'));
     if(restoreFocus&&activeTrigger)activeTrigger.focus({preventScroll:true});
   }
@@ -94,16 +99,10 @@ function enhanceDates(target){
     const parts=selected.split('-').map(Number);
     year=parts[0];month=parts[1]-1;
     calendar.hidden=false;
+    backdrop.hidden=false;
     target.querySelectorAll('.calendar-trigger').forEach(button=>button.setAttribute('aria-expanded',String(button===activeTrigger)));
     calendar.setAttribute('aria-label','Choose '+kind+' date');
     render();
-    const formRect=target.getBoundingClientRect();
-    const triggerRect=activeTrigger.getBoundingClientRect();
-    const width=calendar.getBoundingClientRect().width;
-    calendar.style.left=Math.max(12-formRect.left,Math.min(triggerRect.left-formRect.left,window.innerWidth-12-width-formRect.left))+'px';
-    const height=calendar.getBoundingClientRect().height;
-    const placeAbove=window.innerHeight-triggerRect.bottom<height+12 && triggerRect.top>=height+12;
-    calendar.style.top=(placeAbove?triggerRect.top-formRect.top-height-8:triggerRect.bottom-formRect.top+8)+'px';
     (calendar.querySelector('[data-date="'+selected+'"]:not(:disabled)')||calendar.querySelector('.calendar-day:not(:disabled)'))?.focus({preventScroll:true});
   }
   function render(focusDate){
@@ -123,7 +122,7 @@ function enhanceDates(target){
       const label=new Intl.DateTimeFormat('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).format(new Date(year,month,day));
       days+='<button type="button" class="'+classes+'" data-date="'+value+'" aria-label="'+label+'" aria-pressed="'+selected+'" '+(disabled?'disabled':'')+'>'+day+'</button>';
     }
-    calendar.innerHTML='<div class="calendar-top"><div><span class="calendar-kicker">'+(mode==='start'?'START DATE':'END DATE')+'</span><strong aria-live="polite">'+heading+'</strong></div><div class="calendar-nav"><button type="button" data-action="prev" aria-label="Previous month" '+(currentMonth<=minMonth?'disabled':'')+'>‹</button><button type="button" data-action="next" aria-label="Next month">›</button></div></div><div class="calendar-weekdays" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div><div class="calendar-days">'+days+'</div><div class="calendar-bottom"><button type="button" data-action="clear">Clear dates</button><button type="button" data-action="today" '+(mode==='end'&&start.value>today?'disabled':'')+'>Today</button></div>';
+    calendar.innerHTML='<div class="calendar-top"><div><span class="calendar-kicker">'+(mode==='start'?'START DATE':'END DATE')+'</span><strong aria-live="polite">'+heading+'</strong></div><div class="calendar-nav"><button type="button" data-action="prev" aria-label="Previous month" '+(currentMonth<=minMonth?'disabled':'')+'>‹</button><button type="button" data-action="next" aria-label="Next month">›</button><button type="button" data-action="close" aria-label="Close calendar">×</button></div></div><div class="calendar-weekdays" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div><div class="calendar-days">'+days+'</div><div class="calendar-bottom"><button type="button" data-action="clear">Clear dates</button><button type="button" data-action="today" '+(mode==='end'&&start.value>today?'disabled':'')+'>Today</button></div>';
     if(focusDate)calendar.querySelector('[data-date="'+focusDate+'"]')?.focus({preventScroll:true});
   }
   function choose(value){
@@ -138,6 +137,7 @@ function enhanceDates(target){
         target.querySelectorAll('.calendar-trigger').forEach(button=>button.setAttribute('aria-expanded',String(button===activeTrigger)));
         calendar.setAttribute('aria-label','Choose end date');
         render(start.value);
+        calendar.querySelector('[data-date="'+start.value+'"]')?.focus({preventScroll:true});
       }else close(true);
     }else{
       end.value=value;
@@ -154,13 +154,21 @@ function enhanceDates(target){
       const delta=action==='prev'?-1:1;
       const next=new Date(year,month+delta,1);
       year=next.getFullYear();month=next.getMonth();render();
-      calendar.querySelector('[data-action="'+action+'"]').focus({preventScroll:true});
+      calendar.querySelector('[data-action="'+action+'"]')?.focus({preventScroll:true});
+    }else if(action==='close'){close(true);
     }else if(action==='clear'){
       start.value='';end.value='';end.min=today;syncCalendarForm(target);close(true);
     }else if(action==='today')choose(today);
   });
   calendar.addEventListener('keydown',event=>{
     if(event.key==='Escape'){event.preventDefault();close(true);return;}
+    if(event.key==='Tab'){
+      const buttons=[...calendar.querySelectorAll('button:not(:disabled)')];
+      const first=buttons[0],last=buttons[buttons.length-1];
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus({preventScroll:true});}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus({preventScroll:true});}
+      return;
+    }
     const focused=event.target.closest('[data-date]');
     if(!focused)return;
     const offset={ArrowLeft:-1,ArrowRight:1,ArrowUp:-7,ArrowDown:7}[event.key];
@@ -172,7 +180,8 @@ function enhanceDates(target){
     if(value<today||(mode==='end'&&start.value&&value<start.value))return;
     year=next.getFullYear();month=next.getMonth();render(value);
   });
-  document.addEventListener('pointerdown',event=>{if(!calendar.hidden&&!target.contains(event.target))close()});
+  backdrop.addEventListener('click',()=>close(true));
+  document.addEventListener('pointerdown',event=>{if(!calendar.hidden&&!target.contains(event.target)&&!calendar.contains(event.target)&&event.target!==backdrop)close()});
   if(target.id==='booking-form')target.addEventListener('submit',event=>{if(!validateCalendarForm(target))event.preventDefault()});
 }
 enhanceDates(document.querySelector('#booking-form'));
