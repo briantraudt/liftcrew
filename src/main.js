@@ -41,16 +41,11 @@ form?.addEventListener('submit',event=>{
 contactStep?.querySelector('.contact-back').addEventListener('click',showJob);
 contactStep?.querySelector('.contact-next').addEventListener('click',async()=>{
   if(!validateStep(contactStep))return;
-  const choice=review.querySelector('[name="equipmentChoice"]:checked');
-  if(!choice){review.querySelector('[name="equipmentChoice"]').focus();contactStep.querySelector('#form-note').textContent='Choose the recommendation or ask LiftCrew to choose for you.';return;}
-  const confirmed=contactStep.querySelector('#equipment-confirmed');
-  if(!confirmed.checked){confirmed.focus();confirmed.setCustomValidity('Please confirm you reviewed the equipment options.');confirmed.reportValidity();return;}
-  confirmed.setCustomValidity('');
   const button=contactStep.querySelector('.contact-next');
   const note=contactStep.querySelector('#form-note');
   button.disabled=true;button.textContent='Sending…';note.textContent='Sending your booking request…';
   try{
-    const response=await fetch('/api/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...Object.fromEntries(new FormData(form)),equipmentConfirmed:true,equipmentChoice:choice.value,recommendation:selectedMatch?.title})});
+    const response=await fetch('/api/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...Object.fromEntries(new FormData(form)),recommendation:selectedMatch?.title})});
     const result=await response.json();
     if(!response.ok)throw new Error(result.error||'Unable to send your request.');
     form.hidden=true;
@@ -62,7 +57,6 @@ contactStep?.querySelector('.contact-next').addEventListener('click',async()=>{
     success.scrollIntoView({block:'nearest',behavior:'smooth'});
   }catch(error){note.textContent=error.message;note.classList.remove('success');button.disabled=false;button.innerHTML='Request Booking <span aria-hidden="true">→</span>';}
 });
-contactStep?.querySelector('#equipment-confirmed').addEventListener('change',event=>event.target.setCustomValidity(''));
 
 let recommendationRequest=0;
 async function updateRecommendation(){
@@ -72,7 +66,7 @@ async function updateRecommendation(){
   if(request!==recommendationRequest)return null;
   const box=document.querySelector('#recommendation');
   box.querySelector('strong').textContent=match?match.title:'Complete the job details to see a suggested forklift.';
-  box.querySelector('p').textContent=match?match.reason+' LiftCrew will confirm the equipment before scheduling.':'We’ll review the site and load requirements before confirming equipment and availability.';
+  box.querySelector('p').textContent=match?match.reason:'We’ll review the site and load requirements before confirming equipment and availability.';
   const example=box.querySelector('#equipment-example');
   if(example){example.hidden=!match?.sourceUrl;if(match?.sourceUrl)example.href=match.sourceUrl;}
   return match;
