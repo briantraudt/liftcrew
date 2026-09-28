@@ -1,12 +1,42 @@
 import { suggestEquipment } from './catalog-data.js';
 const toggle=document.querySelector('.menu-toggle');const nav=document.querySelector('.nav');toggle.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')==='true';toggle.setAttribute('aria-expanded',String(!open));toggle.setAttribute('aria-label',open?'Open navigation':'Close navigation');nav.classList.toggle('open',!open)});document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('open');toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Open navigation')}));const year=document.querySelector('#year');if(year)year.textContent=new Date().getFullYear();const form=document.querySelector('#quote-form');
 const review=document.querySelector('#equipment-review');
+const jobStep=form?.querySelector('#job-step');
+const contactStep=form?.querySelector('#contact-step');
 let selectedMatch=null;
-form?.addEventListener('submit',async event=>{
+function setQuoteHeading(title){
+  const heading=form?.parentElement.querySelector(':scope > h2');
+  if(heading){heading.dataset.originalTitle ||= heading.textContent;heading.textContent=title;}
+}
+function validateStep(step){
+  for(const field of step.querySelectorAll('input[required],select[required],textarea[required]')){
+    if(!field.checkValidity()){field.reportValidity();field.focus({preventScroll:true});return false;}
+  }
+  return true;
+}
+function showJob(){
+  jobStep.hidden=false;contactStep.hidden=true;review.hidden=true;form.hidden=false;
+  setQuoteHeading('Tell us about the job.');
+  form.scrollIntoView({block:'start',behavior:'smooth'});
+  form.querySelector('#loadDescription')?.focus({preventScroll:true});
+}
+function showContact(){
+  jobStep.hidden=true;contactStep.hidden=false;review.hidden=true;form.hidden=false;
+  setQuoteHeading('Where can we reach you?');
+  form.scrollIntoView({block:'start',behavior:'smooth'});
+  contactStep.querySelector('#name').focus({preventScroll:true});
+}
+form?.addEventListener('submit',event=>{
   event.preventDefault();
-  if(!validateCalendarForm(form)||!form.reportValidity())return;
+  if(!contactStep.hidden){contactStep.querySelector('.contact-next').click();return;}
+  if(!validateCalendarForm(form)||!validateStep(jobStep))return;
   syncDuration(form);
-  const button=form.querySelector('button[type=submit]');
+  showContact();
+});
+contactStep?.querySelector('.contact-back').addEventListener('click',showJob);
+contactStep?.querySelector('.contact-next').addEventListener('click',async()=>{
+  if(!validateStep(contactStep))return;
+  const button=contactStep.querySelector('.contact-next');
   button.disabled=true;button.textContent='Finding equipment…';
   try{
     const match=await updateRecommendation();
@@ -14,31 +44,31 @@ form?.addEventListener('submit',async event=>{
     selectedMatch=match;
     const data=Object.fromEntries(new FormData(form));
     review.querySelector('#review-summary').textContent=[data.service,prettyDate(data.date),data.durationDays+' '+(data.durationDays==='1'?'day':'days'),data.location+' ZIP',Number(data.loadWeight).toLocaleString()+' lb load',data.liftHeight+' ft lift'].join(' · ');
+    review.querySelectorAll('[name="equipmentChoice"]').forEach(field=>field.checked=false);
     review.querySelector('#equipment-confirmed').checked=false;
-    review.querySelector('#form-note').textContent='Your booking is a request. Our team will confirm the equipment and quote before scheduling.';
+    review.querySelector('#form-note').textContent='Select an option, then request your booking.';
+    review.querySelector('#form-note').classList.remove('success');
     form.hidden=true;review.hidden=false;
-    const heading=review.parentElement.querySelector(':scope > h2');
-    if(heading){heading.dataset.originalTitle ||= heading.textContent;heading.textContent='Your equipment match.';}
+    setQuoteHeading('Select your equipment.');
     review.scrollIntoView({block:'start',behavior:'smooth'});
     review.querySelector('#review-title').focus({preventScroll:true});
   }finally{button.disabled=false;button.innerHTML='See Recommended Equipment <span aria-hidden="true">→</span>';}
 });
 review?.querySelector('.review-back').addEventListener('click',()=>{
   review.hidden=true;form.hidden=false;selectedMatch=null;
-  const heading=review.parentElement.querySelector(':scope > h2');
-  if(heading?.dataset.originalTitle)heading.textContent=heading.dataset.originalTitle;
-  form.scrollIntoView({block:'start',behavior:'smooth'});
-  form.querySelector('#loadDescription')?.focus({preventScroll:true});
+  showContact();
 });
 review?.querySelector('.review-book').addEventListener('click',async()=>{
+  const choice=review.querySelector('[name="equipmentChoice"]:checked');
+  if(!choice){review.querySelector('[name="equipmentChoice"]').focus();review.querySelector('#form-note').textContent='Select a recommendation or ask LiftCrew to choose for you.';return;}
   const confirmed=review.querySelector('#equipment-confirmed');
-  if(!confirmed.checked){confirmed.focus();confirmed.setCustomValidity('Please confirm you reviewed the equipment suggestion.');confirmed.reportValidity();return;}
+  if(!confirmed.checked){confirmed.focus();confirmed.setCustomValidity('Please confirm you reviewed the equipment options.');confirmed.reportValidity();return;}
   confirmed.setCustomValidity('');
   const button=review.querySelector('.review-book');
   const note=review.querySelector('#form-note');
   button.disabled=true;button.textContent='Sending…';note.textContent='Sending your booking request…';
   try{
-    const response=await fetch('/api/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...Object.fromEntries(new FormData(form)),equipmentConfirmed:true,recommendation:selectedMatch?.title})});
+    const response=await fetch('/api/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...Object.fromEntries(new FormData(form)),equipmentConfirmed:true,equipmentChoice:choice.value,recommendation:selectedMatch?.title})});
     const result=await response.json();
     if(!response.ok)throw new Error(result.error||'Unable to send your request.');
     note.textContent='Your booking request was sent. We’ll follow up to confirm equipment, availability, and price.';
@@ -254,6 +284,7 @@ if(bookingForm&&quoteModal&&form){
   const closeQuote=()=>{
     quoteModal.hidden=true;
     review.hidden=true;form.hidden=false;selectedMatch=null;
+    jobStep.hidden=false;contactStep.hidden=true;
     review.querySelector('.review-book').hidden=false;review.querySelector('.review-back').hidden=false;
     const heading=review.parentElement.querySelector(':scope > h2');
     if(heading?.dataset.originalTitle)heading.textContent=heading.dataset.originalTitle;
@@ -268,7 +299,7 @@ if(bookingForm&&quoteModal&&form){
     syncCalendarForm(form);
     refreshBookingSummary();
     setEditing(false);
-    review.hidden=true;form.hidden=false;
+    review.hidden=true;form.hidden=false;jobStep.hidden=false;contactStep.hidden=true;
     quoteModal.hidden=false;
     quoteModal.scrollTop=0;
     closeButton.focus({preventScroll:true});
