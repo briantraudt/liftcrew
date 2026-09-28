@@ -1,6 +1,17 @@
-const toggle=document.querySelector('.menu-toggle');const nav=document.querySelector('.nav');toggle.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')==='true';toggle.setAttribute('aria-expanded',String(!open));toggle.setAttribute('aria-label',open?'Open navigation':'Close navigation');nav.classList.toggle('open',!open)});document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('open');toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Open navigation')}));const year=document.querySelector('#year');if(year)year.textContent=new Date().getFullYear();const form=document.querySelector('#quote-form');form?.addEventListener('submit',async e=>{e.preventDefault();if(!form.reportValidity()||!validateCalendarForm(form))return;const button=form.querySelector('button[type=submit]');const note=document.querySelector('#form-note');button.disabled=true;button.textContent='Sending…';note.textContent='Sending your request…';try{const response=await fetch('/api/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(form)))});const result=await response.json();if(!response.ok)throw new Error(result.error||'Unable to send your request.');form.reset();syncCalendarForm(form);note.textContent='Thanks. Your request was sent. We’ll be in touch.';note.classList.add('success')}catch(error){note.textContent=error.message;note.classList.remove('success')}finally{button.disabled=false;button.innerHTML='Send Quote Request <span aria-hidden="true">→</span>'}});
+import { recommendEquipment } from './equipment.js';
+const toggle=document.querySelector('.menu-toggle');const nav=document.querySelector('.nav');toggle.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')==='true';toggle.setAttribute('aria-expanded',String(!open));toggle.setAttribute('aria-label',open?'Open navigation':'Close navigation');nav.classList.toggle('open',!open)});document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('open');toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Open navigation')}));const year=document.querySelector('#year');if(year)year.textContent=new Date().getFullYear();const form=document.querySelector('#quote-form');form?.addEventListener('submit',async e=>{e.preventDefault();if(!form.reportValidity()||!validateCalendarForm(form))return;const match=updateRecommendation();if(!match)return;const button=form.querySelector('button[type=submit]');const note=document.querySelector('#form-note');button.disabled=true;button.textContent='Sending…';note.textContent='Sending your request…';try{const response=await fetch('/api/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...Object.fromEntries(new FormData(form)),recommendation:match.title,recommendationReason:match.reason})});const result=await response.json();if(!response.ok)throw new Error(result.error||'Unable to send your request.');form.reset();syncCalendarForm(form);updateRecommendation();note.textContent='Thanks. Your request was sent. We’ll be in touch.';note.classList.add('success')}catch(error){note.textContent=error.message;note.classList.remove('success')}finally{button.disabled=false;button.innerHTML='Request Availability & Quote <span aria-hidden="true">→</span>'}});
 
-const params=new URLSearchParams(location.search);if(document.querySelector('#quote-form')&&params.size){for(const key of ['service','date','endDate','location']){const field=document.querySelector(`#quote-form [name="${key}"]`);if(field&&params.has(key))field.value=params.get(key)}if(params.has('date')&&params.has('endDate')){const duration=document.querySelector('#duration');if(duration)duration.value=params.get('date')===params.get('endDate')?'One day':'Multiple days'}}
+function updateRecommendation(){
+  if(!form)return null;
+  const match=recommendEquipment(Object.fromEntries(new FormData(form)));
+  const box=document.querySelector('#recommendation');
+  box.querySelector('strong').textContent=match?match.title:'Complete the job details to see a suggested forklift.';
+  box.querySelector('p').textContent=match?match.reason+' LiftCrew will confirm the equipment before scheduling.':'We’ll review the site and load requirements before confirming equipment and availability.';
+  return match;
+}
+form?.addEventListener('input',updateRecommendation);
+form?.addEventListener('change',updateRecommendation);
+const params=new URLSearchParams(location.search);if(document.querySelector('#quote-form')&&params.size){for(const key of ['service','date','endDate','location']){const field=document.querySelector(`#quote-form [name="${key}"]`);if(field&&params.has(key))field.value=params.get(key)}const summary=document.querySelector('#request-summary');if(summary){const values=[params.get('service'),params.get('location'),params.get('date')&&params.get('endDate')?prettyDate(params.get('date'))+' – '+prettyDate(params.get('endDate')):null].filter(Boolean);summary.textContent=values.join(' · ')}}
 
 function localISO(date){
   return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
@@ -14,7 +25,7 @@ function validateCalendarForm(target){
   if(!target.classList.contains('calendar-ready'))return true;
   const start=target.querySelector('[name="date"]');
   const end=target.querySelector('[name="endDate"]');
-  const missing=!start.value?'start':(target.id==='booking-form'&&!end.value?'end':null);
+  const missing=!start.value?'start':((target.id==='booking-form'||target.id==='quote-form')&&!end.value?'end':null);
   const invalidEnd=end.value&&start.value&&end.value<start.value;
   if(missing||invalidEnd){
     const field=missing||'end';
@@ -164,4 +175,4 @@ function enhanceDates(target){
   if(target.id==='booking-form')target.addEventListener('submit',event=>{if(!validateCalendarForm(target))event.preventDefault()});
 }
 enhanceDates(document.querySelector('#booking-form'));
-enhanceDates(document.querySelector('#quote-form'));
+enhanceDates(document.querySelector('#quote-form'));updateRecommendation();

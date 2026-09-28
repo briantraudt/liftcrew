@@ -129,3 +129,18 @@
 .booking-assurance{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:7px;margin:0;color:#52616b;font-size:.76rem;font-weight:700;line-height:1.3;text-align:center}
 .booking-assurance svg{width:17px;height:17px;flex:none;color:#e95311}
 .hero-quote .booking-assurance{margin-top:9px}
+
+/* Detailed quote intake and provisional equipment match */
+.form-step{margin:0 0 12px;color:#ef5a16;font-size:.72rem;font-weight:800;letter-spacing:.13em}
+.request-summary:empty{display:none}
+.request-summary{padding:12px 15px;margin:0 0 20px;border-radius:8px;background:#f2f5f6;color:#344650;font-size:.85rem;font-weight:700;line-height:1.5}
+.form-divider{margin:25px 0 14px;padding-top:20px;border-top:1px solid #dce4e8;color:#14212b;font:800 1.05rem Manrope,sans-serif}
+.recommendation{margin:24px 0;padding:20px;border:1px solid #f6b896;border-left:4px solid #ff5b13;border-radius:9px;background:#fff7f2}
+.recommendation-label{display:block;margin-bottom:8px;color:#dc4c0d;font-size:.68rem;font-weight:800;letter-spacing:.12em}
+.recommendation strong{display:block;color:#14212b;font:800 1.1rem Manrope,sans-serif;line-height:1.35}
+.recommendation p{margin:8px 0 0;color:#52616b;font-size:.87rem;line-height:1.55}
+
+/* Header contact badge; placeholder number is reserved for fictional use. */
+.phone-badge{display:inline-flex;align-items:center;justify-content:center;gap:10px;flex:none;padding:11px 16px;border:1px solid rgba(255,255,255,.5);border-radius:999px;background:rgba(255,255,255,.1);color:#fff;font-size:.9rem;font-weight:800;white-space:nowrap}
+.phone-badge svg{width:18px;height:18px;color:#ff6b25}
+@media(max-width:600px){.phone-badge{padding:9px 11px;gap:6px;font-size:.78rem}.phone-badge svg{width:15px;height:15px}}
