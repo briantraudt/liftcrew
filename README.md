@@ -22,3 +22,5 @@ For quote delivery, verify a sending domain with [Resend](https://resend.com/dom
 - `QUOTE_FROM_EMAIL`: verified sender address on your domain, such as `quotes@your-domain.com`.
 
 Redeploy after setting the variables. Until they are configured, the form clearly reports that requests cannot be sent. No credentials belong in this repository.
+
+After deployment, submit one real test request and confirm it reaches `QUOTE_TO_EMAIL` before directing customers to the form. The visible success message only appears after the email API reports success.
