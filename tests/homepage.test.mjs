@@ -26,8 +26,8 @@ test('section anchors are unique and all local links resolve',()=>{
   const nav=html.match(/<nav class="nav"[^>]*>(.*?)<\/nav>/)[1];
   assert.deepEqual([...nav.matchAll(/href="([^"]+)"/g)].map(m=>m[1]),['#how-it-works']);
 });
-test('three request steps are concise and honest',()=>{
-  assert.equal((lower.match(/<li>/g)||[]).length,3);
+test('two request steps are concise and honest',()=>{
+  assert.equal((lower.match(/<li>/g)||[]).length,2);
   assert(lower.includes('Your submission is a request.'));
   assert(lower.includes('Nothing is booked until the details are confirmed.'));
   assert(!/bonded|insured|certified|guaranteed/i.test(lower));
@@ -79,12 +79,17 @@ test('removed safety section leaves no homepage links or orphaned styles',()=>{
   assert(!css.includes('lc-safety'));
 });
 
-test('process illustrations remain decorative and the three steps stay semantic',()=>{
+test('process illustrations match the two steps and stay decorative',()=>{
   const process=lower.slice(0,lower.indexOf('id="testimonials"'));
-  assert.equal((process.match(/class="lc-step-art"/g)||[]).length,3);
-  assert.equal((process.match(/viewBox="0 0 200 126" fill="none" aria-hidden="true" focusable="false"/g)||[]).length,3);
+  assert.equal((process.match(/class="lc-step-art"/g)||[]).length,2);
+  assert.equal((process.match(/viewBox="0 0 200 126" fill="none" aria-hidden="true" focusable="false"/g)||[]).length,2);
   assert(process.includes('<ol class="lc-steps">'));
-  assert.equal((process.match(/class="lc-step-number"/g)||[]).length,3);
+  assert.deepEqual([...process.matchAll(/<h3>(.*?)<\/h3>/g)].map(m=>m[1]),['Call or book online','Your forklift and operator arrive']);
+  assert(process.includes('data-illustration="phone-booking"'));
+  assert(process.includes('data-illustration="forklift-operator"'));
+  assert(!/When &amp; where|A few job details|We confirm the plan|Three clear steps|href="tel:/.test(process));
+  assert(css.includes('grid-template-columns:repeat(2,minmax(0,1fr))'));
+  assert.equal((process.match(/class="lc-step-number"/g)||[]).length,2);
   assert(!process.includes('<button'));
 });
 test('testimonials use a featured and secondary composition with no redundant sample boilerplate',()=>{
