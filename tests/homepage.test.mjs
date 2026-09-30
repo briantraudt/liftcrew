@@ -48,3 +48,6 @@ test('small lower-page copy uses accessible contrast against its surface',()=>{
   const pairs=[['53615f','ffffff'],['53615f','f5f5ef'],['61706c','f5f5ef'],['62776b','ffffff'],['606f67','ffffff'],['5c7163','f0f2ea'],['bdd0d0','102d36'],['8da8ac','0c212a'],['302820','ed7138'],['ffffff','bd430b']];
   for(const [fg,bg] of pairs){const a=luminance(fg),b=luminance(bg),ratio=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);assert(ratio>=4.5,`${fg} on ${bg}: ${ratio.toFixed(2)}`);}
 });
+test('lower-page supporting labels remain at least 11px at default text size',()=>{
+  for(const [,size] of css.matchAll(/font-size:(\.[0-9]+)rem/g)) assert(Number(size)>=.6875,`Small supporting label: ${size}rem`);
+});
