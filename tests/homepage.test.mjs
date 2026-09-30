@@ -15,7 +15,7 @@ test('hero, header geometry, form and modal stay unchanged apart from section li
   assert.equal(hash(html.slice(html.indexOf('</main>'))),'c9acf4c033ed7f9dfbe0448f29bda31b96bc958076056d17cf8fa9b428d08609');
 });
 test('only requested compact sections remain below the hero',()=>{
-  assert.deepEqual([...lower.matchAll(/<section[^>]* id="([^"]+)"/g)].map(m=>m[1]),['how-it-works','safety','testimonials']);
+  assert.deepEqual([...lower.matchAll(/<section[^>]* id="([^"]+)"/g)].map(m=>m[1]),['how-it-works','testimonials']);
   assert.equal((lower.match(/<footer/g)||[]).length,1);
   assert(!/star rating|five.star|trusted by|jobs completed|lc-close|lc-services|lc-industries|lc-resources/i.test(lower));
 });
@@ -24,10 +24,10 @@ test('section anchors are unique and all local links resolve',()=>{
   assert.equal(ids.length,new Set(ids).size);
   for(const [,href] of html.matchAll(/href="#([^"\s]+)"/g)) assert(ids.includes(href),`Missing target ${href}`);
   const nav=html.match(/<nav class="nav"[^>]*>(.*?)<\/nav>/)[1];
-  assert.deepEqual([...nav.matchAll(/href="([^"]+)"/g)].map(m=>m[1]),['#how-it-works','#safety']);
+  assert.deepEqual([...nav.matchAll(/href="([^"]+)"/g)].map(m=>m[1]),['#how-it-works']);
 });
-test('three request steps and three safety points are concise and honest',()=>{
-  assert.equal((lower.match(/<li>/g)||[]).length,6);
+test('three request steps are concise and honest',()=>{
+  assert.equal((lower.match(/<li>/g)||[]).length,3);
   assert(lower.includes('Your submission is a request.'));
   assert(lower.includes('Nothing is booked until the details are confirmed.'));
   assert(!/bonded|insured|certified|guaranteed/i.test(lower));
@@ -48,7 +48,7 @@ test('supporting labels remain at least 11px at default text size',()=>{
 });
 test('body copy and supporting labels meet contrast requirements',()=>{
   const luminance=hex=>{const rgb=hex.match(/[a-f\d]{2}/gi).map(v=>parseInt(v,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;};
-  for(const [fg,bg] of [['53635b','f8f8f2'],['5e7064','f8f8f2'],['bfd0cf','112d36'],['9cb5b2','112d36'],['edf5ed','112d36'],['fffaf4','b94d22'],['17363e','f3a573'],['713c24','f8dfcc'],['914522','fafbf4']]){const a=luminance(fg),b=luminance(bg);assert((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5);}
+  for(const [fg,bg] of [['53635b','f8f8f2'],['5e7064','f8f8f2'],['9cb5b2','112d36'],['edf5ed','112d36'],['fffaf4','b94d22'],['17363e','f3a573'],['713c24','f8dfcc'],['914522','fafbf4']]){const a=luminance(fg),b=luminance(bg);assert((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5);}
 });
 
 test('testimonial samples are visibly disclosed and never presented as real endorsements',()=>{
@@ -72,4 +72,9 @@ test('calendar selection styling never recolors the enhanced booking form',()=>{
   assert(!theme.includes('.calendar-ready'));
   assert(theme.includes('.calendar-day.selected,.calendar-day[aria-selected="true"]{background:#b94d22'));
   assert(theme.includes('.hero-booking,.hero-quote,.quote-modal-panel,.lift-calendar{background:#f7f8f1'));
+});
+
+test('removed safety section leaves no homepage links or orphaned styles',()=>{
+  assert(!/id="safety(?:-title)?"|href="#safety"|lc-safety|Plan the lift\.|SAFETY COMES FIRST/.test(html));
+  assert(!css.includes('lc-safety'));
 });
