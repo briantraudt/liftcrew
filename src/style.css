@@ -520,6 +520,6 @@ h1 em,h2 em{color:#ffb185}
 .text-link:hover,.text-link:focus-visible{color:#193a42}
 .step-num,.timeline span,.three-up span,.industry-detail span,.check-list li:before,.safety-panel li span,.faq-list summary:after{color:#ac471e}
 .quote-modal-close{background:#f4f7ed;color:#193a42;border-color:#c8d6c8}
-.calendar-day.selected,.calendar-day[aria-selected="true"],.calendar-ready{background:#b94d22;color:#fffaf4;border-color:#b94d22}
+.calendar-day.selected,.calendar-day[aria-selected="true"]{background:#b94d22;color:#fffaf4;border-color:#b94d22}
 @media(max-width:850px){.nav{background:#112d36}.hero-shade{background:linear-gradient(0deg,#112d36 12%,rgba(17,45,54,.82) 55%,rgba(17,45,54,.2) 87%)}}
 @media(max-width:600px){.hero{background-color:#112d36}.hero-shade{background:linear-gradient(0deg,#112d36 5%,#112d36 45%,rgba(17,45,54,.08) 85%)}.hero-footer{background:#112d36}}
