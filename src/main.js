@@ -305,3 +305,37 @@ if(bookingForm&&quoteModal&&form){
     else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
   });
 }
+
+// Homepage section navigation keeps booking on the same page.
+document.querySelectorAll('[data-service]').forEach(link=>link.addEventListener('click',()=>{
+  if(bookingForm)bookingForm.elements.service.value=link.dataset.service;
+}));
+if(document.body.classList.contains('one-page')){
+  const sectionLinks=[...document.querySelectorAll('.nav a[href^="#"]')];
+  const sections=sectionLinks.map(link=>document.querySelector(link.hash)).filter(Boolean);
+  if('IntersectionObserver' in window){
+    const observer=new IntersectionObserver(entries=>{
+      const visible=entries.filter(entry=>entry.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
+      if(!visible)return;
+      sectionLinks.forEach(link=>{
+        if(link.hash==='#'+visible.target.id)link.setAttribute('aria-current','location');
+        else link.removeAttribute('aria-current');
+      });
+    },{rootMargin:'-100px 0px -35% 0px',threshold:[0,.2,.5]});
+    sections.forEach(section=>observer.observe(section));
+  }
+  const backdrop=document.querySelector('[data-parallax]');
+  const motion=matchMedia('(prefers-reduced-motion: no-preference) and (min-width: 851px)');
+  let pending=false;
+  function updateDepth(){
+    pending=false;
+    if(!motion.matches){backdrop.style.transform='';return;}
+    const rect=backdrop.parentElement.getBoundingClientRect();
+    if(rect.bottom<0||rect.top>innerHeight)return;
+    const offset=Math.max(-65,Math.min(65,(innerHeight/2-rect.top-rect.height/2)*.12));
+    backdrop.style.transform=`translate3d(0,${offset}px,0)`;
+  }
+  function scheduleDepth(){if(!pending){pending=true;requestAnimationFrame(updateDepth);}}
+  if(backdrop){window.addEventListener('scroll',scheduleDepth,{passive:true});window.addEventListener('resize',scheduleDepth);motion.addEventListener('change',scheduleDepth);updateDepth();}
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&nav.classList.contains('open')){nav.classList.remove('open');toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Open navigation');toggle.focus();}});
+}
