@@ -368,3 +368,72 @@
 @media(max-width:850px){.home-section{padding:64px 0}.home-heading{gap:24px;align-items:start;flex-direction:column;margin-bottom:32px}.home-heading>p{max-width:540px}.home-usecases{grid-template-columns:repeat(2,minmax(0,1fr));gap:32px}.home-services article{padding:26px 22px}.home-steps{gap:24px}.safety-content,.home-faq{gap:38px;grid-template-columns:1fr}.home-faq>div>p:not(.eyebrow){max-width:480px}.home-section h2{font-size:2.65rem}.safety-content>div>p:last-child{max-width:540px}}
 @media(max-width:600px){.home-services,.home-steps{grid-template-columns:1fr}.home-steps{gap:28px}.home-steps h3{margin-top:16px}.home-usecases{gap:30px 22px}.home-usecases h3{font-size:1.15rem;margin-top:18px}.home-usecases p{font-size:.9rem}.home-section h2{font-size:2.3rem}.home-footer .home-wrap{flex-direction:column;text-align:center;gap:22px}.home-footer a:not(.brand){margin-left:0}.home-footer small{width:100%}.one-page .hero-inner{padding-bottom:80px}.home-services h3{font-size:1.65rem}.safety-backdrop{inset:0;will-change:auto}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.safety-backdrop{transform:none!important;will-change:auto}.one-page .button{transition:none}}
+
+/* Distinct visual chapters: illustrated services, industry directory, timeline,
+   photographic safety panel, and a practical booking checklist. */
+.section-art{display:block;width:64px;height:64px;flex:none}
+.services-section{background:#fff}
+.home-services{gap:0;border:1px solid #d9e0e3;border-radius:16px;overflow:hidden}
+.home-services article{border:0;background:#fff;padding:38px 42px;position:relative}
+.home-services article:first-child{background:#fff4ec;border-right:1px solid #efd9c9}
+.service-art-pair{display:flex;align-items:center;gap:22px;height:116px;margin-bottom:26px;color:#bf4510}
+.service-art-pair .section-art{width:94px;height:94px;stroke-width:1.6}
+.service-art-pair>span{font-size:26px;font-weight:400;color:#b77c5c}
+.home-services article:nth-child(2) .service-art-pair{color:#203b49}
+.home-services h3{margin-top:18px}
+.home-services .text-link{display:inline-flex;align-items:center;gap:22px}
+.home-industries{background:#102630;color:#fff}
+.home-industries .home-wrap{display:grid;grid-template-columns:.8fr 1.2fr;gap:70px;align-items:center}
+.home-industries .home-heading{display:block;margin:0}
+.home-industries .eyebrow{color:#b8cbd4}
+.home-industries .home-heading>p{color:#b8cbd4;margin-top:24px;max-width:340px}
+.home-industries h2{font-size:clamp(2.3rem,3.4vw,3.2rem)}
+.home-usecases{grid-template-columns:repeat(2,minmax(0,1fr));gap:0;border:1px solid #38505c;border-radius:12px;overflow:hidden}
+.home-usecases article{padding:28px;border:0;background:#ffffff03}
+.home-usecases article:nth-child(odd){border-right:1px solid #38505c}
+.home-usecases article:nth-child(-n+2){border-bottom:1px solid #38505c}
+.industry-art{display:flex;justify-content:space-between;align-items:start;color:#ff9b65}
+.industry-art .section-art{width:52px;height:52px;stroke-width:1.7}
+.industry-art .section-index{color:#819ba8}
+.home-usecases h3{font-size:1.15rem;margin:24px 0 12px;color:#fff}
+.home-usecases p{color:#b8cbd4;font-size:.9rem}
+.home-process{background:#faf8f5}
+.home-process .home-heading{justify-content:center;text-align:center;position:relative;margin-bottom:54px}
+.home-process .eyebrow{justify-content:center}
+.home-process .home-heading>.button{position:absolute;right:0;bottom:0}
+.home-process h2 br{display:none}
+.home-steps{gap:48px;position:relative}
+.home-steps:before{content:'';position:absolute;top:44px;left:44px;right:44px;height:1px;background:#d8c9bb}
+.home-steps article{border:0;padding-top:0;position:relative}
+.step-art{display:grid;place-items:center;width:88px;height:88px;background:#faf8f5;border:1px solid #d8c9bb;border-radius:50%;position:relative;color:#9f3e13}
+.step-art .section-art{width:42px;height:42px}
+.step-art>span{position:absolute;right:-8px;bottom:-3px;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#16303e;color:#fff;font-size:.65rem;font-weight:800;border:3px solid #faf8f5}
+.home-steps h3{margin-top:26px}
+.home-safety{padding:100px 0}
+.safety-backdrop{background:linear-gradient(90deg,rgba(6,21,29,.55),rgba(6,21,29,.18)),url('/hero-forklift.webp') center 45%/cover no-repeat}
+.safety-content{grid-template-columns:1fr 1fr;gap:60px;align-items:stretch}
+.safety-content>div{background:rgba(8,27,37,.92);border-radius:14px;padding:36px}
+.safety-content h2{font-size:clamp(2rem,3vw,2.9rem)}
+.safety-seal{display:flex;align-items:center;gap:14px;color:#ff9b65;margin-bottom:32px}
+.safety-seal .section-art{width:52px;height:52px}
+.safety-seal>span{font-size:.65rem;line-height:1.7;font-weight:800;letter-spacing:.15em}
+.safety-content ul{align-self:end;background:#fff;color:#14212b;border-radius:12px;padding:10px 28px;box-shadow:0 12px 35px #0003}
+.safety-content li,.safety-content li:first-child{border:0;position:relative;padding:22px 0 22px 29px}
+.safety-content li+li{border-top:1px solid #dce3e7}
+.safety-content li:before{content:'✓';position:absolute;left:0;color:#bd4510;font-weight:800}
+.safety-content li span{color:#5d6c76}
+.home-resources{background:#fff}
+.home-faq{grid-template-columns:.8fr 1.2fr;gap:85px;align-items:start}
+.resource-note{position:relative;background:#f0f4f4;padding:34px;border-radius:2px 18px 18px 18px;border-top:4px solid #ed591b}
+.resource-note>.section-art{color:#315361;margin-bottom:28px;width:50px;height:50px}
+.resource-note h2{font-size:2.35rem}
+.ready-list{list-style:none;padding:0;margin:0 0 30px;font-size:.88rem;color:#40535e}
+.ready-list li{padding:10px 0;display:flex;align-items:center;gap:12px}
+.ready-list li:before{content:'';width:12px;height:12px;border:1.5px solid #8097a2;border-radius:2px;flex:none}
+.home-questions details:first-child{border-top:0}
+.home-questions summary{padding-top:27px;padding-bottom:27px}
+.home-questions summary:after{top:24px}
+@media(max-width:1100px){.home-industries .home-wrap{gap:35px;grid-template-columns:1fr 1.3fr}.home-usecases article{padding:22px}.home-process .home-heading{display:block}.home-process .home-heading>.button{position:static;margin-top:24px}.home-faq{gap:45px}.safety-content{gap:30px}}
+@media(max-width:850px){.home-industries .home-wrap{grid-template-columns:1fr;gap:34px}.home-industries .home-heading>p{max-width:500px}.home-services article{padding:28px}.service-art-pair{gap:10px}.service-art-pair .section-art{width:72px;height:72px}.home-steps{gap:24px}.safety-content{grid-template-columns:1fr;max-width:640px}.safety-content>div{padding:28px}.home-faq{grid-template-columns:1fr;gap:32px}.resource-note{max-width:100%}.resource-note h2 br{display:none}.home-safety{padding:64px 0}}
+@media(max-width:600px){.home-services article:first-child{border-right:0;border-bottom:1px solid #efd9c9}.service-art-pair{height:86px;margin-bottom:22px}.home-services article{padding:26px}.home-usecases article{padding:20px}.industry-art .section-art{width:44px;height:44px}.home-usecases h3{font-size:1.08rem}.home-steps{gap:30px}.home-steps:before{left:31px;top:30px;bottom:45px;right:auto;width:1px;height:auto}.home-steps article{padding-left:88px;min-height:90px}.step-art{position:absolute;left:0;top:0;width:64px;height:64px}.step-art .section-art{width:32px;height:32px}.home-steps h3{margin:0 0 10px;font-size:1.18rem}.home-process .home-heading{margin-bottom:40px}.resource-note{padding:28px}.safety-content ul{padding:8px 22px}.home-process h2 br{display:initial}}
+@media(max-width:360px){.home-usecases{grid-template-columns:1fr}.home-usecases article:nth-child(odd){border-right:0}.home-usecases article+article{border-top:1px solid #38505c}.home-usecases article:nth-child(-n+2){border-bottom:0}}
