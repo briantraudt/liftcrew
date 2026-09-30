@@ -43,3 +43,8 @@ test('illustration is local, lightweight, and decorative',()=>{
   const svg=readFileSync(new URL('../public/lift-plan.svg',import.meta.url),'utf8');
   assert(svg.length<10000);assert(!/<script|https?:/i.test(svg.replace('http://www.w3.org/2000/svg','')));
 });
+test('small lower-page copy uses accessible contrast against its surface',()=>{
+  const luminance=hex=>{const rgb=hex.match(/[a-f\d]{2}/gi).map(v=>parseInt(v,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;};
+  const pairs=[['53615f','ffffff'],['53615f','f5f5ef'],['61706c','f5f5ef'],['62776b','ffffff'],['606f67','ffffff'],['5c7163','f0f2ea'],['bdd0d0','102d36'],['8da8ac','0c212a'],['302820','ed7138'],['ffffff','bd430b']];
+  for(const [fg,bg] of pairs){const a=luminance(fg),b=luminance(bg),ratio=(Math.max(a,b)+.05)/(Math.min(a,b)+.05);assert(ratio>=4.5,`${fg} on ${bg}: ${ratio.toFixed(2)}`);}
+});
