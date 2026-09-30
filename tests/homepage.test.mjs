@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const css=readFileSync(new URL('../src/home.css',import.meta.url),'utf8');
@@ -48,7 +48,7 @@ test('supporting labels remain at least 11px at default text size',()=>{
 });
 test('body copy and supporting labels meet contrast requirements',()=>{
   const luminance=hex=>{const rgb=hex.match(/[a-f\d]{2}/gi).map(v=>parseInt(v,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;};
-  for(const [fg,bg] of [['53635b','f8f8f2'],['5e7064','f8f8f2'],['9cb5b2','112d36'],['edf5ed','112d36'],['fffaf4','b94d22'],['17363e','f3a573'],['713c24','f8dfcc'],['914522','fafbf4']]){const a=luminance(fg),b=luminance(bg);assert((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5);}
+  for(const [fg,bg] of [['53635b','f8f8f2'],['5e7064','f8f8f2'],['9cb5b2','112d36'],['edf5ed','112d36'],['fffaf4','b94d22'],['17363e','f3a573'],['713c24','f8dfcc'],['edb28a','183c43'],['e4c7ac','183c43'],['d5e2dc','183c43'],['f5f7ef','183c43']]){const a=luminance(fg),b=luminance(bg);assert((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5);}
 });
 
 test('testimonial samples are visibly disclosed and never presented as real endorsements',()=>{
@@ -77,4 +77,41 @@ test('calendar selection styling never recolors the enhanced booking form',()=>{
 test('removed safety section leaves no homepage links or orphaned styles',()=>{
   assert(!/id="safety(?:-title)?"|href="#safety"|lc-safety|Plan the lift\.|SAFETY COMES FIRST/.test(html));
   assert(!css.includes('lc-safety'));
+});
+
+test('process illustrations remain decorative and the three steps stay semantic',()=>{
+  const process=lower.slice(0,lower.indexOf('id="testimonials"'));
+  assert.equal((process.match(/class="lc-step-art"/g)||[]).length,3);
+  assert.equal((process.match(/viewBox="0 0 200 126" fill="none" aria-hidden="true" focusable="false"/g)||[]).length,3);
+  assert(process.includes('<ol class="lc-steps">'));
+  assert.equal((process.match(/class="lc-step-number"/g)||[]).length,3);
+  assert(!process.includes('<button'));
+});
+test('testimonials use a featured and secondary composition with no redundant sample boilerplate',()=>{
+  assert(lower.includes('class="lc-story-feature"'));
+  assert(lower.includes('class="lc-story-secondary"'));
+  assert(!lower.includes('Illustrative wording for a future customer story'));
+  assert.equal((lower.match(/Illustrative placeholders — not real customer reviews/g)||[]).length,1);
+  assert(css.includes('.lc-stories{background:#183c43'));
+  assert(css.includes('.lc-process{background:#f8f8f2'));
+});
+
+test('every HTML page resolves its local links and fragments',()=>{
+  const root=new URL('../',import.meta.url);
+  for(const page of readdirSync(root).filter(name=>name.endsWith('.html'))){
+    const source=readFileSync(new URL(page,root),'utf8');
+    assert(!source.includes('href="/#safety"'),`${page} retains removed Safety navigation`);
+    for(const [,href] of source.matchAll(/<a\b[^>]*href="([^"]+)"/g)){
+      const url=new URL(href,`https://www.myliftcrew.com/${page}`);
+      if(url.origin!=='https://www.myliftcrew.com')continue;
+      const path=url.pathname==='/'?'index.html':url.pathname.slice(1);
+      const file=new URL(path,root);
+      assert(existsSync(file),`${page}: missing page ${href}`);
+      if(url.hash && url.hash!=='#'){
+        const target=readFileSync(file,'utf8');
+        const ids=[...target.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
+        assert(ids.includes(decodeURIComponent(url.hash.slice(1))),`${page}: missing fragment ${href}`);
+      }
+    }
+  }
 });
