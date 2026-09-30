@@ -20,7 +20,7 @@
 .lc-safety-list li{display:flex;align-items:start;gap:17px;padding-top:21px;border-top:1px solid #526c71}
 .lc-safety-list svg{display:block;flex:none;width:30px;height:30px;color:#ffb185}
 .lc-safety-list p{color:#bfd0cf}
-.lc-footer{background:#0b2029;color:#d8e2dd;padding:34px 0 22px}
+.lc-footer{background:#112d36;color:#d8e2dd;padding:34px 0 22px}
 .lc-footer-main{display:flex;align-items:center;gap:35px}
 .lc-footer-brand{flex:none}.lc-footer-brand img{display:block;width:165px;height:auto}
 .lc-footer-main>p{margin:0;color:#aec1bc;font-size:.76rem;line-height:1.7}
@@ -35,3 +35,17 @@
 @media(max-width:1100px){.lc-steps,.lc-safety-list{gap:26px}.lc-steps li,.lc-safety-list li{gap:13px}.lc-footer-main{gap:25px}.lc-footer-main>p{display:none}.lc-step-number{font-size:2rem}}
 @media(max-width:850px){.lc-section{padding-block:50px}.lc-heading{margin-bottom:29px}.lc-steps,.lc-safety-list{gap:22px}.lc-steps li,.lc-safety-list li{display:block}.lc-step-number{display:block;margin-bottom:16px}.lc-safety-list svg{margin-bottom:16px}.lc-steps h3,.lc-safety-list h3{font-size:.95rem}.lc-steps p,.lc-safety-list p{font-size:.84rem}.lc-footer-main{flex-wrap:wrap;gap:16px 28px}.lc-footer-main nav{margin-left:auto}.lc-book-link{margin-left:auto}.lc-footer-brand img{width:155px}}
 @media(max-width:600px){.lc-wrap{padding-inline:24px}.lc-section{padding-block:43px}.lc-kicker{font-size:.6875rem;margin-bottom:13px}.lc-heading h2{font-size:clamp(1.85rem,7.6vw,2.6rem);line-height:1.15}.lc-heading h2 span{display:block}.lc-heading{margin-bottom:27px}.lc-steps,.lc-safety-list{grid-template-columns:1fr;gap:20px}.lc-steps li,.lc-safety-list li{display:flex;gap:17px;padding-top:19px}.lc-step-number{font-size:1.85rem;margin:0;min-width:32px}.lc-steps h3,.lc-safety-list h3{font-size:1rem;margin-bottom:6px}.lc-steps p,.lc-safety-list p{font-size:.87rem}.lc-request-note{align-items:start;margin-top:24px;font-size:.73rem;gap:10px}.lc-request-note>span{margin-top:7px}.lc-safety-list svg{margin:1px 0 0;width:29px;height:29px}.lc-footer{padding-block:30px 21px}.lc-footer-main{gap:18px 24px}.lc-footer-brand img{width:155px}.lc-footer-main nav{font-size:.73rem;gap:19px;margin-left:0}.lc-book-link{width:100%;margin-left:0;font-size:.83rem}.lc-footer-bottom{align-items:start;gap:20px;font-size:.6875rem}.lc-footer-bottom>span{max-width:185px;text-align:right}}
+/* Clearly disclosed design samples. Replace with permissioned customer quotes later. */
+.lc-stories{background:#eef2e8;border-bottom:1px solid #d4ddcf}
+.lc-stories-heading{display:flex;justify-content:space-between;align-items:center;gap:40px;margin-bottom:28px}
+.lc-stories h2{font-size:clamp(1.9rem,2.7vw,2.6rem);line-height:1.1;letter-spacing:-.055em;margin:0}
+.lc-stories h2 span{color:#64736b}
+.lc-stories .lc-kicker{margin-bottom:14px}
+.lc-sample-notice{max-width:310px;color:#713c24;background:#f8dfcc;border:1px solid #c78154;border-radius:4px;font-size:.82rem;font-weight:700;line-height:1.6;padding:13px 17px;margin:0}
+.lc-sample-quotes{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.lc-sample-quotes figure{margin:0;padding:25px 28px;background:#fafbf4;border:1px solid #d1dcca;border-radius:5px}
+.lc-sample-quotes figcaption{font-size:.6875rem;font-weight:800;line-height:1.6;letter-spacing:.055em;color:#914522;margin-bottom:18px}
+.lc-sample-quotes blockquote{margin:0;color:#26473f;font-family:Manrope,sans-serif;font-size:1.17rem;font-weight:600;letter-spacing:-.035em;line-height:1.6}
+.lc-sample-quotes figure>p{margin:19px 0 0;color:#627467;font-size:.73rem;line-height:1.6}
+@media(max-width:850px){.lc-stories-heading{gap:25px}.lc-sample-notice{max-width:250px}.lc-sample-quotes{gap:20px}.lc-sample-quotes figure{padding:23px}.lc-sample-quotes blockquote{font-size:1.05rem}}
+@media(max-width:600px){.lc-stories-heading{display:block;margin-bottom:23px}.lc-stories h2{font-size:clamp(1.85rem,7.6vw,2.6rem)}.lc-sample-notice{max-width:none;margin-top:22px;padding:12px 15px;font-size:.78rem}.lc-sample-quotes{grid-template-columns:1fr;gap:16px}.lc-sample-quotes figure{padding:22px}.lc-sample-quotes blockquote{font-size:1.07rem}.lc-sample-quotes figcaption{font-size:.6875rem;margin-bottom:14px}.lc-sample-quotes figure>p{font-size:.73rem;margin-top:15px}}

@@ -480,3 +480,46 @@
 /* Accessible white-on-orange action contrast throughout the lower homepage. */
 .home-section .button,.booking-close .button{background:#bd430b;border-color:#bd430b;color:#fff}
 .home-section .button:hover,.booking-close .button:hover{background:#9e3506;border-color:#9e3506}
+
+/* Safety-led site palette: color only, preserving established layout and behavior. */
+:root{color:#193a42;background:#f7f8f1}
+body{background:#f7f8f1}
+.site-header,.one-page .site-header{background:rgba(17,45,54,.97)}
+.hero{background-color:#112d36}
+.hero-shade{background:linear-gradient(90deg,#112d36 0%,rgba(17,45,54,.95) 22%,rgba(17,45,54,.68) 42%,rgba(17,45,54,.12) 68%,rgba(17,45,54,.2) 100%)}
+.hero h1,.hero-copy{color:#f5f7ef}
+h1 em,h2 em{color:#ffb185}
+.hero-sub,.trust-row small{color:#d7e1d9}
+.eyebrow i,.card-kicker i{background:#ffb185}
+.trust-row svg{stroke:#ffb185}
+.button{background:#b94d22;border-color:#b94d22;color:#fffaf4}
+.button:hover{background:#973b17;border-color:#973b17}
+.button-outline{color:#f5f7ef;border-color:#c1d4c9}
+.button-outline:hover{background:#f5f7ef;color:#193a42}
+.nav a:hover,.nav a[aria-current=page],.one-page .nav a[aria-current="location"],.footer-inner nav a:hover{color:#ffb185}
+.phone-badge{background:#f3a573;border-color:#f3a573;color:#17363e;box-shadow:none}
+.phone-badge-copy strong,.phone-badge-copy small,.phone-badge svg{color:#17363e}
+.hero-booking,.hero-quote,.quote-modal-panel,.lift-calendar{background:#f7f8f1;color:#193a42;border-color:#dce3d6}
+.hero-booking:before{background:#ffb185}
+.hero-booking .booking-title:after{background:#b94d22}
+.hero-booking .booking-go:hover{box-shadow:0 8px 20px #112d3626}
+.booking-field input,.booking-field select,.calendar-trigger,.hero-quote input,.hero-quote select,.hero-quote textarea{background:#fffef8;color:#193a42;border-color:#c3d1c7}
+.booking-field :is(input,select):focus,.hero-quote :is(input,select,textarea):focus{border-color:#b94d22;outline-color:#b94d22;box-shadow:0 0 0 3px #b94d2224}
+.booking-assurance{color:#526b60}.booking-assurance svg{stroke:#a9451d}
+.explore-link{color:#edf4ed}.explore-link span{color:#ffb185}
+.subhero{background:linear-gradient(105deg,#112d36,#1b4149);color:#f5f7ef}
+.subhero>div>p:last-child,.dark-section .section-heading p{color:#cfddd4}
+.dark-section,.closing,.notice,.hero-footer,footer{background:#112d36;color:#f5f7ef}
+.hero-footer{background:rgba(17,45,54,.93)}
+.service-feature{background:#1a3b43;border-color:#426069}.service-feature p,.notice p{color:#d1dfd5}
+.service-feature a,.service-icon{color:#ffb185}
+.pale,.safety,.quote-section,.booking-section{background:#f0f3e9}
+.detail-panel,.safety-panel,.three-up article,.industry-detail article,.usecase-grid article{background:#f9faf3;border-color:#d3ded1}
+.industry-grid article,.booking-summary,.recommendation{background:#eef3e8;color:#193a42;border-color:#ccd9c9}
+.text-link,.section-index,.summary-edit,.field-help,.calendar-kicker,.calendar-bottom button,.form-step,.recommendation-label{color:#a64119}
+.text-link:hover,.text-link:focus-visible{color:#193a42}
+.step-num,.timeline span,.three-up span,.industry-detail span,.check-list li:before,.safety-panel li span,.faq-list summary:after{color:#ac471e}
+.quote-modal-close{background:#f4f7ed;color:#193a42;border-color:#c8d6c8}
+.calendar-day.selected,.calendar-day[aria-selected="true"],.calendar-ready{background:#b94d22;color:#fffaf4;border-color:#b94d22}
+@media(max-width:850px){.nav{background:#112d36}.hero-shade{background:linear-gradient(0deg,#112d36 12%,rgba(17,45,54,.82) 55%,rgba(17,45,54,.2) 87%)}}
+@media(max-width:600px){.hero{background-color:#112d36}.hero-shade{background:linear-gradient(0deg,#112d36 5%,#112d36 45%,rgba(17,45,54,.08) 85%)}.hero-footer{background:#112d36}}

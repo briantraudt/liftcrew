@@ -14,10 +14,10 @@ test('hero, header geometry, form and modal stay unchanged apart from section li
   assert.equal(hash(protectedMarkup),'7e1ae2e828eeb568b8f5bcc8c37ace4ad953eacf3bada4a6bab87959419ed549');
   assert.equal(hash(html.slice(html.indexOf('</main>'))),'c9acf4c033ed7f9dfbe0448f29bda31b96bc958076056d17cf8fa9b428d08609');
 });
-test('only How It Works, Safety, and footer remain below the hero',()=>{
-  assert.deepEqual([...lower.matchAll(/<section[^>]* id="([^"]+)"/g)].map(m=>m[1]),['how-it-works','safety']);
+test('only requested compact sections remain below the hero',()=>{
+  assert.deepEqual([...lower.matchAll(/<section[^>]* id="([^"]+)"/g)].map(m=>m[1]),['how-it-works','safety','testimonials']);
   assert.equal((lower.match(/<footer/g)||[]).length,1);
-  assert(!/testimonial|review|star rating|five.star|trusted by|jobs completed|lc-close|lc-services|lc-industries|lc-resources/i.test(lower));
+  assert(!/star rating|five.star|trusted by|jobs completed|lc-close|lc-services|lc-industries|lc-resources/i.test(lower));
 });
 test('section anchors are unique and all local links resolve',()=>{
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
@@ -48,5 +48,21 @@ test('supporting labels remain at least 11px at default text size',()=>{
 });
 test('body copy and supporting labels meet contrast requirements',()=>{
   const luminance=hex=>{const rgb=hex.match(/[a-f\d]{2}/gi).map(v=>parseInt(v,16)/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4);return rgb[0]*.2126+rgb[1]*.7152+rgb[2]*.0722;};
-  for(const [fg,bg] of [['53635b','f8f8f2'],['5e7064','f8f8f2'],['bfd0cf','112d36'],['9cb5b2','0b2029'],['edf5ed','0b2029']]){const a=luminance(fg),b=luminance(bg);assert((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5);}
+  for(const [fg,bg] of [['53635b','f8f8f2'],['5e7064','f8f8f2'],['bfd0cf','112d36'],['9cb5b2','112d36'],['edf5ed','112d36'],['fffaf4','b94d22'],['17363e','f3a573'],['713c24','f8dfcc'],['914522','fafbf4']]){const a=luminance(fg),b=luminance(bg);assert((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5);}
+});
+
+test('testimonial samples are visibly disclosed and never presented as real endorsements',()=>{
+  assert(lower.includes('Illustrative placeholders — not real customer reviews'));
+  assert.equal((lower.match(/SAMPLE COPY · NOT A CUSTOMER REVIEW/g)||[]).length,2);
+  const samples=lower.slice(lower.indexOf('id="testimonials"'),lower.indexOf('<footer'));
+  assert(!/<img|<form|aggregateRating|itemReviewed|ratingValue/i.test(samples));
+});
+test('site-wide safety palette changes colors without modifying hero layout or image',()=>{
+  const shared=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+  const theme=shared.split('/* Safety-led site palette:')[1];
+  assert(theme);
+  assert(!/[;{]\s*(?:padding|margin|width|height|display|position|grid-template|font-size|background-image)\s*:/.test(theme));
+  assert(!theme.includes('url('));
+  assert(theme.includes('background-color:#112d36'));
+  assert(theme.includes('.phone-badge{background:#f3a573'));
 });
