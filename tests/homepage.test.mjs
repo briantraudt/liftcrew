@@ -66,3 +66,10 @@ test('site-wide safety palette changes colors without modifying hero layout or i
   assert(theme.includes('background-color:#112d36'));
   assert(theme.includes('.phone-badge{background:#f3a573'));
 });
+
+test('calendar selection styling never recolors the enhanced booking form',()=>{
+  const theme=readFileSync(new URL('../src/style.css',import.meta.url),'utf8').split('/* Safety-led site palette:')[1];
+  assert(!theme.includes('.calendar-ready'));
+  assert(theme.includes('.calendar-day.selected,.calendar-day[aria-selected="true"]{background:#b94d22'));
+  assert(theme.includes('.hero-booking,.hero-quote,.quote-modal-panel,.lift-calendar{background:#f7f8f1'));
+});
