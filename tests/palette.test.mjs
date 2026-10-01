@@ -31,3 +31,7 @@ test('new card text overrides the legacy mobile flex and heading grid',()=>{
  assert(home.includes('.lc-process .lc-step-copy{grid-column:1;grid-row:1;padding:0;display:block;align-self:center}'));
  assert(home.includes('.lc-stories-heading{display:block;text-align:center;'));
 });
+
+test('testimonial heading retains word spacing at every breakpoint',()=>{
+ assert(html.includes('id="stories-title">Built around the people getting the job done.</h2>'));
+});
