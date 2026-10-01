@@ -21,3 +21,8 @@ test('both illustrations use the same accent tokens and skin tones remain unchan
  assert(html.includes('fill="#e4ac7b"'));
  assert(home.includes('.lc-stories .lc-kicker,.lc-sample-quotes figcaption{color:var(--lc-orange-on-dark)}'));
 });
+
+test('second step has a deliberate transparent number and photo crop is contained',()=>{
+ assert(home.includes('.lc-process .lc-steps li:last-child .lc-step-number{background:transparent;border:0;color:var(--lc-orange-strong)}'));
+ assert(home.includes('.lc-worker-photo{display:block;position:relative;width:112px;height:112px;border-radius:50%;overflow:hidden;'));
+});
