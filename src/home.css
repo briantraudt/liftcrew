@@ -95,3 +95,5 @@
 .lc-process .lc-steps li:last-child .lc-step-number{background:transparent;border:0;color:var(--lc-orange-strong)}
 .lc-worker-photo{display:block;position:relative;width:112px;height:112px;border-radius:50%;overflow:hidden;border:3px solid #d6ddd4;margin:0 auto 18px}
 .lc-worker-photo .lc-worker-portrait--second{position:absolute;width:300%;height:auto;max-width:none;left:-136%;top:-170%;border:0;border-radius:0;margin:0}
+
+.lc-process .lc-kicker,.lc-process .lc-step-number,.lc-process .lc-steps li:last-child .lc-step-number{color:var(--lc-dark)}
