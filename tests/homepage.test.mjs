@@ -55,7 +55,9 @@ test('testimonial samples are visibly disclosed and never presented as real endo
   assert(lower.includes('Illustrative placeholders — not real customer reviews'));
   assert.equal((lower.match(/SAMPLE COPY · NOT A CUSTOMER REVIEW/g)||[]).length,2);
   const samples=lower.slice(lower.indexOf('id="testimonials"'),lower.indexOf('<footer'));
-  assert(!/<img|<form|aggregateRating|itemReviewed|ratingValue/i.test(samples));
+  assert(!/<form|aggregateRating|itemReviewed|ratingValue/i.test(samples));
+  assert.equal((samples.match(/class="lc-worker-portrait/g)||[]).length,2);
+  assert.equal((samples.match(/Fictional name · illustrative stock photo/g)||[]).length,2);
 });
 test('site-wide safety palette changes colors without modifying hero layout or image',()=>{
   const shared=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
@@ -92,13 +94,13 @@ test('process illustrations match the two steps and stay decorative',()=>{
   assert.equal((process.match(/class="lc-step-number"/g)||[]).length,2);
   assert(!process.includes('<button'));
 });
-test('testimonials use a featured and secondary composition with no redundant sample boilerplate',()=>{
-  assert(lower.includes('class="lc-story-feature"'));
-  assert(lower.includes('class="lc-story-secondary"'));
-  assert(!lower.includes('Illustrative wording for a future customer story'));
-  assert.equal((lower.match(/Illustrative placeholders — not real customer reviews/g)||[]).length,1);
-  assert(css.includes('.lc-stories{background:#183c43'));
-  assert(css.includes('.lc-process{background:#f8f8f2'));
+test('testimonial bubbles put a labeled sample name and quote after each portrait',()=>{
+  assert.equal((lower.match(/class="lc-testimonial-card"/g)||[]).length,2);
+  assert(lower.includes('Alex R. <span>(sample)</span>'));
+  assert(lower.includes('Taylor M. <span>(sample)</span>'));
+  assert(lower.includes('Stock models, fictional names and sample quotes.'));
+  assert(css.includes('border-radius:50%'));
+  assert(css.includes('.lc-testimonial-cards{grid-template-columns:1fr'));
 });
 
 test('every HTML page resolves its local links and fragments',()=>{
