@@ -9,7 +9,7 @@ const lower=html.slice(html.indexOf('<section class="lc-section'),html.indexOf('
 const originalNav='<nav class="nav" aria-label="Main navigation"><a href="#services">Services</a><a href="#industries">Industries</a><a href="#safety">Safety</a><a href="#how-it-works">How It Works</a><a href="#resources">Resources</a></nav>';
 test('hero, header geometry, form and modal stay unchanged apart from section links',()=>{
   const protectedMarkup=html.slice(html.indexOf('<header'),html.indexOf('<section class="lc-section'))
-    .replace(/<nav class="nav"[^>]*>.*?<\/nav>/,originalNav)
+    .replace('</a><span class="phone-badge"', '</a><button class="menu-toggle" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button>'+originalNav+'<span class="phone-badge"')
     .replace('class="explore-link" href="#how-it-works"','class="explore-link" href="#services"');
   assert.equal(hash(protectedMarkup),'7e1ae2e828eeb568b8f5bcc8c37ace4ad953eacf3bada4a6bab87959419ed549');
   assert.equal(hash(html.slice(html.indexOf('</main>'))),'c9acf4c033ed7f9dfbe0448f29bda31b96bc958076056d17cf8fa9b428d08609');
@@ -23,8 +23,8 @@ test('section anchors are unique and all local links resolve',()=>{
   const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
   assert.equal(ids.length,new Set(ids).size);
   for(const [,href] of html.matchAll(/href="#([^"\s]+)"/g)) assert(ids.includes(href),`Missing target ${href}`);
-  const nav=html.match(/<nav class="nav"[^>]*>(.*?)<\/nav>/)[1];
-  assert.deepEqual([...nav.matchAll(/href="([^"]+)"/g)].map(m=>m[1]),['#how-it-works']);
+  assert(!html.includes('aria-label="Main navigation"'));
+  assert(!html.includes('class="menu-toggle"'));
 });
 test('two request steps are concise and honest',()=>{
   assert.equal((lower.match(/<li>/g)||[]).length,2);
