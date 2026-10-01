@@ -26,3 +26,8 @@ test('second step has a deliberate transparent number and photo crop is containe
  assert(home.includes('.lc-process .lc-steps li:last-child .lc-step-number{background:transparent;border:0;color:var(--lc-orange-strong)}'));
  assert(home.includes('.lc-worker-photo{display:block;position:relative;width:112px;height:112px;border-radius:50%;overflow:hidden;'));
 });
+
+test('new card text overrides the legacy mobile flex and heading grid',()=>{
+ assert(home.includes('.lc-process .lc-step-copy{grid-column:1;grid-row:1;padding:0;display:block;align-self:center}'));
+ assert(home.includes('.lc-stories-heading{display:block;text-align:center;'));
+});
