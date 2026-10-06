@@ -62,18 +62,19 @@
 /* Compact, direct two-step layout for the crew arranging the job. */
 .lc-process{background:var(--lc-paper)}
 .lc-stories,.lc-footer{background:var(--lc-dark)}
-.lc-process .lc-process-layout{grid-template-columns:260px minmax(0,1fr);gap:40px;align-items:center}
-.lc-process .lc-steps{gap:20px}
-.lc-process .lc-steps>li{display:grid;grid-template-columns:1fr 112px;align-items:center;gap:18px;padding:26px;border:1px solid #bac8c0;border-top:4px solid var(--lc-orange);border-radius:12px;background:var(--lc-paper)}
-.lc-process .lc-step-art{grid-column:2;grid-row:1;width:112px;height:100px;margin:0}
+.lc-process .lc-process-layout{grid-template-columns:max-content minmax(0,max-content);justify-content:center;gap:40px;align-items:center}
+.lc-process .lc-heading{padding:0}
+.lc-process .lc-steps{grid-template-columns:repeat(2,minmax(0,max-content));gap:16px}
+.lc-process .lc-steps>li{display:grid;grid-template-columns:minmax(0,1fr) 80px;align-items:center;gap:16px;padding:16px 20px;border:1px solid #bac8c0;border-top:4px solid var(--lc-orange);border-radius:12px;background:var(--lc-paper)}
+.lc-process .lc-step-art{grid-column:2;grid-row:1;width:80px;height:64px;margin:0}
 .lc-process .lc-step-art svg{width:100%;height:100%}
 .lc-process .lc-step-copy{grid-column:1;grid-row:1;padding:0;display:block;align-self:center}
 .lc-process .lc-step-copy:before{display:none}
 .lc-process .lc-step-number{position:static;width:auto;height:auto;display:block;border:0;background:transparent;color:var(--lc-orange-strong);font-size:1rem;margin-bottom:12px;text-align:left}
-.lc-process .lc-step-copy h3{font-size:1.1rem;line-height:1.35;max-width:20ch}
+.lc-process .lc-step-copy h3{font-size:1.1rem;line-height:1.35;max-width:20ch;margin:0}
 .lc-process .lc-request-note{margin-top:18px}
-@media(max-width:1000px){.lc-process .lc-process-layout{grid-template-columns:1fr;gap:24px}.lc-process .lc-heading h2{max-width:none}.lc-process .lc-steps>li{padding:22px}}
-@media(max-width:600px){.lc-process .lc-steps{grid-template-columns:1fr}.lc-process .lc-steps>li{grid-template-columns:1fr 108px;gap:16px}.lc-process .lc-step-art{width:108px;height:90px}}
+@media(max-width:1000px){.lc-process .lc-process-layout{grid-template-columns:1fr;gap:24px}.lc-process .lc-heading h2{max-width:none}.lc-process .lc-steps>li{padding:16px 20px}}
+@media(max-width:600px){.lc-process .lc-steps{grid-template-columns:1fr}.lc-process .lc-steps>li{grid-template-columns:minmax(0,1fr) 80px;padding:14px 16px}}
 
 .lc-stories .lc-quote-mark,.lc-story-feature blockquote em,.lc-footer a:hover,.lc-book-link svg{color:var(--lc-orange-on-dark)}
 
