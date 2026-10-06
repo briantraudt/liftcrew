@@ -9,6 +9,7 @@ const lower=html.slice(html.indexOf('<section class="lc-section'),html.indexOf('
 const originalNav='<nav class="nav" aria-label="Main navigation"><a href="#services">Services</a><a href="#industries">Industries</a><a href="#safety">Safety</a><a href="#how-it-works">How It Works</a><a href="#resources">Resources</a></nav>';
 test('hero, header geometry, form and modal stay unchanged apart from section links',()=>{
   const protectedMarkup=html.slice(html.indexOf('<header'),html.indexOf('<section class="lc-section'))
+    .replace('<a class="operator-entry" href="/operators.html">Become an operator <span aria-hidden="true">↗</span></a>', '')
     .replace('</a><span class="phone-badge"', '</a><button class="menu-toggle" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button>'+originalNav+'<span class="phone-badge"')
     .replace('class="explore-link" href="#how-it-works"','class="explore-link" href="#services"');
   assert.equal(hash(protectedMarkup),'7e1ae2e828eeb568b8f5bcc8c37ace4ad953eacf3bada4a6bab87959419ed549');
@@ -112,7 +113,8 @@ test('every HTML page resolves its local links and fragments',()=>{
       const url=new URL(href,`https://www.myliftcrew.com/${page}`);
       if(url.origin!=='https://www.myliftcrew.com')continue;
       const path=url.pathname==='/'?'index.html':url.pathname.slice(1);
-      const file=new URL(path,root);
+      const sourceFile=new URL(path,root);
+      const file=existsSync(sourceFile)?sourceFile:new URL('public/'+path,root);
       assert(existsSync(file),`${page}: missing page ${href}`);
       if(url.hash && url.hash!=='#'){
         const target=readFileSync(file,'utf8');
