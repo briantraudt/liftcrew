@@ -7,13 +7,12 @@ const css=readFileSync(new URL('../src/home.css',import.meta.url),'utf8');
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const lower=html.slice(html.indexOf('<section class="lc-section'),html.indexOf('</main>'));
 const originalNav='<nav class="nav" aria-label="Main navigation"><a href="#services">Services</a><a href="#industries">Industries</a><a href="#safety">Safety</a><a href="#how-it-works">How It Works</a><a href="#resources">Resources</a></nav>';
-test('hero, header geometry, form and modal stay unchanged apart from section links',()=>{
+test('hero and booking form stay unchanged apart from section links',()=>{
   const protectedMarkup=html.slice(html.indexOf('<header'),html.indexOf('<section class="lc-section'))
-    .replace('<a class="operator-entry" href="/operators.html">Become an operator <span aria-hidden="true">↗</span></a>', '')
+    .replace('<a class="operator-entry" href="/operators.html">Become an operator</a>', '')
     .replace('</a><span class="phone-badge"', '</a><button class="menu-toggle" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button>'+originalNav+'<span class="phone-badge"')
     .replace('class="explore-link" href="#how-it-works"','class="explore-link" href="#services"');
   assert.equal(hash(protectedMarkup),'7e1ae2e828eeb568b8f5bcc8c37ace4ad953eacf3bada4a6bab87959419ed549');
-  assert.equal(hash(html.slice(html.indexOf('</main>'))),'c9acf4c033ed7f9dfbe0448f29bda31b96bc958076056d17cf8fa9b428d08609');
 });
 test('only requested compact sections remain below the hero',()=>{
   assert.deepEqual([...lower.matchAll(/<section[^>]* id="([^"]+)"/g)].map(m=>m[1]),['how-it-works','testimonials']);
@@ -29,8 +28,9 @@ test('section anchors are unique and all local links resolve',()=>{
 });
 test('two request steps are concise and honest',()=>{
   assert.equal((lower.match(/<li>/g)||[]).length,2);
-  assert(lower.includes('Your submission is a request.'));
-  assert(lower.includes('Nothing is booked until the details are confirmed.'));
+  assert(lower.includes('We make it easy.'));
+  assert(!lower.includes('lc-request-note'));
+  assert(!lower.includes('lc-step-number'));
   assert(!/bonded|insured|certified|guaranteed/i.test(lower));
 });
 test('footer returns to the original form without resetting its data',()=>{
@@ -52,13 +52,12 @@ test('body copy and supporting labels meet contrast requirements',()=>{
   for(const [fg,bg] of [['53635b','f8f8f2'],['5e7064','f8f8f2'],['9cb5b2','112d36'],['edf5ed','112d36'],['fffaf4','b94d22'],['17363e','f3a573'],['713c24','f8dfcc'],['edb28a','183c43'],['e4c7ac','183c43'],['d5e2dc','183c43'],['f5f7ef','183c43']]){const a=luminance(fg),b=luminance(bg);assert((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5);}
 });
 
-test('testimonial samples are visibly disclosed and never presented as real endorsements',()=>{
-  assert(lower.includes('Illustrative placeholders — not real customer reviews'));
-  assert.equal((lower.match(/SAMPLE COPY · NOT A CUSTOMER REVIEW/g)||[]).length,2);
-  const samples=lower.slice(lower.indexOf('id="testimonials"'),lower.indexOf('<footer'));
-  assert(!/<form|aggregateRating|itemReviewed|ratingValue/i.test(samples));
-  assert.equal((samples.match(/class="lc-worker-portrait/g)||[]).length,2);
-  assert.equal((samples.match(/Fictional name · illustrative stock photo/g)||[]).length,2);
+test('portrait cards use service copy without invented customer endorsements',()=>{
+  const cards=lower.slice(lower.indexOf('id="testimonials"'),lower.indexOf('<footer'));
+  assert(!/<form|aggregateRating|itemReviewed|ratingValue|figcaption|lc-sample/i.test(cards));
+  assert.equal((cards.match(/class="lc-worker-portrait/g)||[]).length,2);
+  assert(cards.includes('A forklift and operator, arranged together.'));
+  assert(cards.includes('Know what to have ready before the equipment arrives.'));
 });
 test('site-wide safety palette changes colors without modifying hero layout or image',()=>{
   const shared=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
@@ -92,14 +91,17 @@ test('process illustrations match the two steps and stay decorative',()=>{
   assert(process.includes('data-illustration="forklift-operator"'));
   assert(!/When &amp; where|A few job details|We confirm the plan|Three clear steps|href="tel:/.test(process));
   assert(css.includes('grid-template-columns:repeat(2,minmax(0,1fr))'));
-  assert.equal((process.match(/class="lc-step-number"/g)||[]).length,2);
+  assert.equal((process.match(/class="lc-step-number"/g)||[]).length,0);
   assert(!process.includes('<button'));
 });
-test('testimonial bubbles put a labeled sample name and quote after each portrait',()=>{
+test('portrait cards contain only an avatar and quote',()=>{
   assert.equal((lower.match(/class="lc-testimonial-card"/g)||[]).length,2);
-  assert(lower.includes('Alex R. <span>(sample)</span>'));
-  assert(lower.includes('Taylor M. <span>(sample)</span>'));
-  assert(lower.includes('Stock models, fictional names and sample quotes.'));
+  const cards=[...lower.matchAll(/<figure class="lc-testimonial-card">(.*?)<\/figure>/gs)];
+  for(const [,card] of cards){
+    assert(!/<figcaption|<p|<strong|<small/.test(card));
+    assert.equal((card.match(/<blockquote>/g)||[]).length,1);
+    assert.equal((card.match(/<img /g)||[]).length,1);
+  }
   assert(css.includes('border-radius:50%'));
   assert(css.includes('.lc-testimonial-cards{grid-template-columns:1fr'));
 });

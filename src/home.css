@@ -77,9 +77,9 @@
 
 .lc-stories .lc-quote-mark,.lc-story-feature blockquote em,.lc-footer a:hover,.lc-book-link svg{color:var(--lc-orange-on-dark)}
 
-/* Honest sample story cards. Replace their placeholder content with consented customer stories. */
-.lc-stories-heading{display:block;text-align:center;max-width:720px;margin:0 auto 34px}
-.lc-stories-heading h2{font-size:clamp(1.75rem,2.5vw,2.6rem);line-height:1.18;color:#f5f7ef}
+/* Portrait cards with concise service copy. */
+.lc-stories-heading{display:block;text-align:center;max-width:none;margin:0 auto 34px}
+.lc-stories-heading h2{font-size:clamp(1.5rem,2.5vw,2.25rem);line-height:1.18;color:#f5f7ef}
 .lc-stories-heading .lc-sample-notice{max-width:560px;margin:18px auto 0;padding:0;border:0;color:#c6d3cd;font-size:.8125rem}
 .lc-testimonial-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px;max-width:1000px;margin:auto}
 .lc-testimonial-card{margin:0;padding:32px 32px 28px;border-radius:24px;background:var(--lc-paper);color:#193a42;text-align:center}
@@ -88,7 +88,7 @@
 .lc-testimonial-card figcaption strong{display:block;font-size:1rem;line-height:1.5}
 .lc-testimonial-card figcaption strong span{font-weight:500;color:#57665d}
 .lc-testimonial-card figcaption small{display:block;font-size:.75rem;line-height:1.5;color:#57665d;margin-top:3px}
-.lc-testimonial-card blockquote{margin:20px auto;font:700 1.15rem/1.5 'DM Sans',sans-serif;max-width:33ch}
+.lc-testimonial-card blockquote{margin:0 auto;font:700 1.15rem/1.5 'DM Sans',sans-serif;max-width:33ch}
 .lc-testimonial-card .lc-sample-label{margin:0;font-size:.6875rem;font-weight:700;line-height:1.6;letter-spacing:.045em;color:#57665d}
 @media(max-width:650px){.lc-testimonial-cards{grid-template-columns:1fr;gap:20px}.lc-testimonial-card{padding:28px 24px}.lc-stories-heading h2 br{display:none}}
 

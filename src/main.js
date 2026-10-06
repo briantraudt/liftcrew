@@ -16,11 +16,15 @@ function validateStep(step){
   }
   return true;
 }
+function scrollQuoteToStart(){
+  if(form.closest('.quote-modal'))form.parentElement.scrollTop=0;
+  else form.scrollIntoView({block:'start',behavior:'smooth'});
+}
 function showJob(){
   jobStep.hidden=false;contactStep.hidden=true;form.hidden=false;
   form.parentElement.classList.remove('contact-view');
-  setQuoteHeading('Tell us about the job.','These details help us suggest equipment that fits your load and worksite.');
-  form.scrollIntoView({block:'start',behavior:'smooth'});
+  setQuoteHeading(form.closest('.quote-modal')?'Job details':'Tell us about the job.','These details help us suggest equipment that fits your load and worksite.');
+  scrollQuoteToStart();
   form.querySelector('#loadDescription')?.focus({preventScroll:true});
 }
 async function showContact(){
@@ -28,7 +32,7 @@ async function showContact(){
   if(!selectedMatch)return;
   jobStep.hidden=true;contactStep.hidden=false;form.hidden=false;
   form.parentElement.classList.add('contact-view');
-  form.scrollIntoView({block:'start',behavior:'smooth'});
+  scrollQuoteToStart();
   review.querySelector('#review-title').focus({preventScroll:true});
 }
 form?.addEventListener('submit',event=>{
@@ -262,8 +266,13 @@ if(bookingForm&&quoteModal&&form){
     setEditing(false);
     editButton.focus({preventScroll:true});
   });
+  let pagePosition={x:0,y:0};
   const closeQuote=()=>{
     quoteModal.hidden=true;
+    document.documentElement.classList.remove('quote-open');
+    document.body.classList.remove('quote-open');
+    document.body.style.removeProperty('--quote-scroll-top');
+    window.scrollTo({left:pagePosition.x,top:pagePosition.y,behavior:'instant'});
     form.hidden=false;selectedMatch=null;
     jobStep.hidden=false;contactStep.hidden=true;
     form.parentElement.classList.remove('contact-view');
@@ -290,8 +299,12 @@ if(bookingForm&&quoteModal&&form){
     form.parentElement.classList.remove('contact-view');
     form.parentElement.classList.remove('success-view');
     form.parentElement.querySelector('.booking-success').hidden=true;
+    pagePosition={x:window.scrollX,y:window.scrollY};
+    document.body.style.setProperty('--quote-scroll-top',`-${pagePosition.y}px`);
+    document.documentElement.classList.add('quote-open');
+    document.body.classList.add('quote-open');
     quoteModal.hidden=false;
-    quoteModal.scrollTop=0;
+    scrollQuoteToStart();
     closeButton.focus({preventScroll:true});
   });
   closeButton.addEventListener('click',closeQuote);
@@ -337,5 +350,5 @@ if(document.body.classList.contains('one-page')){
   }
   function scheduleDepth(){if(!pending){pending=true;requestAnimationFrame(updateDepth);}}
   if(backdrop){window.addEventListener('scroll',scheduleDepth,{passive:true});window.addEventListener('resize',scheduleDepth);motion.addEventListener('change',scheduleDepth);updateDepth();}
-  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&nav.classList.contains('open')){nav.classList.remove('open');toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Open navigation');toggle.focus();}});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&nav?.classList.contains('open')){nav.classList.remove('open');toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Open navigation');toggle.focus();}});
 }

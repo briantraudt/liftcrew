@@ -168,16 +168,18 @@
 .calendar-nav{padding-top:18px}
 @media(max-width:380px){.calendar-instruction{font-size:1.05rem}.calendar-nav{gap:2px}.calendar-nav button{width:31px;height:31px}}
 
-/* Homepage second step opens over the hero and scrolls independently. */
+/* Keep the booking popup inside the viewport and lock the page behind it. */
+html.quote-open{overflow:hidden;overscroll-behavior:none}
+body.quote-open{position:fixed;top:var(--quote-scroll-top);left:0;width:100%;overflow:hidden}
 .quote-modal[hidden]{display:none}
-.quote-modal{position:fixed;inset:0;z-index:50;overflow-y:auto;overscroll-behavior:contain;padding:30px 18px;background:rgba(4,17,25,.72);backdrop-filter:blur(5px)}
-.quote-modal-panel{position:relative;width:min(100%,640px);margin:0 auto 30px}
-.quote-modal-panel .hero-quote{max-width:none;padding:30px;box-shadow:0 30px 80px #0005}
+.quote-modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;overflow:hidden;overscroll-behavior:contain;padding:16px 18px;background:rgba(4,17,25,.72);backdrop-filter:blur(5px)}
+.quote-modal-panel{position:relative;width:min(100%,640px);min-height:0;max-height:calc(100dvh - 32px);margin:0 auto;border-radius:12px}
+.quote-modal-panel .hero-quote{width:100%;max-width:none;max-height:inherit;overflow-y:auto;overscroll-behavior:contain;padding:24px;box-shadow:0 30px 80px #0005}
 .quote-modal-panel .hero-quote h2{padding-right:42px}
 .quote-modal-close{position:absolute;right:16px;top:16px;z-index:1;width:40px;height:40px;border:1px solid #dbe4e8;border-radius:9px;background:#fff;color:#14212b;font-size:1.7rem;line-height:1}
 .quote-modal-close:hover{background:#f2f5f6}
 .quote-modal-close:focus-visible{outline:2px solid var(--lc-orange);outline-offset:2px}
-@media(max-width:600px){.quote-modal{padding:12px}.quote-modal-panel .hero-quote{padding:22px 18px}.quote-modal-close{top:12px;right:12px}}
+@media(max-width:600px){.quote-modal{padding:12px}.quote-modal-panel{max-height:calc(100dvh - 24px)}.quote-modal-panel .hero-quote{padding:22px 18px}.quote-modal-close{top:12px;right:12px}}
 
 /* Step two starts with the new job questions; initial choices are one editable summary. */
 .booking-summary{display:flex;align-items:center;gap:10px;margin:0 0 8px;padding:11px 13px;border-radius:9px;background:#f2f5f6}
