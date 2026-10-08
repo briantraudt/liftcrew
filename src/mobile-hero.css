@@ -15,6 +15,7 @@
   .one-page .hero h1{max-width:18ch;margin:0 auto 8px;font-size:clamp(1.8rem,7.8vw,2.35rem);line-height:1.12;letter-spacing:-.045em;text-wrap:balance}
   .one-page .hero-title-desktop{display:none}
   .one-page .hero-title-mobile{display:inline}
+  .one-page .hero-equipment{white-space:nowrap}
   .one-page .hero-included{display:block;margin:0;font-size:clamp(.9375rem,3.8vw,1.125rem);line-height:1.4;font-weight:500;color:#f5f7ef}
   .one-page .hero .eyebrow,.one-page .hero-sub,.one-page .hero .trust-row,.one-page .hero .explore-link{display:none}
   .one-page .hero .hero-actions{display:flex;width:100%;max-width:360px;margin:0 auto}
