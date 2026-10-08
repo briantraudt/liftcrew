@@ -177,6 +177,7 @@ if (bookingForm) {
   }
   function showHomepage() {
     if (!details) return;
+    if (!details.element.hidden) details.syncSchedule();
     details.element.hidden = true;
     document.body.classList.remove('booking-details-open');
     document.title = pageTitle;

@@ -54,10 +54,14 @@ export function createBookingDetails(booking, onBack, onScheduleChange) {
   }
   updateSchedule(booking);
   element.querySelectorAll('[data-back]').forEach(link => link.addEventListener('click', event => {event.preventDefault(); onBack();}));
-  for (const key of ['location', 'date', 'durationDays']) form.elements[key].addEventListener('change', () => {
+  function syncSchedule() {
     const schedule = Object.fromEntries(new FormData(form));
     if (!validateBooking(schedule)) onScheduleChange(schedule);
-  });
+  }
+  for (const key of ['location', 'date', 'durationDays']) {
+    form.elements[key].addEventListener('input', syncSchedule);
+    form.elements[key].addEventListener('change', syncSchedule);
+  }
   form.querySelectorAll('[data-unknown]').forEach(box => box.addEventListener('change', () => {
     const field = form.elements[box.dataset.unknown];
     field.disabled = box.checked;
@@ -128,5 +132,5 @@ export function createBookingDetails(booking, onBack, onScheduleChange) {
     }
   });
 
-  return {element, service: booking.service, updateSchedule, get completed() {return completed;}, focus() {element.querySelector('h1').focus({preventScroll:true});}};
+  return {element, service: booking.service, updateSchedule, syncSchedule, get completed() {return completed;}, focus() {element.querySelector('h1').focus({preventScroll:true});}};
 }
