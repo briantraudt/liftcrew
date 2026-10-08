@@ -1,6 +1,7 @@
 import {db,check,uploadDocument,downloadDocument,removeDocument} from './operator-api.js';
 import {coverage,acknowledgements,emptyProfile,editable,escapeHtml as h,documentSlots,missingItems,renewalIssues,renderRecord} from './operator-data.js';
 import {AGREEMENT_VERSION} from './operator-config.js';
+import './select.js';
 const root=document.querySelector('#app'),steps=['Business','Equipment & operators','Insurance','Documents','Review & submit'];
 let user,app,profile,docs=[],step=0,mode='signup',busy=false,dirty=false,message='',errorMessage='',reviewer=false,recovering=false;
 const get=(obj,path)=>path.split('.').reduce((a,k)=>a?.[k],obj)??'';

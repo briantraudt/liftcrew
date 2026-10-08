@@ -3,6 +3,7 @@ import { CRANE_SERVICE, craneSections, validateCraneRequest } from './crane-fiel
 import { forkliftSections, validateBooking } from './booking-fields.js';
 import { loadCraneCatalog } from './crane-catalog.js';
 import { suggestEquipment } from './catalog-data.js';
+import { refreshSelects } from './select.js';
 
 const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
 
@@ -51,6 +52,7 @@ export function createBookingDetails(booking, onBack, onScheduleChange) {
     const error = validateBooking(schedule);
     if (error || schedule.service !== booking.service) throw Error(error || 'Choose a service on the homepage.');
     for (const key of ['location', 'date', 'durationDays']) form.elements[key].value = schedule[key];
+    refreshSelects(form);
   }
   updateSchedule(booking);
   element.querySelectorAll('[data-back]').forEach(link => link.addEventListener('click', event => {event.preventDefault(); onBack();}));

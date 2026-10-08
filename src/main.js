@@ -1,4 +1,5 @@
 import { validateBooking, bookingServices } from './booking-fields.js';
+import { refreshSelects } from './select.js';
 const toggle=document.querySelector('.menu-toggle');const nav=document.querySelector('.nav');toggle?.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')==='true';toggle.setAttribute('aria-expanded',String(!open));toggle.setAttribute('aria-label',open?'Open navigation':'Close navigation');nav?.classList.toggle('open',!open)});document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>{nav?.classList.remove('open');toggle?.setAttribute('aria-expanded','false');toggle?.setAttribute('aria-label','Open navigation')}));const year=document.querySelector('#year');if(year)year.textContent=new Date().getFullYear();
 
 function localISO(date){
@@ -30,6 +31,7 @@ function validateCalendarForm(target){
 function syncCalendarForm(target){
   if(!target)return;
   syncDuration(target);
+  refreshSelects(target);
   const button=target.querySelector('[data-calendar="start"]');
   if(button){
     button.querySelector('.calendar-trigger-text').textContent=prettyDate(target.elements.date.value);
@@ -155,6 +157,7 @@ if (bookingForm) {
   // Links may preselect a service; dates and location always start on the homepage.
   const service = new URLSearchParams(location.search).get('service');
   if (bookingServices.includes(service)) bookingForm.elements.service.value = service;
+  refreshSelects(bookingForm);
   let details = null;
   let pagePosition = 0;
   const pageTitle = document.title;
@@ -224,7 +227,7 @@ if (bookingForm) {
 
 // Homepage section navigation keeps booking on the same page.
 document.querySelectorAll('[data-service]').forEach(link=>link.addEventListener('click',()=>{
-  if(bookingForm)bookingForm.elements.service.value=link.dataset.service;
+  if(bookingForm){bookingForm.elements.service.value=link.dataset.service;refreshSelects(bookingForm);}
 }));
 if(document.body.classList.contains('one-page')){
   const sectionLinks=[...document.querySelectorAll('.nav a[href^="#"]')];

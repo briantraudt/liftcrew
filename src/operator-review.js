@@ -1,5 +1,6 @@
 import {db,check,downloadDocument,uploadDocument} from './operator-api.js';
 import {escapeHtml as h,renewalIssues} from './operator-data.js';
+import './select.js';
 const root=document.querySelector('#review-app');let applications=[],selected=null,docs=[],submissions=[],history=[],busy=false;
 const approvalChecks={business:'Business identity and authority verified',qualifications:'Operator training, practical evaluation and work eligibility reviewed',equipment:'Equipment, capacity plates, inspection records and transport reviewed',insurance:'Broker verification completed; required coverage, endorsements, limits, working owners and exclusions reviewed',tax:'W-9 received and verified through authorized tax handling',contract:'Final agreement contains LiftCrew’s correct legal entity and all completed terms, and is signed by both parties',exceptions:'Any exception is supported by written legal / broker approval; none is silently waived'};
 function error(e){let el=root.querySelector('#review-error');if(!el){el=document.createElement('div');el.id='review-error';el.setAttribute('role','alert');root.prepend(el);}el.innerHTML=`<p class="notice error">${h(e.message||String(e))}</p>`;el.scrollIntoView({block:'center'});}
