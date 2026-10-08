@@ -5,18 +5,24 @@
   .one-page .header-inner .brand{max-width:140px}
   .one-page .header-inner .brand img{height:auto;width:140px}
   .one-page .operator-entry{display:inline-flex;align-items:center;min-height:44px;font-size:11px;padding:10px 12px}
-  .one-page .hero{--mobile-photo-height:clamp(220px,68vw,380px);min-height:0;background:var(--lc-dark);overflow:hidden}
+  .one-page .hero{--mobile-photo-height:clamp(170px,min(58vw,29svh),320px);min-height:0;background:var(--lc-dark);overflow:hidden}
   .one-page .hero:before{top:68px;height:var(--mobile-photo-height);background:url('/hero-forklift.webp') right center / 150% auto no-repeat}
   .one-page .hero .hero-shade{display:block;inset:68px 0 auto;height:var(--mobile-photo-height);background:linear-gradient(0deg,var(--lc-dark),rgba(17,45,54,0) 35%);pointer-events:none}
-  .one-page .hero-inner{display:flex;flex-direction:column;min-height:0;gap:28px;padding:calc(68px + var(--mobile-photo-height) + 12px) 24px 40px}
+  .one-page .hero-inner{display:flex;flex-direction:column;min-height:0;gap:28px;padding:calc(68px + var(--mobile-photo-height) + 8px) 24px 12px}
   .one-page .hero-copy{order:0;width:100%;max-width:420px;text-align:center}
-  .one-page .hero h1{max-width:15ch;margin:0 auto 24px;font-size:clamp(2rem,8.5vw,2.75rem);line-height:1.1;letter-spacing:-.045em;text-wrap:balance}
+  .one-page .hero h1{max-width:15ch;margin:0 auto 20px;font-size:clamp(2rem,8.5vw,2.75rem);line-height:1.1;letter-spacing:-.045em;text-wrap:balance}
   .one-page .hero .eyebrow,.one-page .hero-sub,.one-page .hero .trust-row,.one-page .hero .explore-link{display:none}
   .one-page .hero .hero-actions{display:flex;width:100%;max-width:360px;margin:0 auto}
   .one-page .hero-actions .button-large{width:100%;min-height:54px;padding:14px 20px;font-size:1rem;border-radius:9px}
   .one-page .hero-actions .button-large span,.one-page .hero-actions .button-outline{display:none}
   .one-page .hero-inner>.hero-booking{order:1}
   .one-page.booking-modal-ready .hero-inner>.hero-booking,.one-page .hero-inner>.booking-modal-placeholder{display:none}
+}
+@media(max-width:600px) and (max-height:700px){
+  .one-page .hero{--mobile-photo-height:clamp(140px,24svh,180px)}
+  .one-page .hero-inner{padding-top:calc(68px + var(--mobile-photo-height) + 4px);padding-bottom:8px}
+  .one-page .hero h1{margin-bottom:16px}
+  .one-page .hero-actions .button-large{min-height:50px;padding-block:12px}
 }
 @media(max-width:360px){
   .one-page .header-inner{padding:0 16px;gap:12px}
