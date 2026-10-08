@@ -1,5 +1,6 @@
 import { validateBooking, bookingServices } from './booking-fields.js';
 import { refreshSelects } from './select.js';
+import { createBookingModal } from './booking-modal.js';
 const toggle=document.querySelector('.menu-toggle');const nav=document.querySelector('.nav');toggle?.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')==='true';toggle.setAttribute('aria-expanded',String(!open));toggle.setAttribute('aria-label',open?'Open navigation':'Close navigation');nav?.classList.toggle('open',!open)});document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>{nav?.classList.remove('open');toggle?.setAttribute('aria-expanded','false');toggle?.setAttribute('aria-label','Open navigation')}));const year=document.querySelector('#year');if(year)year.textContent=new Date().getFullYear();
 
 function localISO(date){
@@ -96,7 +97,7 @@ function enhanceDates(target){
       const label=new Intl.DateTimeFormat('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}).format(new Date(year,month,day));
       days+='<button type="button" class="calendar-day'+(selected?' selected':'')+(value===today?' today':'')+'" data-date="'+value+'" aria-label="'+label+'" aria-pressed="'+selected+'" '+(value<today?'disabled':'')+'>'+day+'</button>';
     }
-    calendar.innerHTML='<div class="calendar-top"><div><span class="calendar-kicker">CHOOSE DATE</span><strong class="calendar-month" aria-live="polite">'+heading+'</strong></div><div class="calendar-nav"><button type="button" data-action="prev" aria-label="Previous month" '+(localISO(first).slice(0,7)<=today.slice(0,7)?'disabled':'')+'>‹</button><button type="button" data-action="next" aria-label="Next month">›</button><button type="button" data-action="close" aria-label="Close calendar">×</button></div></div><div class="calendar-weekdays" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div><div class="calendar-days">'+days+'</div><div class="calendar-bottom"><button type="button" data-action="clear">Clear date</button><button type="button" data-action="today">Today</button></div>';
+    calendar.innerHTML='<div class="calendar-top"><div><strong class="calendar-month" aria-live="polite">'+heading+'</strong></div><div class="calendar-nav"><button type="button" data-action="prev" aria-label="Previous month" '+(localISO(first).slice(0,7)<=today.slice(0,7)?'disabled':'')+'>‹</button><button type="button" data-action="next" aria-label="Next month">›</button><button type="button" data-action="close" aria-label="Close calendar">×</button></div></div><div class="calendar-weekdays" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div><div class="calendar-days">'+days+'</div><div class="calendar-bottom"><button type="button" data-action="clear">Clear date</button><button type="button" data-action="today">Today</button></div>';
     if(focusDate)calendar.querySelector('[data-date="'+focusDate+'"]')?.focus({preventScroll:true});
   }
   function open(){
@@ -154,6 +155,8 @@ enhanceDates(document.querySelector('#booking-form'));
 
 const bookingForm = document.querySelector('#booking-form');
 if (bookingForm) {
+  const bookingModal = createBookingModal(bookingForm);
+  let returnToModal = false;
   // Links may preselect a service; dates and location always start on the homepage.
   const service = new URLSearchParams(location.search).get('service');
   if (bookingServices.includes(service)) bookingForm.elements.service.value = service;
@@ -172,6 +175,7 @@ if (bookingForm) {
 
   function showDetails() {
     if (!details) return;
+    bookingModal.close(false);
     details.element.hidden = false;
     document.body.classList.add('booking-details-open');
     document.title = 'Your booking | LiftCrew';
@@ -185,6 +189,7 @@ if (bookingForm) {
     document.body.classList.remove('booking-details-open');
     document.title = pageTitle;
     window.scrollTo({top: pagePosition, behavior: 'instant'});
+    if (returnToModal) bookingModal.open();
     continueButton.focus({preventScroll: true});
   }
   function backToBooking() {
@@ -215,7 +220,8 @@ if (bookingForm) {
         details = createBookingDetails(booking, backToBooking, syncHomepage);
         document.body.append(details.element);
       } else details.updateSchedule(booking);
-      pagePosition = window.scrollY;
+      returnToModal = bookingModal.isOpen;
+      pagePosition = returnToModal ? bookingModal.scrollY : window.scrollY;
       history.pushState({liftcrewBooking: true}, '', location.href);
       showDetails();
     } catch {

@@ -107,7 +107,6 @@
 .lift-calendar[hidden]{display:none}
 .calendar-top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px}
 .calendar-top strong{display:block;font:800 1.12rem Manrope,sans-serif;letter-spacing:-.03em}
-.calendar-kicker{display:block;margin-bottom:3px;color:var(--lc-orange);font-size:.65rem;font-weight:800;letter-spacing:.14em}
 .calendar-nav{display:flex;gap:5px}
 .calendar-nav button{width:36px;height:36px;border:1px solid #e0e7eb;border-radius:8px;background:#fff;color:#14212b;font-size:1.7rem;line-height:1}
 .calendar-nav button:hover:not(:disabled){background:#f3f6f7}
@@ -157,7 +156,7 @@
 .calendar-backdrop{position:fixed;inset:0;z-index:99;background:rgba(5,18,26,.62)}
 .calendar-backdrop[hidden]{display:none}
 .lift-calendar{position:fixed;z-index:100;top:50%;left:50%;transform:translate(-50%,-50%);width:min(380px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto}
-.lift-calendar .calendar-top{position:sticky;top:-17px;z-index:1;padding:0 0 12px;background:#fff}
+.lift-calendar .calendar-top{position:sticky;top:-17px;z-index:1;padding:0 0 12px;background:inherit}
 @media(max-width:380px){.lift-calendar .calendar-top{top:-12px}}
 /* The date panel tracks the booking card and stays inside the viewport. */
 .lift-calendar{top:50%;left:50%}
@@ -225,9 +224,8 @@ body.quote-open{position:fixed;top:var(--quote-scroll-top);left:0;width:100%;ove
 .expert-choice small{color:#61717b;font-size:.84rem;line-height:1.45;margin-top:4px}
 @media(max-width:600px){.step-actions{flex-direction:column-reverse;align-items:stretch}.step-actions .contact-back,.step-actions .contact-next{width:100%}.hero{background:#07151d}.hero .hero-shade{display:none}.hero-inner{padding-top:94px;display:flex;flex-direction:column;gap:28px}.hero-booking{order:-1;margin:0 auto;box-shadow:0 18px 42px #0005}.hero-copy{order:1}.hero-actions{display:none}.trust-row{margin-top:28px}}
 
-/* Compact calendar header: label above the active month. */
+/* Compact calendar header with the active month and navigation. */
 .lift-calendar .calendar-top{align-items:center;padding-bottom:14px}
-.lift-calendar .calendar-kicker{margin-bottom:7px}
 .lift-calendar .calendar-month{font:800 1.35rem Manrope,sans-serif;line-height:1.2;letter-spacing:-.04em;white-space:nowrap}
 .lift-calendar .calendar-nav{padding-top:0}
 .lift-calendar .calendar-bottom button{color:#14212b}
