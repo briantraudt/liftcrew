@@ -147,3 +147,24 @@ test('hero leads with the hook and clear equipment plus operator service',()=>{
   assert(mobileCss.includes('@media(max-width:600px) and (max-height:450px)'));
   assert(mobileCss.includes('min-height:54px'));
 });
+
+test('desktop booking card uses spare space on the right without moving the modal',()=>{
+  const mobileCss=readFileSync(new URL('../src/mobile-hero.css',import.meta.url),'utf8');
+  assert(mobileCss.includes('@media(min-width:851px){\n  .one-page .hero-copy{flex:1 1 0}\n  .one-page .hero-inner>.hero-booking{flex:0 0 340px;margin-left:auto}'));
+});
+
+test('mobile keeps the hook positioned while centering icons above a bottom CTA',()=>{
+  const mobileCss=readFileSync(new URL('../src/mobile-hero.css',import.meta.url),'utf8');
+  assert(mobileCss.includes('grid-template-rows:clamp(160px,30svh,280px) auto minmax(min-content,1fr) auto;min-height:100svh;min-height:100dvh'));
+  assert(mobileCss.includes('grid-row:3;align-self:center'));
+  assert(mobileCss.includes('padding-bottom:max(20px,env(safe-area-inset-bottom))'));
+  assert(mobileCss.includes('grid-template-rows:0 auto minmax(min-content,1fr);padding-top:80px'));
+});
+
+test('short landscape never links to its hidden process section',()=>{
+  const mobileCss=readFileSync(new URL('../src/mobile-hero.css',import.meta.url),'utf8');
+  const compact=mobileCss.split('@media(max-width:600px) and (max-height:450px){')[1];
+  assert(compact.includes('.one-page .hero:before,.one-page .hero>.lc-process{display:none}'));
+  assert(compact.includes('.one-page .lc-footer nav a[href="#how-it-works"]{display:none}'));
+  assert(html.includes('<a href="#how-it-works">How it works</a>'));
+});
