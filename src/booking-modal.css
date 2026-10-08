@@ -1,0 +1,13 @@
+html.booking-modal-open{overflow:hidden;overscroll-behavior:none}
+body.booking-modal-open{position:fixed;top:var(--booking-scroll-top);left:0;width:100%;overflow:hidden}
+.booking-modal[hidden]{display:none}
+.booking-modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:16px;background:rgba(4,17,25,.72);backdrop-filter:blur(5px);overscroll-behavior:contain}
+.booking-modal-panel{position:relative;width:min(100%,460px);min-height:0;max-height:calc(100dvh - 32px)}
+.booking-modal-panel .hero-booking{width:100%;margin:0;max-height:inherit;overflow-y:auto;overscroll-behavior:contain}
+.booking-modal .hero-booking .booking-title{padding-inline:28px}
+.booking-modal-panel .booking-title strong:focus{outline:none}
+.booking-modal-close{position:absolute;top:12px;right:12px;z-index:1;width:36px;height:36px;display:grid;place-items:center;border:1px solid #c8d6c8;border-radius:8px;background:#f7f8f1;color:#193a42;font-size:1.7rem;line-height:1}
+.booking-modal-close:hover{background:#fff0e9;border-color:var(--lc-orange)}
+.booking-modal-close:focus-visible{outline:2px solid var(--lc-orange);outline-offset:2px}
+.booking-modal-placeholder{width:100%;align-self:center}
+@media(max-width:600px){.booking-modal-placeholder{order:-1}.hero-copy .hero-actions{display:flex}.booking-modal{padding:12px}.booking-modal-panel{max-height:calc(100dvh - 24px)}}
