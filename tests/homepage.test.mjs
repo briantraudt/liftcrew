@@ -91,7 +91,7 @@ test('process illustrations match the two steps and stay decorative',()=>{
   assert.equal((process.match(/class="lc-step-art"/g)||[]).length,2);
   assert.equal((process.match(/viewBox="0 0 200 126" fill="none" aria-hidden="true" focusable="false"/g)||[]).length,2);
   assert(process.includes('<ol class="lc-steps">'));
-  assert.deepEqual([...process.matchAll(/<h3>(.*?)<\/h3>/g)].map(m=>m[1]),['Call or book online','Your equipment and operator arrive']);
+  assert.deepEqual([...process.matchAll(/class="lc-step-desktop">(.*?)<\/span>/g)].map(m=>m[1]),['Call or book online','Your equipment and operator arrive']);
   assert(process.includes('data-illustration="phone-booking"'));
   assert(process.includes('data-illustration="forklift-operator"'));
   assert(!/When &amp; where|A few job details|We confirm the plan|Three clear steps|href="tel:/.test(process));
