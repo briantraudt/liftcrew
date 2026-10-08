@@ -14,7 +14,7 @@ test('desktop hero layout stays unchanged apart from approved service copy',()=>
     .replace('class="explore-link" href="#how-it-works"','class="explore-link" href="#services"')
     .replace('action="/"', 'action="/quote.html"')
     .replace('<option value="Crane with operator">Crane + Operator</option>', '')
-    .replace('Managed <em>Crane</em> and <em>Forklift</em> Service', 'Book a forklift or crane <em>today.</em>')
+    .replace('Crane <em>&amp;</em> Forklift Service', 'Book a forklift or crane <em>today.</em>')
     .replace('<p class="hero-included">Equipment + operator included.</p>', '')
     .replace('Book a forklift or crane <em>today.</em>', 'Book a forklift and operator <em>today.</em>')
     .replace('Equipment + operator. One request.', 'Forklift + operator. One request.')
@@ -132,4 +132,14 @@ test('every HTML page resolves its local links and fragments',()=>{
       }
     }
   }
+});
+
+
+test('hero uses larger white service headline with an orange ampersand',()=>{
+  assert(html.includes('<h1>Crane <em>&amp;</em> Forklift Service</h1>'));
+  const mobileCss=readFileSync(new URL('../src/mobile-hero.css',import.meta.url),'utf8');
+  assert(mobileCss.includes('font-size:clamp(1rem,8cqi,3.25rem);color:#fff'));
+  assert(mobileCss.includes('white-space:nowrap'));
+  const shared=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
+  assert(shared.includes('.hero h1 em,') && shared.includes('color:var(--lc-orange-on-dark)'));
 });

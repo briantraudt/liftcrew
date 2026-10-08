@@ -1,6 +1,6 @@
 /* Keep the shared headline on one line, sized to its available column. */
 .one-page .hero-copy{container-type:inline-size;width:100%;min-width:0}
-.one-page .hero h1{max-width:none;font-size:clamp(.875rem,6cqi,2.5rem);line-height:1.15;letter-spacing:-.045em;white-space:nowrap}
+.one-page .hero h1{max-width:none;font-size:clamp(1rem,8cqi,3.25rem);color:#fff;line-height:1.15;letter-spacing:-.045em;white-space:nowrap}
 .hero-included{display:none}
 /* Fill the first mobile screen, giving spare height to the photograph. */
 @media(max-width:600px){
