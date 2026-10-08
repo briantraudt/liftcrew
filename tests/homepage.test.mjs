@@ -12,6 +12,7 @@ test('hero layout stays unchanged apart from service copy and crane option',()=>
     .replace('<a class="operator-entry" href="/operators.html">Become an operator</a>', '')
     .replace('</a><span class="phone-badge"', '</a><button class="menu-toggle" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button>'+originalNav+'<span class="phone-badge"')
     .replace('class="explore-link" href="#how-it-works"','class="explore-link" href="#services"')
+    .replace('action="/"', 'action="/quote.html"')
     .replace('<option value="Crane with operator">Crane + Operator</option>', '')
     .replace('Book a forklift or crane <em>today.</em>', 'Book a forklift and operator <em>today.</em>')
     .replace('Equipment + operator. One request.', 'Forklift + operator. One request.')

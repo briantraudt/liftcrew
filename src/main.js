@@ -1,92 +1,5 @@
-import { CRANE_SERVICE } from './crane-fields.js';
-import { suggestEquipment } from './catalog-data.js';
-const toggle=document.querySelector('.menu-toggle');const nav=document.querySelector('.nav');toggle?.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')==='true';toggle.setAttribute('aria-expanded',String(!open));toggle.setAttribute('aria-label',open?'Open navigation':'Close navigation');nav?.classList.toggle('open',!open)});document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>{nav?.classList.remove('open');toggle?.setAttribute('aria-expanded','false');toggle?.setAttribute('aria-label','Open navigation')}));const year=document.querySelector('#year');if(year)year.textContent=new Date().getFullYear();const form=document.querySelector('#quote-form');
-const review=document.querySelector('#equipment-review');
-const jobStep=form?.querySelector('#job-step');
-const contactStep=form?.querySelector('#contact-step');
-let selectedMatch=null;
-function goToCrane(target, replace=false){
-  if(target.elements.service.value!==CRANE_SERVICE)return false;
-  const query=new URLSearchParams();
-  for(const key of ['service','location','date','durationDays'])query.set(key,target.elements[key].value);
-  const url='/crane.html?'+query;
-  if(replace)window.location.replace(url);else window.location.assign(url);
-  return true;
-}
-function setQuoteHeading(title,description){
-  const heading=form?.parentElement.querySelector(':scope > h2');
-  if(heading){heading.dataset.originalTitle ||= heading.textContent;heading.textContent=title;}
-  const intro=heading?.nextElementSibling;
-  if(intro?.tagName==='P' && description){intro.dataset.originalText ||= intro.textContent;intro.textContent=description;}
-}
-function validateStep(step){
-  for(const field of step.querySelectorAll('input[required],select[required],textarea[required]')){
-    if(!field.checkValidity()){field.reportValidity();field.focus({preventScroll:true});return false;}
-  }
-  return true;
-}
-function scrollQuoteToStart(){
-  if(form.closest('.quote-modal'))form.parentElement.scrollTop=0;
-  else form.scrollIntoView({block:'start',behavior:'smooth'});
-}
-function showJob(){
-  jobStep.hidden=false;contactStep.hidden=true;form.hidden=false;
-  form.parentElement.classList.remove('contact-view');
-  setQuoteHeading(form.closest('.quote-modal')?'Job details':'Tell us about the job.','These details help us suggest equipment that fits your load and worksite.');
-  scrollQuoteToStart();
-  form.querySelector('#loadDescription')?.focus({preventScroll:true});
-}
-async function showContact(){
-  selectedMatch=await updateRecommendation();
-  if(!selectedMatch)return;
-  jobStep.hidden=true;contactStep.hidden=false;form.hidden=false;
-  form.parentElement.classList.add('contact-view');
-  scrollQuoteToStart();
-  review.querySelector('#review-title').focus({preventScroll:true});
-}
-form?.addEventListener('submit',event=>{
-  event.preventDefault();
-  if(goToCrane(form))return;
-  if(!contactStep.hidden){contactStep.querySelector('.contact-next').click();return;}
-  if(!validateCalendarForm(form)||!validateStep(jobStep))return;
-  syncDuration(form);
-  void showContact();
-});
-contactStep?.querySelector('.contact-back').addEventListener('click',showJob);
-contactStep?.querySelector('.contact-next').addEventListener('click',async()=>{
-  if(!validateStep(contactStep))return;
-  const button=contactStep.querySelector('.contact-next');
-  const note=contactStep.querySelector('#form-note');
-  button.disabled=true;button.textContent='Sending…';note.textContent='Sending your booking request…';
-  try{
-    const response=await fetch('/api/quote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...Object.fromEntries(new FormData(form)),recommendation:selectedMatch?.title})});
-    const result=await response.json();
-    if(!response.ok)throw new Error(result.error||'Unable to send your request.');
-    form.hidden=true;
-    const success=form.parentElement.querySelector('.booking-success');
-    success.hidden=false;
-    form.parentElement.classList.remove('contact-view');
-    form.parentElement.classList.add('success-view');
-    setQuoteHeading('Request received');
-    success.scrollIntoView({block:'nearest',behavior:'smooth'});
-  }catch(error){note.textContent=error.message;note.classList.remove('success');button.disabled=false;button.innerHTML='Request Booking <span aria-hidden="true">→</span>';}
-});
-
-let recommendationRequest=0;
-async function updateRecommendation(){
-  if(!form)return null;
-  const request=++recommendationRequest;
-  const match=await suggestEquipment(Object.fromEntries(new FormData(form)));
-  if(request!==recommendationRequest)return null;
-  const box=document.querySelector('#recommendation');
-  box.querySelector('strong').textContent=match?match.title:'Complete the job details to see a suggested forklift.';
-  box.querySelector('p').textContent=match?match.reason:'We’ll review the site and load requirements before confirming equipment and availability.';
-  const example=box.querySelector('#equipment-example');
-  if(example){example.hidden=!match?.sourceUrl;if(match?.sourceUrl)example.href=match.sourceUrl;}
-  return match;
-}
-
-const params=new URLSearchParams(location.search);if(document.querySelector('#quote-form')&&params.size){for(const key of ['service','date','durationDays','location']){const field=document.querySelector(`#quote-form [name="${key}"]`);if(field&&params.has(key))field.value=params.get(key)}goToCrane(form,true);const summary=document.querySelector('#request-summary');if(summary){const values=[params.get('service'),params.get('location'),params.get('date')?prettyDate(params.get('date')):null,params.get('durationDays')?params.get('durationDays')+' days':null].filter(Boolean);summary.textContent=values.join(' · ')}}
+import { validateBooking, bookingServices } from './booking-fields.js';
+const toggle=document.querySelector('.menu-toggle');const nav=document.querySelector('.nav');toggle?.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')==='true';toggle.setAttribute('aria-expanded',String(!open));toggle.setAttribute('aria-label',open?'Open navigation':'Close navigation');nav?.classList.toggle('open',!open)});document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>{nav?.classList.remove('open');toggle?.setAttribute('aria-expanded','false');toggle?.setAttribute('aria-label','Open navigation')}));const year=document.querySelector('#year');if(year)year.textContent=new Date().getFullYear();
 
 function localISO(date){
   return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
@@ -236,100 +149,75 @@ function enhanceDates(target){
   target.elements.durationDays.addEventListener('change',()=>syncDuration(target));
 }
 enhanceDates(document.querySelector('#booking-form'));
-enhanceDates(document.querySelector('#quote-form'));
 
-const bookingForm=document.querySelector('#booking-form');
-bookingForm?.elements.service.addEventListener('change',()=>{bookingForm.action=bookingForm.elements.service.value===CRANE_SERVICE?'/crane.html':'/quote.html';});
-form?.elements.service.addEventListener('change',()=>{if(!form.closest('.quote-modal'))goToCrane(form);});
-const quoteModal=document.querySelector('#quote-modal');
-if(bookingForm&&quoteModal&&form){
-  const closeButton=quoteModal.querySelector('.quote-modal-close');
-  const editButton=quoteModal.querySelector('.summary-edit');
-  const editPanel=quoteModal.querySelector('#booking-edit');
-  const summary=quoteModal.querySelector('#request-summary');
-  function refreshBookingSummary(){
-    summary.textContent=[form.elements.service.value,form.elements.location.value,
-      prettyDate(form.elements.date.value),form.elements.durationDays.value+' '+(form.elements.durationDays.value==='1'?'day':'days')].join(' · ');
+const bookingForm = document.querySelector('#booking-form');
+if (bookingForm) {
+  // Links may preselect a service; dates and location always start on the homepage.
+  const service = new URLSearchParams(location.search).get('service');
+  if (bookingServices.includes(service)) bookingForm.elements.service.value = service;
+  let details = null;
+  let pagePosition = 0;
+  const pageTitle = document.title;
+  const continueButton = bookingForm.querySelector('.booking-go');
+  const bookingNote = document.createElement('p');
+  bookingNote.className = 'booking-entry-note';
+  bookingNote.setAttribute('role', 'status');
+  bookingNote.hidden = true;
+  bookingForm.append(bookingNote);
+  // A refresh / copied URL must return to step one, even with old history state.
+  if (history.state?.liftcrewBooking) history.replaceState(null, '', location.href);
+
+  function showDetails() {
+    if (!details) return;
+    details.element.hidden = false;
+    document.body.classList.add('booking-details-open');
+    document.title = 'Your booking | LiftCrew';
+    window.scrollTo({top: 0, behavior: 'instant'});
+    details.focus();
   }
-  function setEditing(open){
-    editPanel.hidden=!open;
-    editButton.setAttribute('aria-expanded',String(open));
-    editButton.textContent=open?'Cancel editing':'Edit';
+  function showHomepage() {
+    if (!details) return;
+    details.element.hidden = true;
+    document.body.classList.remove('booking-details-open');
+    document.title = pageTitle;
+    window.scrollTo({top: pagePosition, behavior: 'instant'});
+    continueButton.focus({preventScroll: true});
   }
-  editButton.addEventListener('click',()=>{
-    const opening=editPanel.hidden;
-    setEditing(opening);
-    if(opening)form.elements.service.focus({preventScroll:true});
-    else{
-      for(const key of ['service','location','date','durationDays'])form.elements[key].value=bookingForm.elements[key].value;
-      syncCalendarForm(form);
-      refreshBookingSummary();
-      editButton.focus({preventScroll:true});
-    }
-  });
-  quoteModal.querySelector('.summary-done').addEventListener('click',()=>{
-    const fields=[form.elements.service,form.elements.location];
-    const invalid=fields.find(field=>!field.checkValidity());
-    if(invalid){invalid.reportValidity();return;}
-    if(!validateCalendarForm(form))return;
-    if(goToCrane(form))return;
-    for(const key of ['service','location','date','durationDays'])bookingForm.elements[key].value=form.elements[key].value;
+  function backToBooking() {
+    if (history.state?.liftcrewBooking) history.back();
+    else showHomepage();
+  }
+  function syncHomepage(schedule) {
+    for (const key of ['location', 'date', 'durationDays']) bookingForm.elements[key].value = schedule[key];
     syncCalendarForm(bookingForm);
-    refreshBookingSummary();
-    setEditing(false);
-    editButton.focus({preventScroll:true});
+  }
+  window.addEventListener('popstate', () => {
+    if (history.state?.liftcrewBooking && details) showDetails();
+    else showHomepage();
   });
-  let pagePosition={x:0,y:0};
-  const closeQuote=()=>{
-    quoteModal.hidden=true;
-    document.documentElement.classList.remove('quote-open');
-    document.body.classList.remove('quote-open');
-    document.body.style.removeProperty('--quote-scroll-top');
-    window.scrollTo({left:pagePosition.x,top:pagePosition.y,behavior:'instant'});
-    form.hidden=false;selectedMatch=null;
-    jobStep.hidden=false;contactStep.hidden=true;
-    form.parentElement.classList.remove('contact-view');
-    form.parentElement.classList.remove('success-view');
-    form.parentElement.querySelector('.booking-success').hidden=true;
-    contactStep.querySelector('.contact-next').disabled=false;
-    contactStep.querySelector('.contact-next').innerHTML='Request Booking <span aria-hidden="true">→</span>';
-    const heading=form.parentElement.querySelector(':scope > h2');
-    if(heading?.dataset.originalTitle)heading.textContent=heading.dataset.originalTitle;
-    const intro=heading?.nextElementSibling;
-    if(intro?.dataset.originalText)intro.textContent=intro.dataset.originalText;
-    bookingForm.querySelector('.booking-go').focus({preventScroll:true});
-  };
-  bookingForm.addEventListener('submit',event=>{
+  bookingForm.addEventListener('submit', async event => {
     event.preventDefault();
-    if(!validateCalendarForm(bookingForm)||!bookingForm.reportValidity())return;
-    if(goToCrane(bookingForm))return;
-    for(const key of ['service','location','date','durationDays']){
-      form.elements[key].value=bookingForm.elements[key].value;
-    }
-    syncCalendarForm(form);
-    refreshBookingSummary();
-    setEditing(false);
-    form.hidden=false;jobStep.hidden=false;contactStep.hidden=true;
-    form.parentElement.classList.remove('contact-view');
-    form.parentElement.classList.remove('success-view');
-    form.parentElement.querySelector('.booking-success').hidden=true;
-    pagePosition={x:window.scrollX,y:window.scrollY};
-    document.body.style.setProperty('--quote-scroll-top',`-${pagePosition.y}px`);
-    document.documentElement.classList.add('quote-open');
-    document.body.classList.add('quote-open');
-    quoteModal.hidden=false;
-    scrollQuoteToStart();
-    closeButton.focus({preventScroll:true});
-  });
-  closeButton.addEventListener('click',closeQuote);
-  quoteModal.addEventListener('click',event=>{if(event.target===quoteModal)closeQuote()});
-  quoteModal.addEventListener('keydown',event=>{
-    if(event.key==='Escape'){event.preventDefault();closeQuote();return;}
-    if(event.key!=='Tab')return;
-    const focusable=[...quoteModal.querySelectorAll('button:not(:disabled),input:not([type=hidden]):not(.honeypot),select,textarea')].filter(el=>el.getClientRects().length);
-    const first=focusable[0],last=focusable[focusable.length-1];
-    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
-    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+    if (continueButton.disabled || !validateCalendarForm(bookingForm) || !bookingForm.reportValidity()) return;
+    const booking = Object.fromEntries(new FormData(bookingForm));
+    const error = validateBooking(booking);
+    bookingNote.textContent = error || '';
+    bookingNote.hidden = !error;
+    if (error) return;
+    continueButton.disabled = true;
+    try {
+      const { createBookingDetails } = await import('./booking-details.js');
+      if (!details || details.service !== booking.service || details.completed) {
+        details?.element.remove();
+        details = createBookingDetails(booking, backToBooking, syncHomepage);
+        document.body.append(details.element);
+      } else details.updateSchedule(booking);
+      pagePosition = window.scrollY;
+      history.pushState({liftcrewBooking: true}, '', location.href);
+      showDetails();
+    } catch {
+      bookingNote.textContent = 'The booking form could not load. Please try again.';
+      bookingNote.hidden = false;
+    } finally {continueButton.disabled = false;}
   });
 }
 

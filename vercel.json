@@ -1,0 +1,8 @@
+{
+  "redirects": [
+    { "source": "/quote.html", "destination": "/#booking-form", "permanent": true },
+    { "source": "/crane.html", "destination": "/#booking-form", "permanent": true },
+    { "source": "/quote", "destination": "/#booking-form", "permanent": true },
+    { "source": "/crane", "destination": "/#booking-form", "permanent": true }
+  ]
+}
