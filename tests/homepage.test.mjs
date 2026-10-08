@@ -144,7 +144,7 @@ test('hero leads with the hook and clear equipment plus operator service',()=>{
   assert(mobileCss.includes('white-space:normal;color:#fff'));
   assert(mobileCss.includes('.one-page .hero h1 span{display:block}'));
   assert(mobileCss.includes('@media(min-width:601px) and (max-height:500px)'));
-  assert(mobileCss.includes('@media(max-width:600px) and (max-height:450px)'));
+  assert(mobileCss.includes('@media(max-width:600px) and (max-height:500px)'));
   assert(mobileCss.includes('min-height:54px'));
 });
 
@@ -163,7 +163,7 @@ test('mobile keeps the hook positioned while centering icons above a bottom CTA'
 
 test('short landscape never links to its hidden process section',()=>{
   const mobileCss=readFileSync(new URL('../src/mobile-hero.css',import.meta.url),'utf8');
-  const compact=mobileCss.split('@media(max-width:600px) and (max-height:450px){')[1];
+  const compact=mobileCss.split('@media(max-width:600px) and (max-height:500px){')[1];
   assert(compact.includes('.one-page .hero:before,.one-page .hero>.lc-process{display:none}'));
   assert(compact.includes('.one-page .lc-footer nav a[href="#how-it-works"]{display:none}'));
   assert(html.includes('<a href="#how-it-works">How it works</a>'));
@@ -177,4 +177,14 @@ test('mobile balances the photo and headline with a stronger process row',()=>{
   assert(portrait.includes('grid-template-rows:96px auto;gap:8px'));
   assert(portrait.includes('width:min(100%,152px);height:96px'));
   assert(mobileCss.includes('grid-template-rows:72px auto;gap:6px'));
+});
+
+test('short-phone fallback covers the 375x460 regression and its neighboring heights',()=>{
+  const mobileCss=readFileSync(new URL('../src/mobile-hero.css',import.meta.url),'utf8');
+  const compact=mobileCss.split('@media(max-width:600px) and (max-height:500px){')[1];
+  assert(compact, 'compact fallback must cover 451–500px heights');
+  assert(compact.includes('grid-template-rows:0 auto minmax(min-content,1fr)'));
+  assert(compact.includes('.one-page .hero:before,.one-page .hero>.lc-process{display:none}'));
+  assert(compact.includes('.one-page .hero>.hero-actions{grid-row:3}'));
+  assert(!mobileCss.includes('@media(max-width:600px) and (max-height:450px)'));
 });

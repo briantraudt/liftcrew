@@ -71,7 +71,8 @@
   .one-page .hero .trust-row{display:none}
   .one-page .hero-actions .button-large,.one-page .hero-actions .button-outline{min-height:46px;padding:10px 20px}
 }
-@media(max-width:600px) and (max-height:450px){
+/* Below 500px, photo and process tracks crowd the initial booking action. */
+@media(max-width:600px) and (max-height:500px){
   .one-page .hero{grid-template-rows:0 auto minmax(min-content,1fr);padding-top:80px}
   .one-page .hero:before,.one-page .hero>.lc-process{display:none}
   .one-page .lc-footer nav a[href="#how-it-works"]{display:none}
