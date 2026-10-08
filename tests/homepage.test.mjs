@@ -14,7 +14,7 @@ test('desktop hero layout stays unchanged apart from approved service copy',()=>
     .replace('class="explore-link" href="#how-it-works"','class="explore-link" href="#services"')
     .replace('action="/"', 'action="/quote.html"')
     .replace('<option value="Crane with operator">Crane + Operator</option>', '')
-    .replace('Managed <em>Crane</em> and <em>Forklift</em> Service', 'Book a forklift or crane <em>today.</em>')
+    .replace('<h1><span>Big lifts.</span><span>Made simple.</span></h1><p class="hero-service">Crane <em>&amp;</em> forklift service. Operator included.</p>', '<p class="eyebrow light"><i></i> Equipment + operator. One request.</p><h1>Book a forklift or crane <em>today.</em></h1><p class="hero-sub">No dock, an oversized delivery, or heavy equipment to move? Tell us where and when. We’ll confirm the right equipment, availability, and a quote.</p>')
     .replace('<p class="hero-included">Equipment + operator included.</p>', '')
     .replace('Book a forklift or crane <em>today.</em>', 'Book a forklift and operator <em>today.</em>')
     .replace('Equipment + operator. One request.', 'Forklift + operator. One request.')
@@ -132,4 +132,18 @@ test('every HTML page resolves its local links and fragments',()=>{
       }
     }
   }
+});
+
+
+test('hero leads with the hook and clear equipment plus operator service',()=>{
+  assert(html.includes('<h1><span>Big lifts.</span><span>Made simple.</span></h1>'));
+  assert(html.includes('<p class="hero-service">Crane <em>&amp;</em> forklift service. Operator included.</p>'));
+  assert(!html.includes('hero-included')); 
+  assert(!html.includes('class="eyebrow light"'));
+  const mobileCss=readFileSync(new URL('../src/mobile-hero.css',import.meta.url),'utf8');
+  assert(mobileCss.includes('white-space:normal;color:#fff'));
+  assert(mobileCss.includes('.one-page .hero h1 span{display:block}'));
+  assert(mobileCss.includes('@media(min-width:601px) and (max-height:500px)'));
+  assert(mobileCss.includes('@media(max-width:600px) and (max-height:450px)'));
+  assert(mobileCss.includes('min-height:54px'));
 });
