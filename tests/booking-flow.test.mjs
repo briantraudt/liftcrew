@@ -5,12 +5,12 @@ import { bookingServices, forkliftSections, validateBooking } from '../src/booki
 const today = new Date(2026, 9, 8);
 const valid = {service:'Forklift with operator', location:'78701', date:'2026-10-12', durationDays:'2'};
 
-test('all three services require complete booking details before the second step', () => {
+test('both services require complete booking details before the second step', () => {
   for (const service of bookingServices) {
     assert.equal(validateBooking({...valid, service}, today), null);
     for (const key of ['location', 'date', 'durationDays']) assert(validateBooking({...valid, service, [key]:''}, today));
   }
-  for (const [key, value] of [['service','Crane'], ['location','7870'], ['date','2026-02-30'], ['date','2026-10-07'], ['date','invalid'], ['durationDays','1.5'], ['durationDays','31'], ['durationDays','0']]) {
+  for (const [key, value] of [['service','Crane'], ['service','Forklift only'], ['location','7870'], ['date','2026-02-30'], ['date','2026-10-07'], ['date','invalid'], ['durationDays','1.5'], ['durationDays','31'], ['durationDays','0']]) {
     assert(validateBooking({...valid, [key]:value}, today), `${key}=${value} must not enter step two`);
   }
   assert.equal(validateBooking({...valid, date:'2026-10-08'}, today), null);

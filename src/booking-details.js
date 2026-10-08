@@ -22,7 +22,7 @@ export function createBookingDetails(booking, onBack, onScheduleChange) {
   if (error) throw Error(error);
   const isCrane = booking.service === CRANE_SERVICE;
   const sections = isCrane ? craneSections : forkliftSections;
-  const label = isCrane ? 'Crane + Operator' : booking.service === 'Forklift with operator' ? 'Forklift + Operator' : 'Forklift Only';
+  const label = isCrane ? 'Crane + Operator' : 'Forklift + Operator';
   const element = document.createElement('div');
   element.className = 'booking-details-page';
   element.hidden = true;

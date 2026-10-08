@@ -17,7 +17,7 @@ test('hero layout stays unchanged apart from service copy and crane option',()=>
     .replace('Book a forklift or crane <em>today.</em>', 'Book a forklift and operator <em>today.</em>')
     .replace('Equipment + operator. One request.', 'Forklift + operator. One request.')
     .replace('We’ll confirm the right equipment, availability, and a quote.', 'We’ll confirm the right forklift, availability, and a quote.');
-  assert.equal(hash(protectedMarkup),'7e1ae2e828eeb568b8f5bcc8c37ace4ad953eacf3bada4a6bab87959419ed549');
+  assert.equal(hash(protectedMarkup),'9dc36b580cb6ea2c42e11f194fb3c288f85f613dbd650fbd9f0f174526bf3018');
 });
 test('only requested compact sections remain below the hero',()=>{
   assert.deepEqual([...lower.matchAll(/<section[^>]* id="([^"]+)"/g)].map(m=>m[1]),['how-it-works','testimonials']);

@@ -1,6 +1,6 @@
 import { CRANE_SERVICE } from './crane-fields.js';
 
-export const bookingServices = ['Forklift only', 'Forklift with operator', CRANE_SERVICE];
+export const bookingServices = ['Forklift with operator', CRANE_SERVICE];
 
 // Every entry to the second step must have a complete homepage booking.
 export function validateBooking(input, today = new Date()) {
