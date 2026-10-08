@@ -1,23 +1,36 @@
-/* Keep the shared headline on one line, sized to its available column. */
-.one-page .hero-copy{container-type:inline-size;width:100%;min-width:0}
-.one-page .hero h1{max-width:none;font-size:clamp(1rem,8cqi,3.25rem);color:#fff;line-height:1.15;letter-spacing:-.045em;white-space:nowrap}
-.hero-included{display:none}
-/* Fill the first mobile screen, giving spare height to the photograph. */
+/* A benefit-led hero, with the service and next step immediately below. */
+.one-page .hero{min-height:min(860px,100svh);background-position:70% center}
+.one-page .hero-inner{display:flex;align-items:center;max-width:1600px;min-height:inherit;padding:148px 5.7% 64px}
+.one-page .hero-copy{width:100%;max-width:690px;min-width:0}
+.one-page .hero h1{max-width:none;font-size:clamp(4rem,6.4vw,6.5rem);line-height:1.02;letter-spacing:-.055em;white-space:normal;color:#fff;margin:0 0 28px}
+.one-page .hero h1 span{display:block}
+.one-page .hero-service em{font-style:normal;color:var(--lc-orange)}
+.one-page .hero-service{margin:0 0 30px;font-size:clamp(1rem,1.45vw,1.25rem);font-weight:700;line-height:1.4;color:#fff}
+.one-page .hero .trust-row{margin-top:42px}
+.one-page .hero .explore-link{display:none}
+@media(min-width:601px) and (max-width:1000px){
+  .one-page .hero{min-height:680px;background-size:cover;background-position:65% center}
+  .one-page .hero .hero-shade{display:block;background:linear-gradient(90deg,#112d36 0%,rgba(17,45,54,.86) 42%,rgba(17,45,54,.2) 100%)}
+  .one-page .hero-inner{padding-top:140px;padding-bottom:54px}
+  .one-page .hero-copy{max-width:620px;order:0}
+  .one-page .hero h1{font-size:clamp(3.75rem,8vw,5rem)}
+}
+/* The photo supports the headline instead of taking over the mobile screen. */
 @media(max-width:600px){
   .one-page .site-header{position:absolute;background:var(--lc-dark);backdrop-filter:none}
   .one-page .header-inner{height:68px;padding:0 20px;gap:16px}
   .one-page .header-inner .brand{max-width:140px}
   .one-page .header-inner .brand img{height:auto;width:140px}
   .one-page .operator-entry{display:inline-flex;align-items:center;min-height:44px;font-size:11px;padding:10px 12px}
-  .one-page .hero{display:grid;grid-template-rows:minmax(180px,1fr) auto auto auto;min-height:100svh;min-height:100dvh;padding-top:68px;background:var(--lc-dark);overflow:hidden}
-  .one-page .hero:before{content:"";position:relative;inset:auto;grid-row:1;width:100%;height:100%;background:linear-gradient(0deg,var(--lc-dark),rgba(17,45,54,0) 35%),url('/hero-forklift.webp');background-size:100% 100%,cover;background-position:center,85% center;background-repeat:no-repeat}
+  .one-page .hero{display:grid;grid-template-rows:clamp(160px,30svh,280px) auto auto auto;min-height:0;padding-top:68px;background:var(--lc-dark);overflow:hidden}
+  .one-page .hero:before{content:"";position:relative;inset:auto;grid-row:1;width:100%;height:100%;background:linear-gradient(0deg,var(--lc-dark),rgba(17,45,54,0) 55%),url('/hero-forklift.webp');background-size:100% 100%,cover;background-position:center,80% 45%;background-repeat:no-repeat}
   .one-page .hero .hero-shade{display:none}
-  .one-page .hero-inner{grid-row:2;display:flex;flex-direction:column;align-items:center;min-height:0;width:100%;gap:28px;padding:8px 24px}
-  .one-page .hero>.lc-process{grid-row:3;align-self:end;width:100%;padding-bottom:16px}
-  .one-page .hero-copy{order:0;width:100%;max-width:420px;text-align:center;transform:translateY(-36px)}
-  .one-page .hero h1{margin:0 auto 8px}
-  .one-page .hero-included{display:block;margin:0;font-size:clamp(.9375rem,3.8vw,1.125rem);line-height:1.4;font-weight:500;color:#f5f7ef}
-  .one-page .hero .eyebrow,.one-page .hero-sub,.one-page .hero .trust-row,.one-page .hero .explore-link{display:none}
+  .one-page .hero-inner{grid-row:2;display:flex;flex-direction:column;align-items:center;min-height:0;width:100%;gap:0;padding:0 24px 18px}
+  .one-page .hero-copy{order:0;width:100%;max-width:460px;text-align:center;transform:none;margin-top:-14px}
+  .one-page .hero h1{font-size:clamp(2.5rem,11.4vw,3.75rem);line-height:1.03;letter-spacing:-.055em;margin:0 0 16px}
+  .one-page .hero-service{font-size:clamp(.875rem,3.6vw,1rem);line-height:1.45;margin:0 auto;max-width:32ch}
+  .one-page .hero>.lc-process{grid-row:3;align-self:end;width:100%;padding-bottom:18px}
+  .one-page .hero .trust-row{display:none}
   .one-page .hero .hero-actions{display:flex;width:100%;max-width:360px;margin:0 auto}
   .one-page .hero>.hero-actions{grid-row:4;align-self:end;width:calc(100% - 48px);padding-bottom:max(20px,env(safe-area-inset-bottom))}
   .one-page .hero-actions .button-large{width:100%;min-height:54px;padding:14px 20px;font-size:1rem;border-radius:9px}
@@ -26,9 +39,9 @@
   .one-page.booking-modal-ready .hero-inner>.hero-booking,.one-page .hero-inner>.booking-modal-placeholder{display:none}
 }
 @media(max-width:600px) and (max-height:700px){
-  .one-page .hero{grid-template-rows:minmax(140px,1fr) auto auto auto}
-  .one-page .hero-inner{padding-top:4px;padding-bottom:8px}
-  .one-page .hero-copy{transform:translateY(-24px)}
+  .one-page .hero{grid-template-rows:clamp(100px,25svh,175px) auto auto auto}
+  .one-page .hero-inner{padding-bottom:12px}
+  .one-page .hero h1{font-size:clamp(2.35rem,10.5vw,3.1rem);margin-bottom:12px}
   .one-page .hero>.lc-process{padding-bottom:12px}
   .one-page .hero>.hero-actions{padding-bottom:max(16px,env(safe-area-inset-bottom))}
   .one-page .hero-actions .button-large{min-height:50px;padding-block:12px}
@@ -39,4 +52,21 @@
   .one-page .operator-entry{padding:10px}
   .one-page .hero-inner{padding-right:20px;padding-left:20px}
   .one-page .hero>.hero-actions{width:calc(100% - 40px)}
+}
+/* Short landscape screens keep the hook and booking action in view. */
+@media(min-width:601px) and (max-height:500px){
+  .one-page .hero{min-height:100svh}
+  .one-page .hero-inner{padding:100px 5.7% 24px}
+  .one-page .hero h1{font-size:clamp(2.25rem,5vw,3rem);margin-bottom:12px}
+  .one-page .hero-service{font-size:1rem;margin-bottom:18px}
+  .one-page .hero .trust-row{display:none}
+  .one-page .hero-actions .button-large,.one-page .hero-actions .button-outline{min-height:46px;padding:10px 20px}
+}
+@media(max-width:600px) and (max-height:450px){
+  .one-page .hero{grid-template-rows:0 auto auto;padding-top:80px}
+  .one-page .hero:before,.one-page .hero>.lc-process{display:none}
+  .one-page .hero-inner{grid-row:2;padding-bottom:14px}
+  .one-page .hero-copy{margin-top:0}
+  .one-page .hero h1{font-size:2.35rem;margin-bottom:10px}
+  .one-page .hero>.hero-actions{grid-row:3}
 }
