@@ -7,13 +7,15 @@ const css=readFileSync(new URL('../src/home.css',import.meta.url),'utf8');
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const lower=html.slice(html.indexOf('<section class="lc-section'),html.indexOf('</main>'));
 const originalNav='<nav class="nav" aria-label="Main navigation"><a href="#services">Services</a><a href="#industries">Industries</a><a href="#safety">Safety</a><a href="#how-it-works">How It Works</a><a href="#resources">Resources</a></nav>';
-test('hero layout stays unchanged apart from service copy and crane option',()=>{
+test('desktop hero layout stays unchanged apart from approved service copy',()=>{
   const protectedMarkup=html.slice(html.indexOf('<header'),html.indexOf('<section class="lc-section'))
     .replace('<a class="operator-entry" href="/operators.html">Become an operator</a>', '')
     .replace('</a><span class="phone-badge"', '</a><button class="menu-toggle" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button>'+originalNav+'<span class="phone-badge"')
     .replace('class="explore-link" href="#how-it-works"','class="explore-link" href="#services"')
     .replace('action="/"', 'action="/quote.html"')
     .replace('<option value="Crane with operator">Crane + Operator</option>', '')
+    .replace('<span class="hero-title-desktop">Book a forklift or crane <em>today.</em></span><span class="hero-title-mobile"><em>Turnkey</em> crane &amp;<br>forklift rentals.</span>', 'Book a forklift or crane <em>today.</em>')
+    .replace('<p class="hero-included">Equipment + operator included.</p>', '')
     .replace('Book a forklift or crane <em>today.</em>', 'Book a forklift and operator <em>today.</em>')
     .replace('Equipment + operator. One request.', 'Forklift + operator. One request.')
     .replace('We’ll confirm the right equipment, availability, and a quote.', 'We’ll confirm the right forklift, availability, and a quote.');
