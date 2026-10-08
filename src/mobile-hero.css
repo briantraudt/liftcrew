@@ -15,6 +15,10 @@
   .one-page .hero-copy{max-width:620px;order:0}
   .one-page .hero h1{font-size:clamp(3.75rem,8vw,5rem)}
 }
+@media(min-width:851px){
+  .one-page .hero-copy{flex:1 1 0}
+  .one-page .hero-inner>.hero-booking{flex:0 0 340px}
+}
 /* The photo supports the headline instead of taking over the mobile screen. */
 @media(max-width:600px){
   .one-page .site-header{position:absolute;background:var(--lc-dark);backdrop-filter:none}
