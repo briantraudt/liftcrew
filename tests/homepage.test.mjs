@@ -160,3 +160,11 @@ test('mobile keeps the hook positioned while centering icons above a bottom CTA'
   assert(mobileCss.includes('padding-bottom:max(20px,env(safe-area-inset-bottom))'));
   assert(mobileCss.includes('grid-template-rows:0 auto minmax(min-content,1fr);padding-top:80px'));
 });
+
+test('short landscape never links to its hidden process section',()=>{
+  const mobileCss=readFileSync(new URL('../src/mobile-hero.css',import.meta.url),'utf8');
+  const compact=mobileCss.split('@media(max-width:600px) and (max-height:450px){')[1];
+  assert(compact.includes('.one-page .hero:before,.one-page .hero>.lc-process{display:none}'));
+  assert(compact.includes('.one-page .lc-footer nav a[href="#how-it-works"]{display:none}'));
+  assert(html.includes('<a href="#how-it-works">How it works</a>'));
+});
