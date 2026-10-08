@@ -85,6 +85,7 @@ export function createBookingModal(form) {
       open(link);
     });
   });
+  document.body.classList.add('booking-modal-ready');
   if (location.hash === '#booking-form') open();
   return {open, close, get isOpen() {return !modal.hidden;}, get scrollY() {return scrollY;}};
 }
