@@ -1,9 +1,18 @@
+import { CRANE_SERVICE } from './crane-fields.js';
 import { suggestEquipment } from './catalog-data.js';
 const toggle=document.querySelector('.menu-toggle');const nav=document.querySelector('.nav');toggle?.addEventListener('click',()=>{const open=toggle.getAttribute('aria-expanded')==='true';toggle.setAttribute('aria-expanded',String(!open));toggle.setAttribute('aria-label',open?'Open navigation':'Close navigation');nav?.classList.toggle('open',!open)});document.querySelectorAll('.nav a').forEach(a=>a.addEventListener('click',()=>{nav?.classList.remove('open');toggle?.setAttribute('aria-expanded','false');toggle?.setAttribute('aria-label','Open navigation')}));const year=document.querySelector('#year');if(year)year.textContent=new Date().getFullYear();const form=document.querySelector('#quote-form');
 const review=document.querySelector('#equipment-review');
 const jobStep=form?.querySelector('#job-step');
 const contactStep=form?.querySelector('#contact-step');
 let selectedMatch=null;
+function goToCrane(target, replace=false){
+  if(target.elements.service.value!==CRANE_SERVICE)return false;
+  const query=new URLSearchParams();
+  for(const key of ['service','location','date','durationDays'])query.set(key,target.elements[key].value);
+  const url='/crane.html?'+query;
+  if(replace)window.location.replace(url);else window.location.assign(url);
+  return true;
+}
 function setQuoteHeading(title,description){
   const heading=form?.parentElement.querySelector(':scope > h2');
   if(heading){heading.dataset.originalTitle ||= heading.textContent;heading.textContent=title;}
@@ -37,6 +46,7 @@ async function showContact(){
 }
 form?.addEventListener('submit',event=>{
   event.preventDefault();
+  if(goToCrane(form))return;
   if(!contactStep.hidden){contactStep.querySelector('.contact-next').click();return;}
   if(!validateCalendarForm(form)||!validateStep(jobStep))return;
   syncDuration(form);
@@ -76,7 +86,7 @@ async function updateRecommendation(){
   return match;
 }
 
-const params=new URLSearchParams(location.search);if(document.querySelector('#quote-form')&&params.size){for(const key of ['service','date','durationDays','location']){const field=document.querySelector(`#quote-form [name="${key}"]`);if(field&&params.has(key))field.value=params.get(key)}const summary=document.querySelector('#request-summary');if(summary){const values=[params.get('service'),params.get('location'),params.get('date')?prettyDate(params.get('date')):null,params.get('durationDays')?params.get('durationDays')+' days':null].filter(Boolean);summary.textContent=values.join(' · ')}}
+const params=new URLSearchParams(location.search);if(document.querySelector('#quote-form')&&params.size){for(const key of ['service','date','durationDays','location']){const field=document.querySelector(`#quote-form [name="${key}"]`);if(field&&params.has(key))field.value=params.get(key)}goToCrane(form,true);const summary=document.querySelector('#request-summary');if(summary){const values=[params.get('service'),params.get('location'),params.get('date')?prettyDate(params.get('date')):null,params.get('durationDays')?params.get('durationDays')+' days':null].filter(Boolean);summary.textContent=values.join(' · ')}}
 
 function localISO(date){
   return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
@@ -229,6 +239,8 @@ enhanceDates(document.querySelector('#booking-form'));
 enhanceDates(document.querySelector('#quote-form'));
 
 const bookingForm=document.querySelector('#booking-form');
+bookingForm?.elements.service.addEventListener('change',()=>{bookingForm.action=bookingForm.elements.service.value===CRANE_SERVICE?'/crane.html':'/quote.html';});
+form?.elements.service.addEventListener('change',()=>{if(!form.closest('.quote-modal'))goToCrane(form);});
 const quoteModal=document.querySelector('#quote-modal');
 if(bookingForm&&quoteModal&&form){
   const closeButton=quoteModal.querySelector('.quote-modal-close');
@@ -260,6 +272,7 @@ if(bookingForm&&quoteModal&&form){
     const invalid=fields.find(field=>!field.checkValidity());
     if(invalid){invalid.reportValidity();return;}
     if(!validateCalendarForm(form))return;
+    if(goToCrane(form))return;
     for(const key of ['service','location','date','durationDays'])bookingForm.elements[key].value=form.elements[key].value;
     syncCalendarForm(bookingForm);
     refreshBookingSummary();
@@ -289,6 +302,7 @@ if(bookingForm&&quoteModal&&form){
   bookingForm.addEventListener('submit',event=>{
     event.preventDefault();
     if(!validateCalendarForm(bookingForm)||!bookingForm.reportValidity())return;
+    if(goToCrane(bookingForm))return;
     for(const key of ['service','location','date','durationDays']){
       form.elements[key].value=bookingForm.elements[key].value;
     }

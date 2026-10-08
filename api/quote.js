@@ -4,6 +4,7 @@ export default async function handler(req,res){
   if(req.method!=='POST') return res.status(405).json({error:'Method not allowed'});
   const {service,location,date,durationDays,loadDescription,loadWeight,liftHeight,surface,space,loadLengthIn,loadWidthIn,entryWidth,siteNotes,name,company,email,phone,website}=req.body||{};
   if(website) return res.status(200).json({ok:true});
+  if(!['Forklift only','Forklift with operator'].includes(service))return res.status(400).json({error:'Use the crane request page for Crane + Operator.'});
   const days=Number(durationDays);
   const dateParts=typeof date==='string'&&/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(date)?date.split('-').map(Number):null;
   const start=dateParts?new Date(Date.UTC(dateParts[0],dateParts[1]-1,dateParts[2])):null;

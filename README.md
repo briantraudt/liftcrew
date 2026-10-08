@@ -63,3 +63,14 @@ Authenticated applicants may save incomplete drafts. Submission requires full co
 `npm run build` and `node --test tests/*.test.mjs`. Integration verification uses disposable, clearly labeled accounts and synthetic files; do not use customer records as fixtures. Verify cross-account reads, anonymous reads, forged reviewer roles, direct status mutation, missing documents, expired qualifications, immutable submissions, signed-contract approval gates and retention of prior uploads. No integration credentials are committed.
 
 Reference: [OSHA powered industrial trucks, 29 CFR 1910.178](https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178); [Supabase SMTP configuration](https://supabase.com/docs/guides/auth/auth-smtp).
+
+## Crane + Operator
+
+Homepage crane bookings open `/crane.html` with the date, duration and ZIP retained. The crane form collects load/rigging weight, dimensions, pickup/set heights and radii, maximum path radius, headroom, obstacles, access/setup clearances, ground and utility conditions, crew/rigging/permit needs, schedule and contact details. Unknown dimensions are explicitly recorded for follow-up; a preferred crane is optional. A preference never constitutes a rated lift or confirmed booking.
+
+- `public.crane_catalog`: 25 reference classes from United Rentals **page 1** as checked October 8, 2026. Read-only to public clients. `data/cranes-page-1.json` is the reproducible seed. The listing's `cat-classes` order and `pageLength:25` define membership; the remaining 10 entries (outrigger pads, roustabouts and gantries) are page 2 and excluded. Source links and timestamps are recorded per row. Published vertical reach, boom length and tipping height have distinct fields; missing specifications remain null. Source inconsistencies are recorded in `spec_notes`.
+- `/api/crane-quote`: independently validates the submission and preferred class, then saves to `public.crane_quote_requests`. Contact details have no anonymous/authenticated read/update/delete access. Public access permits insertion only; no service-role credentials are shipped. Review requests in the Supabase Table Editor as a project administrator.
+- Crane request success means the inquiry was durably saved. The existing Resend variables optionally enable staff email notifications. An email outage does not lose the inquiry. Email delivery is currently unconfigured; saved inquiries must be monitored in Supabase until those variables are set.
+- No automatic capacity-at-radius calculation, availability claim, price or dispatch is made. Actual crane/load-chart, rigging and site review remain required before confirmation.
+
+Checks: `node --test tests/*.test.mjs` and `npm run build`.

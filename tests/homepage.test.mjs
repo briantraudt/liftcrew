@@ -7,11 +7,15 @@ const css=readFileSync(new URL('../src/home.css',import.meta.url),'utf8');
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const lower=html.slice(html.indexOf('<section class="lc-section'),html.indexOf('</main>'));
 const originalNav='<nav class="nav" aria-label="Main navigation"><a href="#services">Services</a><a href="#industries">Industries</a><a href="#safety">Safety</a><a href="#how-it-works">How It Works</a><a href="#resources">Resources</a></nav>';
-test('hero and booking form stay unchanged apart from section links',()=>{
+test('hero layout stays unchanged apart from service copy and crane option',()=>{
   const protectedMarkup=html.slice(html.indexOf('<header'),html.indexOf('<section class="lc-section'))
     .replace('<a class="operator-entry" href="/operators.html">Become an operator</a>', '')
     .replace('</a><span class="phone-badge"', '</a><button class="menu-toggle" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button>'+originalNav+'<span class="phone-badge"')
-    .replace('class="explore-link" href="#how-it-works"','class="explore-link" href="#services"');
+    .replace('class="explore-link" href="#how-it-works"','class="explore-link" href="#services"')
+    .replace('<option value="Crane with operator">Crane + Operator</option>', '')
+    .replace('Book a forklift or crane <em>today.</em>', 'Book a forklift and operator <em>today.</em>')
+    .replace('Equipment + operator. One request.', 'Forklift + operator. One request.')
+    .replace('We’ll confirm the right equipment, availability, and a quote.', 'We’ll confirm the right forklift, availability, and a quote.');
   assert.equal(hash(protectedMarkup),'7e1ae2e828eeb568b8f5bcc8c37ace4ad953eacf3bada4a6bab87959419ed549');
 });
 test('only requested compact sections remain below the hero',()=>{
@@ -86,7 +90,7 @@ test('process illustrations match the two steps and stay decorative',()=>{
   assert.equal((process.match(/class="lc-step-art"/g)||[]).length,2);
   assert.equal((process.match(/viewBox="0 0 200 126" fill="none" aria-hidden="true" focusable="false"/g)||[]).length,2);
   assert(process.includes('<ol class="lc-steps">'));
-  assert.deepEqual([...process.matchAll(/<h3>(.*?)<\/h3>/g)].map(m=>m[1]),['Call or book online','Your forklift and operator arrive']);
+  assert.deepEqual([...process.matchAll(/<h3>(.*?)<\/h3>/g)].map(m=>m[1]),['Call or book online','Your equipment and operator arrive']);
   assert(process.includes('data-illustration="phone-booking"'));
   assert(process.includes('data-illustration="forklift-operator"'));
   assert(!/When &amp; where|A few job details|We confirm the plan|Three clear steps|href="tel:/.test(process));
