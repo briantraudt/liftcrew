@@ -14,7 +14,7 @@ test('desktop hero layout stays unchanged apart from approved service copy',()=>
     .replace('class="explore-link" href="#how-it-works"','class="explore-link" href="#services"')
     .replace('action="/"', 'action="/quote.html"')
     .replace('<option value="Crane with operator">Crane + Operator</option>', '')
-    .replace('<span class="hero-title-desktop">Book a forklift or crane <em>today.</em></span><span class="hero-title-mobile">Turnkey<br><em class="hero-equipment">Crane &amp; Forklift</em><br>Rentals.</span>', 'Book a forklift or crane <em>today.</em>')
+    .replace('Managed <em>Crane</em> and <em>Forklift</em> Service', 'Book a forklift or crane <em>today.</em>')
     .replace('<p class="hero-included">Equipment + operator included.</p>', '')
     .replace('Book a forklift or crane <em>today.</em>', 'Book a forklift and operator <em>today.</em>')
     .replace('Equipment + operator. One request.', 'Forklift + operator. One request.')
