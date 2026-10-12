@@ -45,8 +45,12 @@ if (hero) {
     const mobile = matchMedia('(max-width:600px)').matches;
     const desktop = matchMedia('(min-width:851px)').matches;
     const ratio = image.naturalWidth / image.naturalHeight;
-    // Preserve the current mobile photo track and the forklift's proportions.
-    const height = mobile ? Math.max(box.height, box.width / ratio) : box.height;
+    // Cover both mobile edges while keeping the 70% focal point centered.
+    // The nearer source edge must extend at least half the viewport width.
+    // Desktop keeps its existing size, position and edge fades.
+    const height = mobile
+      ? Math.max(box.height, (box.width + 2) / (ratio * 2 * (1 - 0.7)))
+      : box.height;
     const width = height * ratio;
     let center = box.width / 2;
     if (desktop && copy) {
