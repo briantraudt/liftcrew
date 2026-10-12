@@ -116,3 +116,11 @@
 @media(max-width:600px) and (max-height:500px){
   .one-page .hero.hero-photo-ready>.hero-photo{display:none}
 }
+
+/* Mobile-only: lower the headline two text lines and keep the photo edge to edge. */
+@media(max-width:600px){
+  .one-page .hero-photo img{-webkit-mask-image:none;mask-image:none}
+}
+@media(max-width:600px) and (min-height:501px){
+  .one-page .hero-inner{padding-top:40px}
+}
