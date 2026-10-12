@@ -16,3 +16,7 @@
 .lc-select-option.is-active{background:var(--lc-orange,var(--orange,#ff5a1f));color:var(--lc-on-orange,var(--on-orange,#fff))}
 @media(max-width:600px){.hero-booking .booking-field .lc-select-trigger{height:44px;min-height:44px}.lc-select-trigger{font-size:16px}}
 @media(forced-colors:active){.lc-select-option.is-active{background:Highlight;color:HighlightText}.lc-select-trigger:focus-visible{outline-color:Highlight}}
+
+/* Keep booking dates and dropdown values typographically aligned on one line. */
+.booking-form .booking-field :is(.calendar-trigger,.lc-select-trigger){gap:8px;font-size:1rem;font-weight:400;line-height:1.25;white-space:nowrap;color:#193a42}
+.booking-form .calendar-trigger-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
