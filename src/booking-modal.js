@@ -1,4 +1,5 @@
 import './booking-modal.css';
+import './booking-request-id.js';
 
 export function createBookingModal(form) {
   const modal = document.createElement('div');
@@ -62,7 +63,6 @@ export function createBookingModal(form) {
   closeButton.addEventListener('click', () => close());
   modal.addEventListener('click', event => {if (event.target === modal) close();});
   modal.addEventListener('keydown', event => {
-    // A dropdown handles its own Escape before the surrounding dialog does.
     if (event.defaultPrevented) return;
     if (event.key === 'Escape') {event.preventDefault(); close(); return;}
     if (event.key !== 'Tab') return;
