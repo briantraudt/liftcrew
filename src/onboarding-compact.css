@@ -1,0 +1,30 @@
+/* Operator-only spacing; accessible control sizes are preserved. */
+body.operator-onboarding .op-header{height:76px;padding-top:12px;padding-bottom:12px}
+body.operator-onboarding .op-header img{width:154px}
+body.operator-onboarding .op-main{padding-top:18px;padding-bottom:40px}
+body.operator-onboarding .account-bar{margin-bottom:12px}
+body.operator-onboarding .portal-heading{margin-bottom:16px;gap:12px}
+body.operator-onboarding .portal-heading h1{font-size:clamp(25px,2.6vw,33px)}
+body.operator-onboarding .onboarding-progress{margin-bottom:18px}
+body.operator-onboarding .application-layout{gap:22px;grid-template-columns:210px minmax(0,1fr)}
+body.operator-onboarding .application-card{padding:24px 28px}
+body.operator-onboarding .application-card h2{margin-bottom:10px}
+body.operator-onboarding .application-card>.muted{margin-top:0;margin-bottom:18px}
+body.operator-onboarding .field{margin-bottom:16px}
+body.operator-onboarding .record{padding:20px;margin:18px 0}
+body.operator-onboarding .record-heading{margin-bottom:14px}
+body.operator-onboarding .step-sidebar nav{gap:4px}
+body.operator-onboarding .step-link{padding:13px 10px}
+body.operator-onboarding .form-actions{padding-top:18px;margin-top:22px}
+.equipment-permissions{border:1px solid var(--line);border-radius:9px;padding:16px;margin:2px 0 18px;min-width:0}
+.equipment-permissions legend{font-size:13px;font-weight:700;padding:0 5px}
+.equipment-permissions .check{margin:12px 0}.equipment-permissions small{display:block;color:var(--muted)}
+.equipment-permissions .field-hint{margin:0 0 12px}
+.insurance-requirements{margin:18px 0}.insurance-requirements dl{margin:0}
+.insurance-requirements dl>div{display:grid;grid-template-columns:minmax(150px,1fr) 1.8fr;gap:18px;padding:11px 0;border-bottom:1px solid var(--line);font-size:13px;line-height:1.55}
+.insurance-requirements dt{font-weight:700}.insurance-requirements dd{margin:0}
+.insurance-requirements details{padding-top:14px;border:0}.insurance-requirements details p{font-size:13px}
+.service-area-result{font-size:13px;line-height:1.65;margin:0 0 18px}.service-area-result details{padding-top:8px;border:0}.service-area-result details p{max-height:150px;overflow:auto;overflow-wrap:anywhere}
+.insurance-packet .upload-inputs{grid-template-columns:minmax(0,1fr) auto}.insurance-packet .upload-inputs button{grid-column:auto}
+.confirmation-card{max-width:510px;margin:18px auto}.confirmation-card h1{font-size:32px}.confirmation-card .btn{width:100%}.confirmation-card [hidden]{display:none}
+@media(max-width:720px){body.operator-onboarding .op-header{height:68px;padding:12px 20px}body.operator-onboarding .op-header img{width:132px}body.operator-onboarding .op-header nav a{display:block}body.operator-onboarding .op-main{padding:16px 16px 32px}body.operator-onboarding .application-layout{grid-template-columns:minmax(0,1fr);gap:12px}body.operator-onboarding .application-card{padding:20px 16px}body.operator-onboarding .portal-heading{align-items:center;margin-bottom:12px}body.operator-onboarding .portal-heading h1{font-size:24px}body.operator-onboarding .onboarding-progress{margin-bottom:12px}.insurance-requirements dl>div{grid-template-columns:1fr;gap:3px}.insurance-packet .upload-inputs{grid-template-columns:1fr}.equipment-permissions{padding:12px}}

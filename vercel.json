@@ -4,5 +4,11 @@
     { "source": "/crane.html", "destination": "/#booking-form", "permanent": true },
     { "source": "/quote", "destination": "/#booking-form", "permanent": true },
     { "source": "/crane", "destination": "/#booking-form", "permanent": true }
-  ]
+  ],
+  "rewrites": [{ "source": "/operator-confirmed", "destination": "/operator-confirmed.html" }],
+  "headers": [{ "source": "/operator-confirmed(.*)", "headers": [
+    { "key": "Cache-Control", "value": "no-store" },
+    { "key": "Referrer-Policy", "value": "no-referrer" },
+    { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+  ] }]
 }

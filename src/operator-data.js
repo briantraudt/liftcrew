@@ -1,3 +1,4 @@
+import {authorizationErrors,hasInsurancePacket} from './onboarding-model.js';
 export const coverage = [
  ['cgl','General liability','$1M occurrence / $2M aggregate'],['auto','Auto liability','$1M combined single limit'],['wc','Workers’ compensation','Statutory; disclose working-owner exclusions'],['employers','Employers’ liability','$1M each accident / disease'],['umbrella','Umbrella / excess','$2M occurrence and aggregate'],['handling','Property being handled','Greater of $250K or maximum exposed replacement value'],['equipment','Equipment physical damage','Adequate equipment replacement values']
 ];
@@ -9,7 +10,7 @@ export const acknowledgements = {
  terms:'I have received and reviewed the provider agreement draft and its proposed insurance requirements. This application does not execute that draft, guarantee work or authorize dispatch. A completed agreement, required approvals and an accepted work order are required before work.',
  electronic:'I agree to submit this application and its certifications electronically under my typed name. I can access, download and retain the linked documents and print this application.'
 };
-export const emptyProfile=()=>({business:{},equipment:[{id:crypto.randomUUID()}],operators:[{id:crypto.randomUUID()}],insurance:{}});
+export const emptyProfile=()=>({business:{},equipment:[{id:crypto.randomUUID()}],operators:[{id:crypto.randomUUID(),equipmentIds:[]}],insurance:{inputMode:'packet'}});
 export const editable=a=>['draft','changes_requested'].includes(a?.status);
 export const escapeHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function documentSlots(p){
@@ -21,20 +22,21 @@ export function documentSlots(p){
 }
 export function missingItems(p,docs=[]){
  const items=[];const need=(obj,keys,label)=>keys.forEach(k=>{if(!String(obj?.[k]??'').trim())items.push(label+' — '+k.replace(/[A-Z]/g,c=>' '+c.toLowerCase()));});
- need(p.business,['legalName','entityType','formationState','address','contactName','phone','serviceArea','emergencyName','emergencyPhone','availability'],'Business');
+ need(p.business,['legalName','entityType','formationState','address','contactName','phone','zip','radiusMiles','emergencyName','emergencyPhone','availability'],'Business');
  if(!p.equipment?.length)items.push('Add a machine');
- for(const e of p.equipment||[])need(e,['make','model','serial','ownership','capacity','loadCenter','liftHeight','fuel','tires','attachments','transport','inspectionDate'],e.model||'Equipment');
+ for(const e of p.equipment||[])need(e,['make','model','serial','ownership','capacity','liftHeight','fuel','tires','attachments','transport','inspectionDate'],e.model||'Equipment');
  if(!p.operators?.length)items.push('Add an operator');
- for(const o of p.operators||[]){need(o,['name','relationship','equipmentTypes','trainingDate','evaluationDate','trainer','evaluator'],'Operator');if(o.adult!=='yes')items.push('Confirm each operator is at least 18');}
- need(p.insurance,['brokerName','brokerEmail','brokerPhone','workingOwners','exceptions'],'Insurance');
- for(const [k,l] of coverage)need(p.insurance?.[k],['carrier','policy','limit','expiry'],l);
- for(const [kind,id,title] of documentSlots(p))if(!docs.some(d=>d.active&&d.kind===kind&&d.entity_id===id))items.push(title);
+ for(const o of p.operators||[]){need(o,['name','relationship','trainingDate','evaluationDate','trainer','evaluator'],'Operator');if(o.adult!=='yes')items.push('Confirm each operator is at least 18');}
+ items.push(...authorizationErrors(p));
+ if(!(Number(p.insurance?.maximumLoadValue)>0))items.push('Enter maximum property value per job');
+ if(!hasInsurancePacket(docs))items.push('Upload your insurance policy packet');
+ for(const [kind,id,title] of documentSlots(p).filter(([kind])=>!['coi','endorsements','handling'].includes(kind)))if(!docs.some(d=>d.active&&d.kind===kind&&d.entity_id===id))items.push(title);
  return [...new Set(items)];
 }
 export function renewalIssues(p,docs=[]){
  const today=new Date().toISOString().slice(0,10), cutoff=new Date();cutoff.setUTCFullYear(cutoff.getUTCFullYear()-3);
  const issues=[];
- for(const [k,l] of coverage)if(p.insurance?.[k]?.expiry&&p.insurance[k].expiry<today)issues.push(l+' has expired');
+ for(const [k,l] of coverage)if(p.insurance?.inputMode!=='packet'&&p.insurance?.[k]?.expiry&&p.insurance[k].expiry<today)issues.push(l+' has expired');
  for(const o of p.operators||[])if(o.evaluationDate&&o.evaluationDate<cutoff.toISOString().slice(0,10))issues.push((o.name||'Operator')+' needs a current evaluation');
  for(const d of docs)if(d.active&&d.expires_on&&d.expires_on<today)issues.push(d.filename+' has expired');
  return issues;
@@ -48,6 +50,6 @@ export function validateFile(file){
 }
 export function renderRecord(value){
  if(Array.isArray(value))return value.map((v,i)=>`<section class="record"><h3>Entry ${i+1}</h3>${renderRecord(v)}</section>`).join('');
- if(value&&typeof value==='object')return `<div class="table-scroll"><table>${Object.entries(value).filter(([k])=>k!=='id').map(([k,v])=>`<tr><th scope="row">${escapeHtml(({dba:'DBA',wc:'Workers’ compensation',cgl:'General liability',auto:'Auto liability',employers:'Employers’ liability',umbrella:'Umbrella / excess',handling:'Property being handled',adult:'At least 18 years old',capacity:'Rated capacity (lb)',loadCenter:'Load center (in)',liftHeight:'Maximum lift height (ft)'})[k]||k.replace(/[A-Z]/g,c=>' '+c.toLowerCase()).replace(/^./,c=>c.toUpperCase()))}</th><td>${v&&typeof v==='object'?renderRecord(v):escapeHtml(typeof v==='boolean'?(v?'Yes':'No'):v||'—')}</td></tr>`).join('')}</table></div>`;
+ if(value&&typeof value==='object')return `<div class="table-scroll"><table>${Object.entries(value).filter(([k])=>!['id','serviceZipCodes'].includes(k)).map(([k,v])=>`<tr><th scope="row">${escapeHtml(({dba:'DBA',wc:'Workers’ compensation',cgl:'General liability',auto:'Auto liability',employers:'Employers’ liability',umbrella:'Umbrella / excess',handling:'Property being handled',equipmentIds:'Authorized equipment identifiers',adult:'At least 18 years old',capacity:'Rated capacity (lb)',loadCenter:'Load center (in)',liftHeight:'Maximum lift height (ft)'})[k]||k.replace(/[A-Z]/g,c=>' '+c.toLowerCase()).replace(/^./,c=>c.toUpperCase()))}</th><td>${v&&typeof v==='object'?renderRecord(v):escapeHtml(typeof v==='boolean'?(v?'Yes':'No'):v||'—')}</td></tr>`).join('')}</table></div>`;
  return escapeHtml(value);
 }
