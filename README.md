@@ -1,76 +1,67 @@
 # LiftCrew
 
-Responsive LiftCrew marketing website, built with Vite and a Vercel serverless quote endpoint.
+Vite marketing, customer quote intake and provider onboarding, hosted on Vercel with Supabase authentication, private storage and database review gates.
 
-## Run locally
+## Development
 
-```bash
-npm install
+```sh
+npm ci
 npm run dev
+node --test tests/*.test.mjs
+npm run build
 ```
 
-`npm run build` produces the site in `dist/`. The quote API is served by Vercel and does not run through the Vite development server.
+Vite builds `dist/`. `/api/*` endpoints are Vercel serverless functions; the Vite development server does not execute them.
 
-## Deploy to Vercel
+## Provider onboarding
 
-Import `briantraudt/liftcrew` into Vercel. The framework is Vite, build command is `npm run build`, and output directory is `dist`. The `/api/quote` serverless function is deployed alongside the static site.
+`/operators.html`: verified signup → business → equipment → operators with equipment selections → read and electronically sign → one insurance packet → supporting records → submit. Profiles resume after login. ZIP coverage is computed server-side using ZIP centers and mileage radius; it is not driving distance. Qualification, capacity, site and insurance checks remain necessary for every job.
 
-For quote delivery, verify a sending domain with [Resend](https://resend.com/domains) and set these Vercel environment variables for Production (and Preview if desired):
+`/operator-confirmed.html` verifies the callback, removes credentials from the URL, and asks the user to sign in. It never treats an ordinary direct page visit as a confirmed email. Hosted Supabase URL settings must allow the production callback; a Git push alone does not change those settings.
 
-- `RESEND_API_KEY`: Resend API key.
-- `QUOTE_TO_EMAIL`: inbox that should receive requests.
-- `QUOTE_FROM_EMAIL`: verified sender address on your domain, such as `quotes@your-domain.com`.
+`/operator-agreement.html` serves the actual published v2 agreement, not the archived v1 draft. Its body hash must match before actions are displayed. Personalized signature records bind the exact contract text, business identity, authenticated signer, authority, consent and server timestamp. LiftCrew countersigns separately. Publication is not a company signature or provider approval. See `docs/provider-agreement-publication.md`.
 
-Redeploy after setting the variables. Until they are configured, the form clearly reports that requests cannot be sent. No credentials belong in this repository.
+The `insurance-review` Edge Function reads consented insurance uploads using a server-only OpenAI key. One combined packet can support multiple coverage requirements. Tax, equipment-photo and training upload kinds are excluded from the model manifest. Unclear or unavailable extraction goes to human review, never automatic approval. Authenticity/current coverage require independent verification. See `docs/onboarding-release-20261013.md` for the current packet and equipment-authorization model.
 
-After deployment, submit one real test request and confirm it reaches `QUOTE_TO_EMAIL` before directing customers to the form. The visible success message only appears after the email API reports success.
+## Staff access
 
-## Operator onboarding
+- `/staff-login.html`: staff signup, verified sign-in, invitation/password-reset handling. Staff do not need a provider application.
+- `/operator-review.html`: reviewer-only provider management, contract countersignature, independent-verification records, corrections and approvals.
+- `/customer-requests.html`: reviewer-only customer request inbox, request status, contact details and email retry.
 
-- `/operators.html`: account creation, email confirmation, sign-in, password recovery, resumable applications, private uploads, electronic application certification and status.
-- `/operator-review.html`: authenticated, explicitly authorized reviewer dashboard. Reviewers can request updates, decline, or approve after all checks and a finalized signed contract upload.
-- `/operator-agreement.html`: complete proposed provider agreement, with a downloadable PDF. The application **acknowledges the draft**; it does not execute an agreement with missing legal fields.
-- `/operator-privacy.html`: application privacy / electronic records notice.
+Reviewer authority comes from private owner-maintained tables and a confirmed email, never editable user metadata. Creating a staff login does not grant reviewer rights. The owner's authorized email is configured separately from registration; the owner must create and verify the account and choose their own password.
 
-### Backend
+## Customer request delivery
 
-Supabase project `exokcxcxmmsnqejzhxwf`. Apply checked-in migrations in order when creating a new environment. They were applied to the existing project during implementation. The browser uses a publishable key, never a service-role key. RLS restricts applications, submissions and private objects by authenticated ownership; reviewer status comes from private owner-maintained tables, never user-editable metadata. Direct status changes and submission record writes are not granted to applicants. RPCs enforce submission and approval gates in the database.
+Forklift and crane quote submissions are validated and saved to `public.customer_requests` **before** attempting email. Success returns a durable request reference, not a claim of an email reaching an inbox or a confirmed booking. Existing crane inquiries are copied into the unified staff inbox without deleting originals.
 
-Private bucket: `operator-documents`, 10 MB/file, PDF/JPEG/PNG/WebP. Client-side signature/type/size checks supplement storage limits. Files download as attachments. There is **no automated malware scanner**. Submitted application snapshots include agreement version/hash, typed name, authority, acknowledgements and server timestamp. Previously submitted documents are archived rather than deleted when replaced. Expiration warnings are checked when opening the portal; this release does not send renewal reminders or review emails and does not implement dispatch scheduling.
+The browser retains a request UUID for retries of unchanged form details. The database deduplicates the same reference/payload and rejects conflicting reuse. The narrow intake RPC requires a server-only credential, applies per-IP-hash/per-email and global volume limits, and grants no public access to customer data. Approved staff alone can read requests and change their status.
 
-### Authentication setup before inviting public applicants
+Email is secondary: missing credentials or a failed send cannot erase or reject a saved inquiry. Staff see `pending`, `unconfigured`, `sending`, `accepted`, `failed` or `delivery_unknown`. `accepted` means the email provider accepted the send, **not** inbox delivery. Retries use the same Resend idempotency key, with bounded attempts and a conservative retry window. There is no background retry scheduler in this release; staff can retry a saved request from the inbox.
 
-1. In Supabase Authentication → Email / SMTP, configure a verified transactional sender for this project. Supabase's default sender is restricted and is not a production public-signup email service. Keep email confirmation enabled.
-2. Set Site URL to `https://www.myliftcrew.com` and allow the exact redirect `https://www.myliftcrew.com/operators.html`. Add only deliberate preview/local URLs for testing. Confirmation and recovery templates must retain the supported confirmation link. Test confirmation, resend and password recovery from an actual authorized inbox.
-3. The verified hosting-project owner's email has been added to the **private** reviewer allowlist. That owner must create and confirm their account. Additional reviewers must be granted explicitly by a Supabase project administrator, for example:
+### Server configuration
 
-   ```sql
-   insert into private.operator_reviewers(user_id)
-   select id from auth.users
-   where lower(email) = lower('YOUR_VERIFIED_REVIEWER_EMAIL')
-     and email_confirmed_at is not null
-   on conflict do nothing;
-   ```
+- `CUSTOMER_INTAKE_KEY`: high-entropy server secret in Vercel; its SHA-256 is held in `private.customer_intake_credentials`. Never expose it in Vite variables, browser bundles, source control or logs.
+- `QUOTE_TO_EMAIL`: designated LiftCrew staff inbox.
+- `RESEND_API_KEY` and `QUOTE_FROM_EMAIL`: required only for email alerts. Use an authorized, verified sender domain. Do not claim delivery before checking the provider/inbox.
+- `OPENAI_API_KEY`: Supabase Edge Function secret only; optional `INSURANCE_REVIEW_MODEL` defaults to `gpt-4.1`.
 
-4. Complete LiftCrew's legal entity, notices/contact details and commercial choices with counsel and the insurance broker. Execute the final provider agreement outside this draft-acknowledgement flow, then upload the signed copy during review. A new finalized web agreement requires a new immutable version/hash and matching database migration; never silently change a version already acknowledged.
-5. Enable [leaked-password protection](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection) where available; the project security advisor currently reports it disabled.
-6. Define retention/deletion handling, reviewer operating procedures and a malware scanning process appropriate to your document handling. Tax documents are private but can contain sensitive tax identifiers; do not forward them to clients.
+Deploy after Vercel environment changes. Do not copy secrets into this repository. The frontend uses only the Supabase publishable key.
 
-Authenticated applicants may save incomplete drafts. Submission requires full coverage records and supporting files; exceptions are disclosed for human review and do not waive insurance requirements. Each machine and operator has a stable identifier and its own document checklist. Each assignment still requires a work order and current job-specific safety/insurance review.
+### Hosted authentication setup
 
-### Verification
+Set Supabase Site URL to `https://www.myliftcrew.com`. Allow these exact production redirects and the deliberate apex equivalents:
 
-`npm run build` and `node --test tests/*.test.mjs`. Integration verification uses disposable, clearly labeled accounts and synthetic files; do not use customer records as fixtures. Verify cross-account reads, anonymous reads, forged reviewer roles, direct status mutation, missing documents, expired qualifications, immutable submissions, signed-contract approval gates and retention of prior uploads. No integration credentials are committed.
+- `https://www.myliftcrew.com/operator-confirmed.html`
+- `https://www.myliftcrew.com/operators.html`
+- `https://www.myliftcrew.com/staff-login.html`
 
-Reference: [OSHA powered industrial trucks, 29 CFR 1910.178](https://www.osha.gov/laws-regs/regulations/standardnumber/1910/1910.178); [Supabase SMTP configuration](https://supabase.com/docs/guides/auth/auth-smtp).
+The existing operator frontend also requests `https://myliftcrew.com/operator-confirmed.html` and `https://myliftcrew.com/operators.html`; include those exact URLs. Keep email confirmation enabled, use a working transactional SMTP sender, and keep the confirmation template's supported confirmation link. Old localhost links cannot be repaired by publishing a new page. Test fresh signup, resend and recovery from a real authorized inbox.
 
-## Crane + Operator
+## Security and verification
 
-Homepage crane bookings open `/crane.html` with the date, duration and ZIP retained. The crane form collects load/rigging weight, dimensions, pickup/set heights and radii, maximum path radius, headroom, obstacles, access/setup clearances, ground and utility conditions, crew/rigging/permit needs, schedule and contact details. Unknown dimensions are explicitly recorded for follow-up; a preferred crane is optional. A preference never constitutes a rated lift or confirmed booking.
+Apply migrations in order for a new environment. The published agreement is authorized production business data, not an automatic seed. Public tables use RLS. Applicants cannot directly write approval, signature or AI-result fields. Intake secrets and reviewer lists remain private. Uploaded files are private but are **not malware-scanned**; handle W-9s and downloaded files appropriately. Renewal and decision email reminders are not implemented.
 
-- `public.crane_catalog`: 25 reference classes from United Rentals **page 1** as checked October 8, 2026. Read-only to public clients. `data/cranes-page-1.json` is the reproducible seed. The listing's `cat-classes` order and `pageLength:25` define membership; the remaining 10 entries (outrigger pads, roustabouts and gantries) are page 2 and excluded. Source links and timestamps are recorded per row. Published vertical reach, boom length and tipping height have distinct fields; missing specifications remain null. Source inconsistencies are recorded in `spec_notes`.
-- `/api/crane-quote`: independently validates the submission and preferred class, then saves to `public.crane_quote_requests`. Contact details have no anonymous/authenticated read/update/delete access. Public access permits insertion only; no service-role credentials are shipped. Review requests in the Supabase Table Editor as a project administrator.
-- Crane request success means the inquiry was durably saved. The existing Resend variables optionally enable staff email notifications. An email outage does not lose the inquiry. Email delivery is currently unconfigured; saved inquiries must be monitored in Supabase until those variables are set.
-- No automatic capacity-at-radius calculation, availability claim, price or dispatch is made. Actual crane/load-chart, rigging and site review remain required before confirmation.
+Unit/API tests: `node --test tests/*.test.mjs`. Browser checks: build, start preview on port 4173, then run `tests/operator-onboarding.browser.mjs` and `tests/staff-inbox.browser.mjs` with the optional `playwright-core` / `@sparticuz/chromium` test dependencies and required Linux browser libraries. Browser identity fixtures are mocked; they are not evidence of real email delivery. Production database QA uses rollback-only synthetic fixtures; no synthetic signature or approval should remain.
 
-Checks: `node --test tests/*.test.mjs` and `npm run build`.
+This release covers onboarding, clearance and candidate matching. It does not implement provider job offers, scheduling/reservations, work-order acceptance, customer payments, or automated dispatch. Current job-specific requirements still apply.
