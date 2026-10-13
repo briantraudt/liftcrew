@@ -1,0 +1,64 @@
+// Run against `npm run preview -- --port 4173` after npm run build.
+// Optional test dependencies: playwright-core and @sparticuz/chromium.
+// Supabase is fully mocked: no production accounts, documents or AI requests are created.
+import assert from 'node:assert/strict';
+import {chromium as playwright} from 'playwright-core';
+import chromium from '@sparticuz/chromium';
+const base=process.env.TEST_BASE_URL||'http://127.0.0.1:4173';
+const user={id:'11111111-1111-4111-8111-111111111111',email:'synthetic@example.com',aud:'authenticated',role:'authenticated',email_confirmed_at:'2026-10-13T00:00:00Z'};
+const encode=value=>Buffer.from(JSON.stringify(value)).toString('base64url');
+const token=encode({alg:'HS256',typ:'JWT'})+'.'+encode({sub:user.id,aud:'authenticated',role:'authenticated',exp:Math.floor(Date.now()/1000)+3600})+'.synthetic-signature';
+const session={access_token:token,refresh_token:'synthetic-refresh',expires_at:Math.floor(Date.now()/1000)+3600,expires_in:3600,token_type:'bearer',user};
+const fixture=()=>({id:'22222222-2222-4222-8222-222222222222',user_id:user.id,status:'draft',revision:0,profile:{business:{zip:'78703',radiusMiles:50,legalName:'Synthetic Test LLC'},equipment:[{id:'machine-one',make:'Toyota',model:'8FGU25',category:'Warehouse forklift',serial:'TEST-1'},{id:'machine-two',make:'JLG',model:'G6',category:'Telehandler',serial:'TEST-2'}],operators:[{id:'operator-one',name:'Synthetic Operator',equipmentIds:[]}],insurance:{inputMode:'packet',maximumLoadValue:250000}}});
+const browser=await playwright.launch({args:chromium.args,executablePath:await chromium.executablePath(),headless:true});
+let assertions=0;
+try{
+ for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
+  let application=fixture();const errors=[];
+  const context=await browser.newContext({viewport});
+  await context.addInitScript(value=>localStorage.setItem('sb-exokcxcxmmsnqejzhxwf-auth-token',JSON.stringify(value)),session);
+  await context.route('https://exokcxcxmmsnqejzhxwf.supabase.co/**',async route=>{
+   const request=route.request(),url=new URL(request.url());let data=null,status=200;
+   if(url.pathname==='/auth/v1/user')data=user;
+   else if(url.pathname==='/auth/v1/logout')status=204;
+   else if(url.pathname==='/rest/v1/operator_applications'){
+    if(request.method()==='PATCH'){application={...application,...request.postDataJSON()};data=application;}
+    else data=[application];
+   }else if(url.pathname==='/rest/v1/operator_documents')data=[];
+   else if(url.pathname==='/rest/v1/provider_contract_versions')data=[{id:'version-test',version:'synthetic'}];
+   else if(url.pathname==='/rest/v1/rpc/is_operator_reviewer')data=false;
+   else if(url.pathname==='/rest/v1/rpc/provider_clearance')data={eligible:false,blockers:['Verification required'],envelope:null,review:null,reviewCurrent:true};
+   else if(url.pathname==='/rest/v1/rpc/provider_service_area')data={count:163,city:'Austin',state:'TX',zips:['78701','78702','78703']};
+   else throw Error('Unexpected mocked request: '+request.method()+' '+url.pathname);
+   await route.fulfill({status,headers:{'content-type':'application/json','access-control-allow-origin':'*'},body:status===204?'':JSON.stringify(data)});
+  });
+  const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
+  await page.goto(base+'/operators.html');await page.getByRole('heading',{name:'Your business',exact:true}).waitFor();
+  assert.equal(await page.locator('.op-header').getByText('For clients',{exact:true}).count(),0);assertions++;
+  await page.locator('#service-area-result').getByText(/163 ZIP codes/).waitFor();assertions++;
+  const box=await page.locator('.application-card').boundingBox();assert(box.y<(viewport.width>720?270:380));assertions++;
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assertions++;
+  await page.locator('[data-step="1"]').click();await page.getByRole('heading',{name:'Your equipment',exact:true}).waitFor();
+  assert.equal(await page.locator('[data-equipment-permission]').count(),0);assertions++;
+  await page.locator('[data-step="2"]').click();await page.getByRole('heading',{name:'Your operators',exact:true}).waitFor();
+  assert.equal(await page.locator('[data-equipment-permission]').count(),2);assertions++;
+  assert.equal(await page.locator('[data-field="operators.0.equipmentTypes"]').count(),0);assertions++;
+  await page.locator('[data-equipment-permission][value="machine-one"]').check();
+  await page.getByRole('button',{name:'Save',exact:true}).click();await page.getByText('Saved. You can return to complete onboarding.',{exact:true}).waitFor();
+  assert.deepEqual(application.profile.operators[0].equipmentIds,['machine-one']);assertions++;
+  await page.locator('[data-step="4"]').click();await page.getByRole('heading',{name:'Insurance',exact:true}).waitFor();
+  assert.equal(await page.locator('input[type=file]').count(),1);assertions++;
+  assert.equal(await page.locator('[data-field^="insurance.cgl"]').count(),0);assertions++;
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assertions++;
+  await page.goto(base+'/operator-confirmed.html');await page.getByRole('heading',{name:'Continue your onboarding',exact:true}).waitFor();assertions++;
+  await page.goto(base+'/operator-confirmed.html#error=expired');await page.getByRole('heading',{name:'Let’s get you back on track.',exact:true}).waitFor();assertions++;
+  assert.equal(new URL(page.url()).hash,'');assertions++;
+  await page.goto(base+'/operator-confirmed.html#access_token='+token+'&refresh_token=synthetic-refresh&type=signup');await page.getByRole('heading',{name:'Email confirmed.',exact:true}).waitFor();assertions++;
+  assert.equal(await page.locator('#confirmation-login').getAttribute('href'),'/operators.html?mode=signin');assertions++;
+  assert.equal(new URL(page.url()).hash,'');assertions++;
+  assert.deepEqual(errors,[]);assertions++;
+  console.log(`PASS ${viewport.width}px: layout, equipment selections, single packet upload, confirmation states`);
+  await context.close();
+ }
+ console.log(`Browser assertions passed: ${assertions}`);
+}finally{await browser.close();}
