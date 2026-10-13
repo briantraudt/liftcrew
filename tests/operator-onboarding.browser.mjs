@@ -32,7 +32,7 @@ try{
    else throw Error('Unexpected mocked request: '+request.method()+' '+url.pathname);
    await route.fulfill({status,headers:{'content-type':'application/json','access-control-allow-origin':'*'},body:status===204?'':JSON.stringify(data)});
   });
-  const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
+  const page=await context.newPage();page.setDefaultTimeout(10000);page.on('pageerror',error=>errors.push(error.message));
   await page.goto(base+'/operators.html');await page.getByRole('heading',{name:'Your business',exact:true}).waitFor();
   assert.equal(await page.locator('.op-header').getByText('For clients',{exact:true}).count(),0);assertions++;
   await page.locator('#service-area-result').getByText(/163 ZIP codes/).waitFor();assertions++;
@@ -50,10 +50,10 @@ try{
   assert.equal(await page.locator('input[type=file]').count(),1);assertions++;
   assert.equal(await page.locator('[data-field^="insurance.cgl"]').count(),0);assertions++;
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assertions++;
-  await page.goto(base+'/operator-confirmed.html');await page.getByRole('heading',{name:'Continue your onboarding',exact:true}).waitFor();assertions++;
-  await page.goto(base+'/operator-confirmed.html#error=expired');await page.getByRole('heading',{name:'Let’s get you back on track.',exact:true}).waitFor();assertions++;
+  await page.goto(base+'/operator-confirmed.html?case=direct');await page.getByRole('heading',{name:'Continue your onboarding',exact:true}).waitFor();assertions++;
+  await page.goto(base+'/operator-confirmed.html?case=expired#error=expired');await page.getByRole('heading',{name:'Let’s get you back on track.',exact:true}).waitFor();assertions++;
   assert.equal(new URL(page.url()).hash,'');assertions++;
-  await page.goto(base+'/operator-confirmed.html#access_token='+token+'&refresh_token=synthetic-refresh&type=signup');await page.getByRole('heading',{name:'Email confirmed.',exact:true}).waitFor();assertions++;
+  await page.goto(base+'/operator-confirmed.html?case=valid#access_token='+token+'&refresh_token=synthetic-refresh&type=signup');await page.getByRole('heading',{name:'Email confirmed.',exact:true}).waitFor();assertions++;
   assert.equal(await page.locator('#confirmation-login').getAttribute('href'),'/operators.html?mode=signin');assertions++;
   assert.equal(new URL(page.url()).hash,'');assertions++;
   assert.deepEqual(errors,[]);assertions++;
