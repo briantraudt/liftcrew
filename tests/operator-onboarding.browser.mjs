@@ -1,5 +1,6 @@
 // Run against `npm run preview -- --port 4173` after npm run build.
 // Optional test dependencies: playwright-core and @sparticuz/chromium.
+// Requires system nss, nspr and a fallback font (e.g. DejaVu Sans).
 // Supabase is fully mocked: no production accounts, documents or AI requests are created.
 import assert from 'node:assert/strict';
 import {chromium as playwright} from 'playwright-core';
@@ -10,10 +11,10 @@ const encode=value=>Buffer.from(JSON.stringify(value)).toString('base64url');
 const token=encode({alg:'HS256',typ:'JWT'})+'.'+encode({sub:user.id,aud:'authenticated',role:'authenticated',exp:Math.floor(Date.now()/1000)+3600})+'.synthetic-signature';
 const session={access_token:token,refresh_token:'synthetic-refresh',expires_at:Math.floor(Date.now()/1000)+3600,expires_in:3600,token_type:'bearer',user};
 const fixture=()=>({id:'22222222-2222-4222-8222-222222222222',user_id:user.id,status:'draft',revision:0,profile:{business:{zip:'78703',radiusMiles:50,legalName:'Synthetic Test LLC'},equipment:[{id:'machine-one',make:'Toyota',model:'8FGU25',category:'Warehouse forklift',serial:'TEST-1'},{id:'machine-two',make:'JLG',model:'G6',category:'Telehandler',serial:'TEST-2'}],operators:[{id:'operator-one',name:'Synthetic Operator',equipmentIds:[]}],insurance:{inputMode:'packet',maximumLoadValue:250000}}});
-const browser=await playwright.launch({args:chromium.args,executablePath:await chromium.executablePath(),headless:true});
 let assertions=0;
-try{
- for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
+for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
+ const browser=await playwright.launch({args:chromium.args,executablePath:await chromium.executablePath(),headless:true});
+ try{
   let application=fixture();const errors=[];
   const context=await browser.newContext({viewport});
   await context.addInitScript(value=>localStorage.setItem('sb-exokcxcxmmsnqejzhxwf-auth-token',JSON.stringify(value)),session);
@@ -58,7 +59,6 @@ try{
   assert.equal(new URL(page.url()).hash,'');assertions++;
   assert.deepEqual(errors,[]);assertions++;
   console.log(`PASS ${viewport.width}px: layout, equipment selections, single packet upload, confirmation states`);
-  await context.close();
- }
- console.log(`Browser assertions passed: ${assertions}`);
-}finally{await browser.close();}
+ }finally{await browser.close();}
+}
+console.log(`Browser assertions passed: ${assertions}`);
