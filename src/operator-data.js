@@ -24,7 +24,7 @@ export function missingItems(p,docs=[]){
  const items=[];const need=(obj,keys,label)=>keys.forEach(k=>{if(!String(obj?.[k]??'').trim())items.push(label+' — '+k.replace(/[A-Z]/g,c=>' '+c.toLowerCase()));});
  need(p.business,['legalName','entityType','formationState','address','contactName','phone','zip','radiusMiles','emergencyName','emergencyPhone','availability'],'Business');
  if(!p.equipment?.length)items.push('Add a machine');
- for(const e of p.equipment||[])need(e,['make','model','serial','ownership','capacity','liftHeight','fuel','tires','attachments','transport','inspectionDate'],e.model||'Equipment');
+ for(const e of p.equipment||[])need(e,['make','model','serial','ownership','capacity','liftHeight','fuel','tires','attachments','transport','inspectionDate','baseZip','hourlyRate','fourHourRate','dailyRate'],e.model||'Equipment');
  if(!p.operators?.length)items.push('Add an operator');
  for(const o of p.operators||[]){need(o,['name','relationship','trainingDate','evaluationDate','trainer','evaluator'],'Operator');if(o.adult!=='yes')items.push('Confirm each operator is at least 18');}
  items.push(...authorizationErrors(p));
