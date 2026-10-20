@@ -4,6 +4,7 @@ import { forkliftSections, validateBooking } from './booking-fields.js';
 import { loadCraneCatalog } from './crane-catalog.js';
 import { suggestEquipment } from './catalog-data.js';
 import { refreshSelects } from './select.js';
+import { attachPricingPreview } from './customer-pricing-ui.js';
 
 const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
 
@@ -37,6 +38,7 @@ export function createBookingDetails(booking, onBack, onScheduleChange) {
       ${isCrane ? '<div class="wide"><label for="detail-craneClass">Crane preference</label><select id="detail-craneClass" name="craneClass"><option value="">Help me choose</option></select><p class="field-note" data-catalog-note role="status"></p></div>' : ''}
     </div></section>
     ${sections.map(section => `<section class="details-card"><h2>${section.title}</h2><div class="details-grid">${section.fields.map(renderField).join('')}</div></section>`).join('')}
+    <section class="details-card price-preview" data-price-preview aria-live="polite"><h2>Nearby equipment & pricing</h2><div data-price-output><p class="field-note">Enter your ZIP code and lift requirements to see an estimate.</p></div></section>
     ${isCrane ? '' : '<section class="details-card equipment-suggestion" hidden aria-live="polite"><h2>Suggested equipment</h2><strong></strong><p class="field-note"></p><a target="_blank" rel="noopener noreferrer" hidden>View equipment example</a></section>'}
     <div class="details-submit"><p>${isCrane ? 'We’ll confirm the unit after a load-chart and site review.' : 'We’ll confirm the unit after a load and site review.'}</p><button type="submit" class="button">Request Quote</button><p class="details-note" role="status" aria-live="polite"></p></div></form>
     <section class="details-card details-success" hidden tabindex="-1"><h2>Request received.</h2><p>We’ll review your lift and follow up with availability and a quote.</p><p data-reference></p><a class="button" href="#booking-form" data-back>Back to LiftCrew</a></section>
@@ -45,6 +47,7 @@ export function createBookingDetails(booking, onBack, onScheduleChange) {
   const form = element.querySelector('form');
   const note = element.querySelector('.details-note');
   const submit = form.querySelector('[type=submit]');
+  const refreshPricing = attachPricingPreview(form, element.querySelector('[data-price-preview]'));
   let completed = false;
   const today = new Date();
   form.elements.date.min = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -53,6 +56,7 @@ export function createBookingDetails(booking, onBack, onScheduleChange) {
     if (error || schedule.service !== booking.service) throw Error(error || 'Choose a service on the homepage.');
     for (const key of ['location', 'date', 'durationDays']) form.elements[key].value = schedule[key];
     refreshSelects(form);
+    refreshPricing();
   }
   updateSchedule(booking);
   element.querySelectorAll('[data-back]').forEach(link => link.addEventListener('click', event => {event.preventDefault(); onBack();}));
