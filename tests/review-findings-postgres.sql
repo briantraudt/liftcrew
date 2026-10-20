@@ -12,7 +12,7 @@ create table public.provider_contract_envelopes(
  application_id uuid not null,business_hash text not null,provider_signed_at timestamptz,
  liftcrew_signed_at timestamptz,created_at timestamptz not null default now()
 );
-create table public.operator_reviews(application_id uuid not null,decision text not null,
+create table public.operator_reviews(id uuid primary key default gen_random_uuid(),application_id uuid not null,revision integer not null default 1,decision text not null,
  evidence_fingerprint text,valid_until date,created_at timestamptz not null default now());
 create table public.operator_documents(application_id uuid not null,active boolean not null,expires_on date);
 create table private.us_zip_centroids(zip text primary key,latitude double precision,longitude double precision);
@@ -42,13 +42,13 @@ begin
 end; $$;
 -- Synthetic durable-intake dependency: persists locally and has no network/email side effects.
 create function public.create_customer_request(p_key text,p_id uuid,p_rate_key text,p_details jsonb)
-returns uuid language plpgsql security definer set search_path='' as $
+returns uuid language plpgsql security definer set search_path='' as $fixture$
 begin
  perform private.check_customer_intake_key(p_key);
  insert into public.customer_requests(id,details) values(p_id,p_details)
  on conflict(id) do nothing;
  return p_id;
-end; $;
+end; $fixture$;
 -- Deliberately protected: any erroneous invocation by the anonymous quote will raise.
 create function public.provider_clearance(p_application_id uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
@@ -212,6 +212,17 @@ begin
  'synthetic-test-only-intake-credentials-never-production','10002','Forklift with operator',5000,10,1);
  if result->>'status'<>'unavailable' then raise exception 'Stale approval fingerprint still priced equipment'; end if;
 end; $assertions$;
+-- A newer submitted revision beats an older approval even if its timestamp is earlier.
+insert into public.operator_reviews(application_id,revision,decision,evidence_fingerprint,valid_until,created_at)
+values('11111111-1111-4111-a111-111111111111',2,'approved',
+ private.provider_fingerprint('11111111-1111-4111-a111-111111111111'),current_date-1,now()-interval '1 day');
+do $revision$
+begin
+ if (public.quote_nearest_provider_equipment(
+ 'synthetic-test-only-intake-credentials-never-production','10002','Forklift with operator',5000,10,1)->>'status')<>'unavailable'
+ then raise exception 'Out-of-order older revision was improperly considered current approval'; end if;
+end; $revision$;
+delete from public.operator_reviews where revision=2;
 -- Test additional gates after resetting the matching fingerprint.
 update public.operator_reviews
  set evidence_fingerprint=private.provider_fingerprint('11111111-1111-4111-a111-111111111111')
