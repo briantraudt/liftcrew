@@ -47,6 +47,7 @@ revoke all on function public.provider_clearance(uuid) from public,anon,authenti
 grant execute on function public.provider_clearance(uuid) to authenticated;
 alter table public.operator_applications enable row level security;
 grant select,update(profile) on public.operator_applications to authenticated;
+create policy synthetic_owner_read on public.operator_applications for select to authenticated using(true);
 create policy synthetic_owner_edit on public.operator_applications for update to authenticated
  using(true) with check(true);
 grant usage on schema private to authenticated;
@@ -119,6 +120,15 @@ begin
  'synthetic-test-only-intake-credentials-never-production','10003','Crane with operator',null,null,1);
  if result->>'status'<>'manual' then raise exception 'Crane needs specialty review'; end if;
 end; $assertions$;
+-- Verify anonymous access uses only the existing secret-validated price interface.
+set role anon;
+do $anon$
+begin
+ if (public.quote_nearest_provider_equipment(
+  'synthetic-test-only-intake-credentials-never-production','10002','Forklift with operator',5000,10,1)->>'status')<>'matched'
+ then raise exception 'Anonymous pricing did not resolve approved inventory'; end if;
+end; $anon$;
+reset role;
 -- Test RLS-writable direct profile updates under applicant role: no client/UI assumptions.
 set role authenticated;
 update public.operator_applications set profile=profile#-'{insurance,maximumLoadValue}'
