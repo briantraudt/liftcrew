@@ -28,3 +28,8 @@ body.operator-onboarding .form-actions{padding-top:18px;margin-top:22px}
 .insurance-packet .upload-inputs{grid-template-columns:minmax(0,1fr) auto}.insurance-packet .upload-inputs button{grid-column:auto}
 .confirmation-card{max-width:510px;margin:18px auto}.confirmation-card h1{font-size:32px}.confirmation-card .btn{width:100%}.confirmation-card [hidden]{display:none}
 @media(max-width:720px){body.operator-onboarding .op-header{height:68px;padding:12px 20px}body.operator-onboarding .op-header img{width:132px}body.operator-onboarding .op-header nav a{display:block}body.operator-onboarding .op-main{padding:16px 16px 32px}body.operator-onboarding .application-layout{grid-template-columns:minmax(0,1fr);gap:12px}body.operator-onboarding .application-card{padding:20px 16px}body.operator-onboarding .portal-heading{align-items:center;margin-bottom:12px}body.operator-onboarding .portal-heading h1{font-size:24px}body.operator-onboarding .onboarding-progress{margin-bottom:12px}.insurance-requirements dl>div{grid-template-columns:1fr;gap:3px}.insurance-packet .upload-inputs{grid-template-columns:1fr}.equipment-permissions{padding:12px}}
+
+
+.equipment-rate-heading{margin:22px 0 15px;padding-top:20px;border-top:1px solid var(--line)}
+.equipment-rate-heading h3{font-size:18px;letter-spacing:-.45px;margin-bottom:7px}
+.equipment-rate-heading .field-hint{margin:0 0 14px;max-width:720px}
