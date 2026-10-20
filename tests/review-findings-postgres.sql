@@ -156,6 +156,13 @@ begin
   raise exception 'New provider was forced to invent a job-property value';
  end if;
 end; $assertions$;
+-- A successfully rejected reduction leaves the profile identical; actual other edits
+-- must invalidate the independent reviewer evidence fingerprint.
+set role authenticated;
+update public.operator_applications
+ set profile=jsonb_set(profile,'{business,dispatchNotes}','"Synthetic edit"'::jsonb,true)
+where id='11111111-1111-4111-a111-111111111111';
+reset role;
 -- Approved fingerprints must go stale if the provider changes its profile.
 do $assertions$
 declare result jsonb;
