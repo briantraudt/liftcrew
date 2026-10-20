@@ -15,3 +15,29 @@ jobs:
       - run: npm ci
       - run: node --test tests/*.test.mjs
       - run: npm run build
+  database-regression:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: synthetic-regression-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tests/prepare-original-pricing.mjs
+      - name: Verify security boundaries with rollback-only synthetic PostgreSQL fixtures
+        env:
+          PGPASSWORD: synthetic-regression-only
+        run: |
+          if ! command -v psql >/dev/null; then sudo apt-get update -qq && sudo apt-get install -y postgresql-client; fi
+          psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/review-findings-postgres.sql
