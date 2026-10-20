@@ -23,6 +23,14 @@ Vite builds `dist/`. `/api/*` endpoints are Vercel serverless functions; the Vit
 
 The `insurance-review` Edge Function reads consented insurance uploads using a server-only OpenAI key. One combined packet can support multiple coverage requirements. Tax, equipment-photo and training upload kinds are excluded from the model manifest. Unclear or unavailable extraction goes to human review, never automatic approval. Authenticity/current coverage require independent verification. See `docs/onboarding-release-20261013.md` for the current packet and equipment-authorization model.
 
+## Equipment pricing and customer travel
+
+Each machine in `/operators.html` records its own base ZIP, hourly rate, 4-hour rate, and daily rate. Providers also set a maximum service radius in Business. That limit is applied separately to every machine's ZIP. The included delivery radius is **25 miles one way**; for longer trips the mileage allowance is **$2 per excess round-trip mile**. At 40 miles one way, the excess is 15 miles in each direction: 30 billable miles × $2 = **$60**.
+
+`/api/equipment-pricing` returns a price preview for the nearest **currently approved**, suitable forklift/telehandler with a trained authorized operator, valid provider clearance and all three rates. Matching uses the job ZIP and machine ZIP centroids (straight-line estimates), not road routing; actual delivery mileage, compatibility, availability, site constraints and transport arrangements require confirmation. Hourly and 4-hour rates are displayed as single-session prices, with daily totals multiplied by booking days. Crane inquiries remain manual until separate specialty authorization is implemented.
+
+Price previews are calculated on the server with the existing `CUSTOMER_INTAKE_KEY`; provider identities and private records are not sent to the browser. Every customer intake stores an **independent server-calculated price snapshot** in `customer_requests.pricing_snapshot`, shown in the staff inbox and email alerts. Failed price matching never prevents durable quote intake. Apply `supabase/migrations/20261020160000_equipment_pricing.sql` before deploying the updated frontend and API.
+
 ## Staff access
 
 - `/staff-login.html`: staff signup, verified sign-in, invitation/password-reset handling. Staff do not need a provider application.

@@ -13,6 +13,8 @@ export function extraProfileErrors(profile){
  for(const equipment of profile.equipment||[]){
   required(equipment,['category','make','model','serial','ownership','fuel','tires','attachments','transport','inspectionDate','baseZip','availability','replacementValue','widthIn','heightIn','weightLb'],'Equipment');
   for(const key of ['capacity','liftHeight','replacementValue','widthIn','heightIn','weightLb'])if(!(Number(equipment[key])>0))errors.push(`Equipment ${key} must be positive`);
+  if(!/^\d{5}$/.test(equipment.baseZip||''))errors.push('Enter a five-digit equipment ZIP code');
+  for(const key of ['hourlyRate','fourHourRate','dailyRate']){const rate=String(equipment[key]??'').trim();if(!/^\d+(\.\d{1,2})?$/.test(rate)||Number(rate)<=0||Number(rate)>100000)errors.push('Enter a valid '+key.replace(/[A-Z]/g,c=>' '+c.toLowerCase())+' between $0.01 and $100,000');}
   if(equipment.category!=='Crane'&&!(Number(equipment.loadCenter)>0))errors.push('Forklift load center must be positive');
   if(equipment.category==='Crane'&&!(Number(equipment.workingRadiusFt)>0))errors.push('Crane working radius must be positive');
  }
