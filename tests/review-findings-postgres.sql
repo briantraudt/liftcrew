@@ -5,6 +5,7 @@ create role anon;
 create role authenticated;
 create schema private;
 create table public.operator_applications(id uuid primary key,status text not null,profile jsonb not null);
+create table public.customer_requests(id uuid primary key,details jsonb not null,pricing_snapshot jsonb);
 create table public.operator_submissions(application_id uuid not null,profile_snapshot jsonb not null);
 create table public.provider_insurance_reviews(application_id uuid not null,profile_snapshot jsonb not null);
 create table public.provider_contract_envelopes(
@@ -39,6 +40,15 @@ begin
   raise exception 'No valid test credential';
  end if;
 end; $$;
+-- Synthetic durable-intake dependency: persists locally and has no network/email side effects.
+create function public.create_customer_request(p_key text,p_id uuid,p_rate_key text,p_details jsonb)
+returns uuid language plpgsql security definer set search_path='' as $
+begin
+ perform private.check_customer_intake_key(p_key);
+ insert into public.customer_requests(id,details) values(p_id,p_details)
+ on conflict(id) do nothing;
+ return p_id;
+end; $;
 -- Deliberately protected: any erroneous invocation by the anonymous quote will raise.
 create function public.provider_clearance(p_application_id uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
@@ -81,6 +91,8 @@ from public.operator_applications where id='11111111-1111-4111-a111-111111111111
 revoke all on function public.quote_nearest_provider_equipment(text,text,text,numeric,numeric,integer)
  from public,anon,authenticated;
 grant execute on function public.quote_nearest_provider_equipment(text,text,text,numeric,numeric,integer) to anon;
+revoke all on function public.create_priced_customer_request(text,uuid,text,jsonb) from public,anon,authenticated;
+grant execute on function public.create_priced_customer_request(text,uuid,text,jsonb) to anon;
 \ir ../supabase/migrations/20261020205500_review_findings_safety.sql
 
 do $assertions$
@@ -129,6 +141,35 @@ begin
  then raise exception 'Anonymous pricing did not resolve approved inventory'; end if;
 end; $anon$;
 reset role;
+-- An approved match can be captured, and even an internal pricing validation failure
+-- must preserve the synthetic inquiry with an unavailable snapshot.
+set role anon;
+do $requests$
+begin
+ perform public.create_priced_customer_request(
+  'synthetic-test-only-intake-credentials-never-production',
+  '44444444-4444-4444-a444-444444444444',repeat('a',64),
+  '{"service":"Forklift with operator","location":"10002","durationDays":"1","loadWeight":"5000","liftHeight":"10"}'::jsonb);
+ perform public.create_priced_customer_request(
+  'synthetic-test-only-intake-credentials-never-production',
+  '55555555-5555-4555-a555-555555555555',repeat('b',64),
+  '{"service":"Forklift with operator","location":"10002","durationDays":"1","loadWeight":"999999","liftHeight":"10"}'::jsonb);
+end; $requests$;
+reset role;
+do $requests$
+begin
+ if (select count(*) from public.customer_requests)<>2 then
+  raise exception 'A failed price lookup discarded a synthetic customer request';
+ end if;
+ if (select pricing_snapshot->>'status' from public.customer_requests
+     where id='44444444-4444-4444-a444-444444444444')<>'matched' then
+  raise exception 'Matched price was not saved with synthetic inquiry';
+ end if;
+ if (select pricing_snapshot->>'status' from public.customer_requests
+     where id='55555555-5555-4555-a555-555555555555')<>'unavailable' then
+  raise exception 'Pricing failure was not durably captured as unavailable';
+ end if;
+end; $requests$;
 -- Test RLS-writable direct profile updates under applicant role: no client/UI assumptions.
 set role authenticated;
 update public.operator_applications set profile=profile#-'{insurance,maximumLoadValue}'
