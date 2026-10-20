@@ -36,7 +36,7 @@ declare destination private.us_zip_centroids; nearest record; delivery_fee numer
 begin
  perform private.check_customer_intake_key(p_key);
  if p_zip is null or p_zip !~ '^[0-9]{5}$'
-    or p_service not in ('Forklift with operator','Crane with operator')
+    or p_service is null or p_service not in ('Forklift with operator','Crane with operator')
     or p_duration_days is null or p_duration_days not between 1 and 30
  then raise exception 'Invalid pricing request' using errcode='22023'; end if;
 
@@ -124,13 +124,28 @@ begin
  saved_id:=public.create_customer_request(p_key,p_id,p_rate_key,p_details);
  if (p_details->>'loadWeight') ~ '^[0-9]+(\.[0-9]+)?$' then weight:=(p_details->>'loadWeight')::numeric; end if;
  if (p_details->>'liftHeight') ~ '^[0-9]+(\.[0-9]+)?$' then height:=(p_details->>'liftHeight')::numeric; end if;
- snapshot:=public.quote_nearest_provider_equipment(
-  p_key,p_details->>'location',p_details->>'service',weight,height,
-  (p_details->>'durationDays')::integer
- );
+ begin
+  snapshot:=public.quote_nearest_provider_equipment(
+   p_key,p_details->>'location',p_details->>'service',weight,height,
+   (p_details->>'durationDays')::integer
+  );
+ exception when others then
+  -- A pricing lookup failure must never discard a successfully submitted inquiry.
+  snapshot:=jsonb_build_object('status','unavailable','message','Pricing needs staff verification.');
+ end;
  update public.customer_requests set pricing_snapshot=snapshot
  where id=saved_id and pricing_snapshot is null;
  return saved_id;
 end; $function$;
 revoke all on function public.create_priced_customer_request(text,uuid,text,jsonb) from public,anon,authenticated;
 grant execute on function public.create_priced_customer_request(text,uuid,text,jsonb) to anon;
+
+-- Staff notifications include the pricing snapshot when available.
+do $migration$
+declare definition text; needle text;
+begin
+ definition:=pg_get_functiondef('public.claim_customer_notification(text,uuid,boolean)'::regprocedure);
+ needle:=$anchor$return jsonb_build_object('id',r.id,'details',r.details);$anchor$;
+ if position(needle in definition)=0 then raise exception 'Unexpected customer notification definition'; end if;
+ execute replace(definition,needle,$replacement$return jsonb_build_object('id',r.id,'details',r.details,'pricing',r.pricing_snapshot);$replacement$);
+end $migration$;
