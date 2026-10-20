@@ -14,7 +14,7 @@ begin
      and r.valid_until>current_date
     from public.operator_reviews r
     where r.application_id=a.id
-    order by r.created_at desc limit 1
+    order by r.revision desc,r.created_at desc,r.id desc limit 1
    ) is true
    and coalesce((
     select e.liftcrew_signed_at is not null
