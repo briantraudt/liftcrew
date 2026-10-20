@@ -20,11 +20,9 @@ $replacement$||needle);
 
  -- Existing reviewer matcher previously used business ZIP instead of each machine's ZIP.
  definition:=pg_get_functiondef('public.match_provider_equipment(text,numeric,numeric,text)'::regprocedure);
- needle:=$anchor$  join private.us_zip_centroids home on home.zip=a.profile->'business'->>'zip'
-  cross join lateral jsonb_array_elements(a.profile->'equipment') e$anchor$;
+ needle:=$anchor$from public.operator_applications a join private.us_zip_centroids home on home.zip=a.profile->'business'->>'zip' cross join lateral jsonb_array_elements(a.profile->'equipment') e cross join lateral$anchor$;
  if position(needle in definition)=0 then raise exception 'Unexpected equipment matcher definition'; end if;
- execute replace(definition,needle,$replacement$  cross join lateral jsonb_array_elements(a.profile->'equipment') e
-  join private.us_zip_centroids home on home.zip=e.value->>'baseZip'$replacement$);
+ execute replace(definition,needle,$replacement$from public.operator_applications a cross join lateral jsonb_array_elements(a.profile->'equipment') e join private.us_zip_centroids home on home.zip=e.value->>'baseZip' cross join lateral$replacement$);
 end $migration$;
 
 create or replace function public.quote_nearest_provider_equipment(
