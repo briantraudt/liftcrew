@@ -1,6 +1,6 @@
 import {INSURANCE_KINDS as legacyKinds,evaluateInsurance as evaluateCore} from './rules-core.mjs';
 export {POLICY_KINDS,requirements,extractionSchema,validDate} from './rules-core.mjs';
-export const RULES_VERSION='schedule-a-v3-single-packet-2026-10-13';
+export const RULES_VERSION='schedule-a-v3-single-packet-job-value-at-dispatch-2026-10-20';
 export const INSURANCE_KINDS=['insurance_packet',...legacyKinds];
 
 /**
