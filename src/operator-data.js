@@ -1,6 +1,6 @@
 import {authorizationErrors,hasInsurancePacket} from './onboarding-model.js';
 export const coverage = [
- ['cgl','General liability','$1M occurrence / $2M aggregate'],['auto','Auto liability','$1M combined single limit'],['wc','Workers’ compensation','Statutory; disclose working-owner exclusions'],['employers','Employers’ liability','$1M each accident / disease'],['umbrella','Umbrella / excess','$2M occurrence and aggregate'],['handling','Property being handled','Greater of $250K or maximum exposed replacement value'],['equipment','Equipment physical damage','Adequate equipment replacement values']
+ ['cgl','General liability','$1M occurrence / $2M aggregate'],['auto','Auto liability','$1M combined single limit'],['wc','Workers’ compensation','Statutory; disclose working-owner exclusions'],['employers','Employers’ liability','$1M each accident / disease'],['umbrella','Umbrella / excess','$2M occurrence and aggregate'],['handling','Property being handled','At least $250K; higher-value jobs require sufficient verified handling coverage'],['equipment','Equipment physical damage','Adequate equipment replacement values']
 ];
 export const acknowledgements = {
  accurate:'The information and documents I provide are accurate and current. I will promptly report changes, incidents, coverage lapses and disqualifying conditions.',
@@ -28,7 +28,6 @@ export function missingItems(p,docs=[]){
  if(!p.operators?.length)items.push('Add an operator');
  for(const o of p.operators||[]){need(o,['name','relationship','trainingDate','evaluationDate','trainer','evaluator'],'Operator');if(o.adult!=='yes')items.push('Confirm each operator is at least 18');}
  items.push(...authorizationErrors(p));
- if(!(Number(p.insurance?.maximumLoadValue)>0))items.push('Enter maximum property value per job');
  if(!hasInsurancePacket(docs))items.push('Upload your insurance policy packet');
  for(const [kind,id,title] of documentSlots(p).filter(([kind])=>!['coi','endorsements','handling'].includes(kind)))if(!docs.some(d=>d.active&&d.kind===kind&&d.entity_id===id))items.push(title);
  return [...new Set(items)];

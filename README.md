@@ -31,6 +31,10 @@ Each machine in `/operators.html` records its own base ZIP, hourly rate, 4-hour 
 
 Price previews are calculated on the server with the existing `CUSTOMER_INTAKE_KEY`; provider identities and private records are not sent to the browser. Every customer intake stores an **independent server-calculated price snapshot** in `customer_requests.pricing_snapshot`, shown in the staff inbox and email alerts. Failed price matching never prevents durable quote intake. Apply `supabase/migrations/20261020160000_equipment_pricing.sql` before deploying the updated frontend and API.
 
+## Property-handling insurance
+
+The equipment step no longer asks providers to guess the maximum value of customer property per future job. Insurance review requires **at least $250,000** of documented property-handling coverage, with independently verified limits and relevant policy terms/endorsements. Previously disclosed higher limits remain required for the corresponding existing provider application; deleting the question does not silently downgrade an existing disclosure. The property replacement value actually exposed is determined **for each customer work order**. Before dispatch, staff must verify the provider's active handling limit covers the full job-specific exposure, or obtain higher coverage/approved exception before authorizing work. See the explicit staff inbox reminder. The machine's own replacement value remains required for equipment physical-damage verification.
+
 ## Staff access
 
 - `/staff-login.html`: staff signup, verified sign-in, invitation/password-reset handling. Staff do not need a provider application.

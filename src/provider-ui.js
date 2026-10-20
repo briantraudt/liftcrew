@@ -21,7 +21,6 @@ export function extraProfileErrors(profile){
  if(!profile.operators?.length)errors.push('Add an operator');
  for(const operator of profile.operators||[]){required(operator,['name','relationship','trainingDate','trainer','evaluationDate','evaluator'],'Operator');if(operator.adult!=='yes')errors.push('Confirm each operator is at least 18');}
  errors.push(...authorizationErrors(profile));
- if(!(Number(profile.insurance?.maximumLoadValue)>0))errors.push('Enter the maximum total property value per job in the Equipment step');
  return [...new Set(errors)];
 }
 export function reviewHTML(review,current=true){
