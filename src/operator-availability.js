@@ -11,14 +11,16 @@ export function readWeeklyAvailability(business={}){
     return business.weeklyAvailability.filter(x=>x&&weekDays.some(d=>d[0]===x.day))
       .map(x=>({day:x.day,start:String(x.start||'08:00'),end:String(x.end||'17:00')}));
   }
-  const legacy=String(business.availability||'').toLowerCase();
-  if(/\bweekdays\b|\bmon(?:day)?\s*[-–]\s*fri(?:day)?\b/.test(legacy))return weekDays.slice(0,5).map(([day])=>make(day));
-  if(/\bweekends\b|\bsat(?:urday)?\s*[-–]\s*sun(?:day)?\b/.test(legacy))return weekDays.slice(5).map(([day])=>make(day));
-  if(/\bevery day\b|\bdaily\b|\b7 days\b/.test(legacy))return weekDays.map(([day])=>make(day));
+  // Free-text historical schedules can contain uncommon hours, exceptions or
+  // timezones. Never fabricate 08:00–17:00 from 'Weekdays' or drop extra notes.
+  // Ask the provider to explicitly select and confirm new day/time windows.
   return [];
 }
 export function setWeeklyAvailability(business,day,change){
   if(!weekDays.some(([id])=>id===day))return false;
+  if(!Array.isArray(business.weeklyAvailability)&&business.availability&&!business.availabilityNotes){
+    business.availabilityNotes=String(business.availability);
+  }
   const items=readWeeklyAvailability(business);
   const existing=items.find(item=>item.day===day);
   if(change.enabled===true && !existing)items.push(make(day));
@@ -51,6 +53,6 @@ export function weeklyAvailabilityMarkup(business={},esc=value=>String(value)){
         '<div class="availability-hours"><label><span>From</span><input type="time" data-availability-time="'+day+'" data-time-part="start" value="'+esc(item?.start||'08:00')+'" '+(!checked?'disabled':'')+'></label>'+
         '<label><span>To</span><input type="time" data-availability-time="'+day+'" data-time-part="end" value="'+esc(item?.end||'17:00')+'" '+(!checked?'disabled':'')+'></label></div></div>';
     }).join('')+'</div>'+
-    (!Array.isArray(business.weeklyAvailability)&&business.availability&&!days.length?'<p class="availability-legacy">Saved availability notes: '+esc(business.availability)+'</p>':'')+
+    (business.availabilityNotes||(!Array.isArray(business.weeklyAvailability)?business.availability:'')?'<p class="availability-legacy">Saved availability notes: '+esc(business.availabilityNotes||business.availability)+'</p>':'')+
     '<p class="availability-note">Use your local operating hours.</p></section>';
 }
