@@ -7,6 +7,7 @@ import {CONFIRMATION_URL,OPERATOR_LOGIN_URL} from './operator-auth.js';
 import {onboardingStages,stageForStep,renewalAlerts,businessRadiusForMachines,normalizeMachineRadiusFallbacks} from './onboarding-experience.js';
 import {validatePublishedAgreement} from './published-agreement-format.js';
 import {renderAgreementPreview} from './agreement-preview.js';
+import {contractEnvelope,requiredContractEnvelope} from './contract-envelope.js';
 import {setWeeklyAvailability} from './operator-availability.js';
 import {insurancePrecheck} from './insurance-precheck.js';
 import {confirmOperatorAction} from './operator-confirmation.js';
@@ -100,7 +101,7 @@ async function load(){
  await save();
  // Refresh the server fingerprint and review status *after* any normalization save.
  // Never show a superseded insurance review as current.
- clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));envelope=clearance.envelope;
+ clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));envelope=contractEnvelope(clearance.envelope);
  await prepareWhenComplete();
  render();
  if(clearance.review&&['queued','reading'].includes(clearance.review.state))pollReview(clearance.review.id);
@@ -143,7 +144,7 @@ async function prepareWhenComplete(){
  if(stepIds[step]!=='agreement'||envelope||!published||beforeAgreementIssues().length)return;
  try{
   // Prepare a personalized reading copy only. No consent or signature is recorded here.
-  envelope=check(await db.rpc('prepare_provider_contract',{p_application_id:app.id}));
+  envelope=requiredContractEnvelope(check(await db.rpc('prepare_provider_contract',{p_application_id:app.id})));
  }catch{
   // Keep the complete read-only published text visible. Preparation can be retried.
   message='The published agreement is available to read. Personalized signing is temporarily unavailable.';
@@ -163,7 +164,7 @@ function contract(){
  if(!envelope)return heading+visibleTerms+'<button type="button" class="btn" data-prepare>Prepare personalized agreement for signing</button>';
  return heading+visibleTerms+`<div class="signature-box"><p id="scroll-status" role="status">Review the agreement above and scroll to the end before signing.</p><label class="check"><input type="checkbox" name="read-contract"><span>I have read the complete agreement, including Schedule A, and am authorized to bind this provider.</span></label><label class="check"><input type="checkbox" name="esign-consent"><span>I consent to electronic records and signatures. Typing my name and selecting Sign agreement constitutes my signature. I can download a copy and can request a paper process before signing.</span></label><div class="form-grid"><label class="field"><span>Full legal name</span><input name="signature" autocomplete="name" maxlength="200"></label><label class="field"><span>Title / signing authority</span><input name="signature-title" maxlength="100"></label></div><button type="button" class="btn" data-sign-contract disabled>Sign agreement</button></div><p class="signature-audit">Document SHA-256: ${h(envelope.sha256)}</p>`;
 }
-async function prepareContract(){await save();if(beforeAgreementIssues().length)throw Error('Complete all business, machine, operator, insurance and supporting records before preparing the agreement.');envelope=check(await db.rpc('prepare_provider_contract',{p_application_id:app.id}));render();}
+async function prepareContract(){await save();if(beforeAgreementIssues().length)throw Error('Complete all business, machine, operator, insurance and supporting records before preparing the agreement.');envelope=requiredContractEnvelope(check(await db.rpc('prepare_provider_contract',{p_application_id:app.id})));render();}
 function applicationSummary(){return `<div class="summary-grid"><section><h3>Business</h3><p>${h(p.business.legalName||'Not entered')}<br>${h(p.business.contactName)} · ${h(p.business.phone)}<br>${h(p.business.city)}, ${h(p.business.state)} ${h(p.business.zip)}</p></section><section><h3>Equipment & people</h3><p>${p.equipment.length} machine(s) · ${p.operators.length} operator(s)</p><p>${p.equipment.map(equipment=>h([equipment.make,equipment.model].filter(Boolean).join(' '))).join('<br>')}</p></section><section><h3>Records</h3><p>${docs.filter(doc=>doc.active).length} uploads<br>${envelope?.provider_signed_at?'Agreement signed':'Agreement signature required'}</p></section></div>`;}
 function finish(){
  const issues=[
@@ -264,7 +265,7 @@ function bindSignature(){
  let reachedEnd=false;
  const update=()=>{reachedEnd||=scroller.scrollTop+scroller.clientHeight>=scroller.scrollHeight-12;sign.disabled=!(reachedEnd&&root.querySelector('[name=read-contract]').checked&&root.querySelector('[name=esign-consent]').checked&&root.querySelector('[name=signature]').value.trim()&&root.querySelector('[name=signature-title]').value.trim());root.querySelector('#scroll-status').textContent=reachedEnd?'End of agreement reached. Confirm your review and signing consent below.':'Scroll through the agreement to enable signing.';};
  root.querySelector('[name=signature]').oninput=update;root.querySelector('[name=signature-title]').oninput=update;scroller.onscroll=update;root.querySelector('[name=read-contract]').onchange=update;root.querySelector('[name=esign-consent]').onchange=update;requestAnimationFrame(update);
- sign.onclick=()=>run(async()=>{if(beforeAgreementIssues().length)throw Error('Complete the required information and documents before signing.');if(!reachedEnd)throw Error('Read the complete agreement first.');const name=root.querySelector('[name=signature]').value.trim(),title=root.querySelector('[name=signature-title]').value.trim();envelope=check(await db.rpc('sign_provider_contract',{p_envelope_id:envelope.id,p_name:name,p_title:title,p_read:root.querySelector('[name=read-contract]').checked,p_consent:root.querySelector('[name=esign-consent]').checked}));step=stepIds.indexOf('finish');persistDraftStep(app.id,step);message='Agreement signed. Review the final certifications and submit your application.';render();});
+ sign.onclick=()=>run(async()=>{if(beforeAgreementIssues().length)throw Error('Complete the required information and documents before signing.');if(!reachedEnd)throw Error('Read the complete agreement first.');const name=root.querySelector('[name=signature]').value.trim(),title=root.querySelector('[name=signature-title]').value.trim();envelope=requiredContractEnvelope(check(await db.rpc('sign_provider_contract',{p_envelope_id:envelope.id,p_name:name,p_title:title,p_read:root.querySelector('[name=read-contract]').checked,p_consent:root.querySelector('[name=esign-consent]').checked})),{signed:true});step=stepIds.indexOf('finish');persistDraftStep(app.id,step);message='Agreement signed. Review the final certifications and submit your application.';render();});
 }
 
 async function startReview(retry){
@@ -277,7 +278,7 @@ async function startReview(retry){
 function stopPoll(){pollEpoch++;clearTimeout(pollTimer);pollTimer=null;}
 function pollReview(id){
  stopPoll();const epoch=pollEpoch,applicationId=app.id,started=Date.now();
- const tick=async()=>{if(epoch!==pollEpoch||!user||app?.id!==applicationId)return;try{const result=check(await db.rpc('provider_clearance',{p_application_id:applicationId}));if(epoch!==pollEpoch||app?.id!==applicationId)return;clearance=result;envelope=result.envelope||envelope;const element=root.querySelector('#insurance-review-status');if(element)element.innerHTML=applicantReviewStatusHTML(result.review,result.reviewCurrent);if(!['queued','reading'].includes(result.review?.state)){render();return;}if(Date.now()-started>180000)return;}catch{if(Date.now()-started>180000)return;}pollTimer=setTimeout(tick,2500);};
+ const tick=async()=>{if(epoch!==pollEpoch||!user||app?.id!==applicationId)return;try{const result=check(await db.rpc('provider_clearance',{p_application_id:applicationId}));if(epoch!==pollEpoch||app?.id!==applicationId)return;clearance=result;envelope=contractEnvelope(result.envelope)||envelope;const element=root.querySelector('#insurance-review-status');if(element)element.innerHTML=applicantReviewStatusHTML(result.review,result.reviewCurrent);if(!['queued','reading'].includes(result.review?.state)){render();return;}if(Date.now()-started>180000)return;}catch{if(Date.now()-started>180000)return;}pollTimer=setTimeout(tick,2500);};
  pollTimer=setTimeout(tick,800);
 }
 function scheduleServiceArea(){
