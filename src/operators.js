@@ -4,7 +4,7 @@ import {providerSlots,extraProfileErrors,reviewHTML,saveAgreement} from './provi
 import {businessView,equipmentView,operatorsView,insuranceView,documentsView} from './onboarding-ui.js';
 import {stepIds,stepLabels,insuranceKinds,hasInsurancePacket,removeEquipmentAssignments,restoredStep,persistStep,validateInsuranceBatch} from './onboarding-model.js';
 import {CONFIRMATION_URL,OPERATOR_LOGIN_URL} from './operator-auth.js';
-import {onboardingStages,stageForStep,ratePreviewMarkup,renewalAlerts,businessRadiusForMachines} from './onboarding-experience.js';
+import {onboardingStages,stageForStep,ratePreviewMarkup,renewalAlerts,businessRadiusForMachines,normalizeMachineRadiusFallbacks} from './onboarding-experience.js';
 import {validatePublishedAgreement} from './published-agreement-format.js';
 import {renderAgreementPreview} from './agreement-preview.js';
 import './operator-flow.css';
@@ -60,14 +60,20 @@ async function load(){
   if(digest!==candidate.sha256)throw Error('Published agreement integrity verification failed');
   publishedAgreement=candidate;
  }catch{agreementPreviewError='The full agreement preview could not be verified here. Open the published agreement page instead.';}
- clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));envelope=clearance.envelope;
  step=restoredStep(sessionStorage,app.id);dirty=false;
+ // Repair legacy blank machine radii before the agreement preflight reads this draft.
+ await save();
+ // Refresh the server fingerprint and review status *after* any normalization save.
+ // Never show a superseded insurance review as current.
+ clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));envelope=clearance.envelope;
  await prepareWhenComplete();
  render();
  if(clearance.review&&['queued','reading'].includes(clearance.review.state))pollReview(clearance.review.id);
 }
 async function save(){
- if(!app||!editable(app)||!dirty)return;
+ if(!app||!editable(app))return;
+ const normalized=normalizeMachineRadiusFallbacks(p);
+ if(!dirty&&!normalized)return;
  p.business.radiusMiles=businessRadiusForMachines(p);
  app=check(await db.from('operator_applications').update({profile:p}).eq('id',app.id).eq('status',app.status).select().single());
  dirty=false;
