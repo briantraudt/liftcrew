@@ -6,6 +6,7 @@ on:
       - 'operators.html'
       - 'src/**'
       - 'tests/operator-onboarding.browser.mjs'
+      - 'tests/admin-review.browser.mjs'
       - '.github/workflows/operator-browser-smoke.yml'
 jobs:
   operator-browser:
@@ -32,3 +33,6 @@ jobs:
           exit 1
       - name: Test authenticated onboarding with mocked Supabase on desktop and mobile
         run: node tests/operator-onboarding.browser.mjs
+
+      - name: Test staff review, countersignature, approval and suspension on desktop and mobile
+        run: node tests/admin-review.browser.mjs
