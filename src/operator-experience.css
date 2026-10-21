@@ -178,3 +178,8 @@ body.operator-onboarding .signature-box{border-top:1px solid #e2e8e5}
  .lc-confirm-actions button{flex:1}
 }
 @media(prefers-reduced-motion:reduce){.lc-confirm-actions button{transition:none}}
+
+/* Keep the mileage explanation with its own machine-radius input. */
+body.operator-onboarding .machine-radius-field{min-width:0}
+body.operator-onboarding .machine-radius-field .field{margin-bottom:6px}
+body.operator-onboarding .machine-radius-field .field-hint{margin:0 0 18px;color:#596e70;font-size:11px;line-height:1.5}
