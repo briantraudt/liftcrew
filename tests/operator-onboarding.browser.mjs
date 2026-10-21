@@ -3,9 +3,12 @@
 // Requires system nss, nspr and a fallback font (e.g. DejaVu Sans).
 // Supabase is fully mocked: no production accounts, documents or AI requests are created.
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import {chromium as playwright} from 'playwright-core';
 import chromium from '@sparticuz/chromium';
 const base=process.env.TEST_BASE_URL||'http://127.0.0.1:4173';
+const demoAgreementBody='Synthetic test contract. '+('This is an inert test clause with no legal force. ').repeat(65);
+const demoPublished={body:demoAgreementBody,version:'synthetic-preview',sha256:createHash('sha256').update(demoAgreementBody).digest('hex')};
 const user={id:'11111111-1111-4111-8111-111111111111',email:'synthetic@example.com',aud:'authenticated',role:'authenticated',email_confirmed_at:'2026-10-13T00:00:00Z'};
 const encode=value=>Buffer.from(JSON.stringify(value)).toString('base64url');
 const token=encode({alg:'HS256',typ:'JWT'})+'.'+encode({sub:user.id,aud:'authenticated',role:'authenticated',exp:Math.floor(Date.now()/1000)+3600})+'.synthetic-signature';
@@ -29,6 +32,7 @@ for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
    else if(url.pathname==='/rest/v1/provider_contract_versions')data=[{id:'version-test',version:'synthetic'}];
    else if(url.pathname==='/rest/v1/rpc/is_operator_reviewer')data=false;
    else if(url.pathname==='/rest/v1/rpc/provider_clearance')data={eligible:false,blockers:['Verification required'],envelope:null,review:null,reviewCurrent:true};
+   else if(url.pathname==='/rest/v1/rpc/current_provider_agreement')data=demoPublished;
    else if(url.pathname==='/rest/v1/rpc/provider_service_area')data={count:163,city:'Austin',state:'TX',zips:['78701','78702','78703']};
    else throw Error('Unexpected mocked request: '+request.method()+' '+url.pathname);
    await route.fulfill({status,headers:{'content-type':'application/json','access-control-allow-origin':'*'},body:status===204?'':JSON.stringify(data)});
@@ -54,6 +58,9 @@ for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
   assert.equal(await page.locator('input[type=file]').count(),1);assertions++;
   assert.equal(await page.locator('[data-field^="insurance.cgl"]').count(),0);assertions++;
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assertions++;
+  await page.locator('.stage-link').last().click();await page.getByRole('heading',{name:'Review & sign',exact:true}).waitFor();
+  assert(await page.locator('.agreement-preview').textContent().then(s=>s.includes('Synthetic test contract.')));assertions++;
+  assert.equal(await page.locator('[data-sign-contract]').count(),0);assertions++;
   await page.goto(base+'/operator-confirmed.html?case=direct');await page.getByRole('heading',{name:'Continue your onboarding',exact:true}).waitFor();assertions++;
   await page.goto(base+'/operator-confirmed.html?case=expired#error=expired');await page.getByRole('heading',{name:'Let’s get you back on track.',exact:true}).waitFor();assertions++;
   assert.equal(new URL(page.url()).hash,'');assertions++;

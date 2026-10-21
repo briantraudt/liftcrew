@@ -2,8 +2,8 @@
 export const onboardingStages = [
   {label:'Business', steps:['business']},
   {label:'Equipment & Operators', steps:['equipment','operators']},
-  {label:'Insurance & Documents', steps:['insurance','documents']},
-  {label:'Review & Sign', steps:['agreement','finish']}
+  {label:'Upload Documents', steps:['insurance','documents']},
+  {label:'Agree & Submit', steps:['agreement','finish']}
 ];
 export const stageForStep = stepId => Math.max(0, onboardingStages.findIndex(stage=>stage.steps.includes(stepId)));
 

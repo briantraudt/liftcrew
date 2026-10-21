@@ -5,6 +5,8 @@ import {businessView,equipmentView,operatorsView,insuranceView,documentsView} fr
 import {stepIds,stepLabels,insuranceKinds,hasInsurancePacket,removeEquipmentAssignments,restoredStep,persistStep,validateInsuranceBatch} from './onboarding-model.js';
 import {CONFIRMATION_URL,OPERATOR_LOGIN_URL} from './operator-auth.js';
 import {onboardingStages,stageForStep,ratePreviewMarkup,renewalAlerts,businessRadiusForMachines} from './onboarding-experience.js';
+import {validatePublishedAgreement} from './published-agreement-format.js';
+import {renderAgreementPreview} from './agreement-preview.js';
 import './operator-flow.css';
 import './onboarding-compact.css';
 import './operator-experience.css';
@@ -14,7 +16,7 @@ const root=document.querySelector('#app');
 const headerSignout=document.querySelector('#portal-signout');
 function setHeaderSignedIn(signedIn){if(headerSignout)headerSignout.hidden=!signedIn;}
 const certifications={accurate:'These details and documents are accurate and current. I will report changes and coverage lapses.',authority:'I am authorized to represent this provider and submit its personnel and business records.',safety:'Operators must be qualified for the machine and workplace. We will follow capacity limits, inspect equipment and stop unsafe work.',privacy:'I have read the application privacy notice and authorize LiftCrew to verify these records with my broker and other appropriate sources.',terms:'I signed the provider agreement. Work requires LiftCrew approval, both signatures, current coverage and an accepted work order. Crane/specialty work requires a separate signed rider.',electronic:'I intend to certify this application electronically under my typed name and can download and retain my agreement and records.'};
-let user=null,app=null,p=null,docs=[],clearance=null,envelope=null,published=null,step=0;
+let user=null,app=null,p=null,docs=[],clearance=null,envelope=null,published=null,publishedAgreement=null,agreementPreviewError='',step=0;
 let mode=new URLSearchParams(location.search).get('mode')==='signin'?'signin':'signup';
 let recovering=false,reviewer=false,busy=false,dirty=false,aiConsent=false,pollTimer=null,pollEpoch=0;
 let message='',errorMessage='',authEmail='',areaTimer=null,areaVersion=0;
@@ -50,8 +52,18 @@ async function load(){
  docs=check(await db.from('operator_documents').select('*').eq('application_id',app.id).order('created_at'));
  reviewer=check(await db.rpc('is_operator_reviewer'))===true;
  published=check(await db.from('provider_contract_versions').select('id,version').order('published_at',{ascending:false}).limit(1))[0]||null;
+ // The complete published terms are public, read-only, and viewable before any application fields are completed.
+ publishedAgreement=null;agreementPreviewError='';
+ try{
+  const candidate=validatePublishedAgreement(check(await db.rpc('current_provider_agreement')));
+  const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(candidate.body)))).map(x=>x.toString(16).padStart(2,'0')).join('');
+  if(digest!==candidate.sha256)throw Error('Published agreement integrity verification failed');
+  publishedAgreement=candidate;
+ }catch{agreementPreviewError='The full agreement preview could not be verified here. Open the published agreement page instead.';}
  clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));envelope=clearance.envelope;
- step=restoredStep(sessionStorage,app.id);dirty=false;render();
+ step=restoredStep(sessionStorage,app.id);dirty=false;
+ await prepareWhenComplete();
+ render();
  if(clearance.review&&['queued','reading'].includes(clearance.review.state))pollReview(clearance.review.id);
 }
 async function save(){
@@ -61,9 +73,12 @@ async function save(){
  dirty=false;
 }
 async function move(next){
- await save();step=Math.max(0,Math.min(stepIds.length-1,next));persistStep(sessionStorage,app.id,step);render();
- // Contract preparation is deliberate and only offered after earlier information is complete.
- root.querySelector('.application-card h2')?.scrollIntoView({block:'start',behavior:'smooth'});
+ await save();
+ step=Math.max(0,Math.min(stepIds.length-1,next));
+ persistStep(sessionStorage,app.id,step);
+ await prepareWhenComplete();
+ render();
+ root.querySelector('.application-card h2, .onboarding-title')?.scrollIntoView({block:'start',behavior:'smooth'});
 }
 
 function beforeAgreementIssues(){
@@ -76,15 +91,29 @@ function beforeAgreementIssues(){
   ...renewalIssues(p,docs)
  ];
 }
-function contract(){
- if(!published&&!envelope)return '<h2>Read & sign</h2><div class="notice"><strong>LiftCrew is finalizing the provider agreement.</strong><p>Your details and documents can be saved. Signing and work approval remain unavailable until the completed agreement is published.</p></div>';
- if(!envelope){
-  const issues=beforeAgreementIssues();
-  if(issues.length)return `<h2>Read &amp; sign</h2><div class="notice"><strong>Complete your application before signing.</strong><p>Enter your business, equipment, operator, insurance and supporting documents first. Your agreement will be prepared with the final information.</p><p>${issues.length} requirement${issues.length===1?'':'s'} outstanding. Use the other sections to finish before returning here.</p></div>`;
-  return '<h2>Read &amp; sign</h2><p>All required information has been entered. Prepare your personalized agreement, review the complete terms, and sign.</p><button type="button" class="btn" data-prepare>Prepare my agreement</button>';
+async function prepareWhenComplete(){
+ if(stepIds[step]!=='agreement'||envelope||!published||beforeAgreementIssues().length)return;
+ try{
+  // Prepare a personalized reading copy only. No consent or signature is recorded here.
+  envelope=check(await db.rpc('prepare_provider_contract',{p_application_id:app.id}));
+ }catch{
+  // Keep the complete read-only published text visible. Preparation can be retried.
+  message='The published agreement is available to read. Personalized signing is temporarily unavailable.';
  }
- const signed=Boolean(envelope.provider_signed_at);
- return `<h2>${signed?'Your signed agreement':'Read & sign'}</h2><p class="muted">${signed?'Your signature is recorded. Download and keep a copy.':'Read the complete agreement and Schedule A. Scroll to the end before signing. Scrolling does not replace reading the terms.'}</p><div class="contract-text" id="contract-text" tabindex="0" role="region" aria-label="Complete provider agreement">${h(envelope.body)}</div>${signed?`<div class="notice success">Signed by ${h(envelope.provider_name)}, ${h(envelope.provider_title)} on ${h(new Date(envelope.provider_signed_at).toLocaleString())}. ${envelope.liftcrew_signed_at?'LiftCrew has countersigned.':'Awaiting LiftCrew countersignature.'}</div><button type="button" class="btn secondary" data-agreement-download>Download agreement & signature record</button>`:`<div class="signature-box"><p id="scroll-status" role="status">Scroll through the agreement to enable signing.</p><label class="check"><input type="checkbox" name="read-contract"><span>I have read the complete agreement, including the insurance schedule, and am authorized to bind this provider.</span></label><label class="check"><input type="checkbox" name="esign-consent"><span>I consent to electronic records and signatures. Typing my name and selecting “Sign agreement” is my signature, not an application acknowledgment. I can download and retain a copy. To use paper instead, contact LiftCrew before signing.</span></label><div class="form-grid"><label class="field"><span>Full legal name</span><input name="signature" autocomplete="name" maxlength="200"></label><label class="field"><span>Title / signing authority</span><input name="signature-title" maxlength="100"></label></div><button type="button" class="btn" data-sign-contract disabled>Sign agreement</button></div>`}<p class="signature-audit">Document SHA-256: ${h(envelope.sha256)}</p>`;
+}
+function contract(){
+ const issues=beforeAgreementIssues(),signed=Boolean(envelope?.provider_signed_at);
+ const preview=envelope?.body?envelope:publishedAgreement;
+ const previewMarkup=renderAgreementPreview(preview,{personalized:Boolean(envelope)});
+ const fullAgreementLink='<a class="agreement-full-link" href="/operator-agreement.html" target="_blank" rel="noopener">Read the complete published agreement in a new tab</a>';
+ const title=signed?'Agreement signed':'Review & sign';
+ const heading='<h2>'+title+'</h2>';
+ const visibleTerms=previewMarkup+fullAgreementLink;
+ if(!preview)return heading+'<div class="notice" role="status">'+h(agreementPreviewError||'The published agreement is temporarily unavailable.')+'</div>'+fullAgreementLink;
+ if(signed)return heading+visibleTerms+`<div class="notice success">Signed by ${h(envelope.provider_name)} on ${h(new Date(envelope.provider_signed_at).toLocaleString())}. ${envelope.liftcrew_signed_at?'LiftCrew has countersigned.':'Awaiting LiftCrew countersignature.'}</div><button type="button" class="btn secondary" data-agreement-download>Download signed agreement & audit</button>`;
+ if(issues.length)return heading+visibleTerms+`<div class="agreement-signing-status" role="status"><strong>Available to read now. Signing is locked until the application is complete.</strong><p>${issues.length} required item${issues.length===1?'':'s'} remain. Finish your business, equipment, personnel, insurance and document details before signing.</p></div>`;
+ if(!envelope)return heading+visibleTerms+'<button type="button" class="btn" data-prepare>Prepare personalized agreement for signing</button>';
+ return heading+visibleTerms+`<div class="signature-box"><p id="scroll-status" role="status">Review the agreement above and scroll to the end before signing.</p><label class="check"><input type="checkbox" name="read-contract"><span>I have read the complete agreement, including Schedule A, and am authorized to bind this provider.</span></label><label class="check"><input type="checkbox" name="esign-consent"><span>I consent to electronic records and signatures. Typing my name and selecting Sign agreement constitutes my signature. I can download a copy and can request a paper process before signing.</span></label><div class="form-grid"><label class="field"><span>Full legal name</span><input name="signature" autocomplete="name" maxlength="200"></label><label class="field"><span>Title / signing authority</span><input name="signature-title" maxlength="100"></label></div><button type="button" class="btn" data-sign-contract disabled>Sign agreement</button></div><p class="signature-audit">Document SHA-256: ${h(envelope.sha256)}</p>`;
 }
 async function prepareContract(){await save();if(beforeAgreementIssues().length)throw Error('Complete all business, machine, operator, insurance and supporting records before preparing the agreement.');envelope=check(await db.rpc('prepare_provider_contract',{p_application_id:app.id}));render();}
 function applicationSummary(){return `<div class="summary-grid"><section><h3>Business</h3><p>${h(p.business.legalName||'Not entered')}<br>${h(p.business.contactName)} · ${h(p.business.phone)}<br>${h(p.business.city)}, ${h(p.business.state)} ${h(p.business.zip)}</p></section><section><h3>Equipment & people</h3><p>${p.equipment.length} machine(s) · ${p.operators.length} operator(s)</p><p>${p.equipment.map(equipment=>h([equipment.make,equipment.model].filter(Boolean).join(' '))).join('<br>')}</p></section><section><h3>Records</h3><p>${docs.filter(doc=>doc.active).length} uploads<br>${envelope?.provider_signed_at?'Agreement signed':'Agreement signature required'}</p></section></div>`;}
@@ -96,7 +125,7 @@ function finish(){
  ];
  if(!envelope?.provider_signed_at)issues.push({message:'Sign the finalized provider agreement',step:'agreement'});
  const missing=issues.length>0;
- return `<h2>Review &amp; submit</h2><p class="muted">Check your details and complete every outstanding requirement. Submitting is not approval to accept work.</p>
+ return `<h2>Submit application</h2>
  ${applicationSummary()}
  ${missing?`<div class="notice error"><strong>${issues.length} item${issues.length===1?'':'s'} to finish before submitting</strong><ul class="issue-list">${issues.map(issue=>`<li><button type="button" class="issue-link" data-fix="${stepIds.indexOf(issue.step)}">→ ${h(issue.message)}</button></li>`).join('')}</ul></div>`:'<div class="notice success"><strong>Ready to submit for LiftCrew verification.</strong> Your application is complete for submission, not yet approved or work-eligible.</div>'}
  <details><summary>Review all saved business, machine and personnel details</summary>${renderRecord(p)}</details>
@@ -130,11 +159,11 @@ function render(){
  const edit=editable(app),stage=stageForStep(stepIds[step]);
  const views={business:()=>businessView(p),equipment:()=>equipmentView(p),operators:()=>operatorsView(p),insurance:()=>insuranceView({docs,aiConsent,clearance}),documents:()=>documentsView(p,docs),agreement:contract,finish};
  const status=clearance?.eligible?'Approved':app.status==='declined'?'Not approved':app.status==='submitted'?'Verification pending':app.status==='changes_requested'?'Updates needed':'In progress';
- root.innerHTML=`<div class="portal-heading"><h1>${edit?'Join the LiftCrew network':'Provider dashboard'}</h1>${reviewer?'<a href="/operator-review.html" class="text-btn">Provider management</a>':''}</div>${notice()}
+ root.innerHTML=`${edit?(reviewer?'<div class="reviewer-link"><a href="/operator-review.html">Provider management</a></div>':''):`<div class="portal-heading"><h1>Provider dashboard</h1>${reviewer?'<a href="/operator-review.html" class="text-btn">Provider management</a>':''}</div>`}${notice()}
  ${edit?`<div class="application-layout"><aside class="step-sidebar"><nav class="stage-nav" aria-label="Onboarding categories">
  ${onboardingStages.map((group,stageIndex)=>`<button type="button" class="stage-link ${stageIndex===stage?'active':''}" data-step="${stepIds.indexOf(group.steps[0])}" ${stageIndex===stage?'aria-current="step"':''}>${h(group.label)}</button>`).join('')}
  </nav></aside>
- <form id="provider-form" class="application-card" novalidate>${views[stepIds[step]]()}<div class="form-actions"><button type="button" class="text-btn" data-back ${step===0?'disabled':''}>Back</button><div><span class="save-state">${dirty?'Unsaved changes':'Saved'}</span><button type="button" class="btn secondary" data-save>Save</button>${step<stepIds.length-1?'<button type="button" class="btn" data-next>Save &amp; continue</button>':''}</div></div></form></div>`:statusPage()}`;
+ <form id="provider-form" class="application-card" novalidate>${stepIds[step]==='business'?'<h1 class="onboarding-title">Join the LiftCrew family</h1>':''}${views[stepIds[step]]()}<div class="form-actions"><button type="button" class="text-btn" data-back ${step===0?'disabled':''}>Back</button><div><span class="save-state">${dirty?'Unsaved changes':'Saved'}</span><button type="button" class="btn secondary" data-save>Save</button>${step<stepIds.length-1&&(stepIds[step]!=='agreement'||Boolean(envelope?.provider_signed_at))?'<button type="button" class="btn" data-next>'+(stepIds[step]==='agreement'?'Continue to submit':'Save &amp; continue')+'</button>':''}</div></div></form></div>`:statusPage()}`;
  bind();
 }
 function bind(){
@@ -176,7 +205,7 @@ function bindSignature(){
  let reachedEnd=false;
  const update=()=>{reachedEnd||=scroller.scrollTop+scroller.clientHeight>=scroller.scrollHeight-12;sign.disabled=!(reachedEnd&&root.querySelector('[name=read-contract]').checked&&root.querySelector('[name=esign-consent]').checked);root.querySelector('#scroll-status').textContent=reachedEnd?'End of agreement reached. Confirm your review and signing consent below.':'Scroll through the agreement to enable signing.';};
  scroller.onscroll=update;root.querySelector('[name=read-contract]').onchange=update;root.querySelector('[name=esign-consent]').onchange=update;requestAnimationFrame(update);
- sign.onclick=()=>run(async()=>{if(!reachedEnd)throw Error('Read the complete agreement first.');const name=root.querySelector('[name=signature]').value.trim(),title=root.querySelector('[name=signature-title]').value.trim();envelope=check(await db.rpc('sign_provider_contract',{p_envelope_id:envelope.id,p_name:name,p_title:title,p_read:root.querySelector('[name=read-contract]').checked,p_consent:root.querySelector('[name=esign-consent]').checked}));message='Your electronic signature was recorded. Keep a copy for your records.';render();});
+ sign.onclick=()=>run(async()=>{if(beforeAgreementIssues().length)throw Error('Complete the required information and documents before signing.');if(!reachedEnd)throw Error('Read the complete agreement first.');const name=root.querySelector('[name=signature]').value.trim(),title=root.querySelector('[name=signature-title]').value.trim();envelope=check(await db.rpc('sign_provider_contract',{p_envelope_id:envelope.id,p_name:name,p_title:title,p_read:root.querySelector('[name=read-contract]').checked,p_consent:root.querySelector('[name=esign-consent]').checked}));step=stepIds.indexOf('finish');persistStep(sessionStorage,app.id,step);message='Agreement signed. Review the final certifications and submit your application.';render();});
 }
 
 async function startReview(retry){
@@ -199,7 +228,7 @@ function scheduleServiceArea(){
  target.textContent='Calculating your service area…';
  areaTimer=setTimeout(async()=>{try{const key=zip+':'+radius;let result=areaCache.get(key);if(!result){result=check(await db.rpc('provider_service_area',{p_zip:zip,p_radius:radius}));areaCache.set(key,result);}if(version!==areaVersion||!target.isConnected)return;target.innerHTML=`<strong>${h(result.count)} ZIP codes within ${h(radius)} miles of ${h(result.city)}, ${h(result.state)}.</strong><details><summary>View covered ZIP codes</summary><p>${result.zips.map(h).join(', ')}</p></details>`;}catch(error){if(version===areaVersion&&target.isConnected)target.textContent=error.message||'Coverage could not be calculated. Check your ZIP or try again.';}},350);
 }
-function clearState(){stopPoll();clearTimeout(areaTimer);areaVersion++;areaCache.clear();user=null;app=null;p=null;docs=[];envelope=null;clearance=null;aiConsent=false;dirty=false;}
+function clearState(){stopPoll();clearTimeout(areaTimer);areaVersion++;areaCache.clear();user=null;app=null;p=null;docs=[];envelope=null;clearance=null;publishedAgreement=null;agreementPreviewError='';aiConsent=false;dirty=false;}
 window.addEventListener('beforeunload',event=>{if(dirty){event.preventDefault();event.returnValue='';}});
 window.addEventListener('pagehide',()=>{stopPoll();clearTimeout(areaTimer);areaVersion++;});
 db.auth.onAuthStateChange((event,session)=>{if(event==='PASSWORD_RECOVERY'){recovering=true;user=session?.user;mode='signup';queueMicrotask(authView);}if(event==='SIGNED_OUT'){clearState();queueMicrotask(authView);}});

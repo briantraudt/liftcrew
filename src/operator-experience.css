@@ -98,3 +98,46 @@ body.operator-onboarding .insurance-packet .upload-inputs>button{
  body.operator-onboarding .insurance-packet .upload-inputs{grid-template-columns:1fr}
  body.operator-onboarding .insurance-packet .upload-inputs>button{width:100%;grid-column:1/-1}
 }
+
+
+/* Minimal, typography-led operator onboarding (no navigation cards or colored fills). */
+body.operator-onboarding{background:#f7f8f7;color:#152f38}
+body.operator-onboarding .op-main{max-width:1250px;padding-top:32px}
+body.operator-onboarding .application-layout{grid-template-columns:214px minmax(0,1fr);gap:36px;align-items:start}
+body.operator-onboarding .application-card{background:#fff;border:1px solid #e2e6e4;border-radius:9px;box-shadow:none;padding:38px 42px}
+body.operator-onboarding .onboarding-title{font-size:clamp(30px,3.1vw,43px);letter-spacing:-1.5px;line-height:1.13;font-weight:800;margin:0 0 32px;color:#142e38}
+body.operator-onboarding .step-sidebar .stage-nav{display:flex;flex-direction:column;gap:0;align-items:stretch;overflow:visible;border-left:1px solid #d2d9d7;padding:8px 0}
+body.operator-onboarding .stage-link,
+body.operator-onboarding .stage-link:hover:not(.active){
+ display:block;min-height:51px;width:100%;margin:0 0 0 -1px;padding:14px 16px;
+ border:0;border-left:3px solid transparent;border-radius:0;
+ background:transparent;box-shadow:none;text-align:left;font-size:13px;letter-spacing:0;
+ line-height:1.4;font-weight:600;color:#485f62;white-space:nowrap
+}
+body.operator-onboarding .stage-link:hover:not(.active){color:#152f38;background:#f0f3f2;border-left-color:#d0dad6}
+body.operator-onboarding .stage-link.active,
+body.operator-onboarding .stage-link.active:hover{background:transparent;box-shadow:none;border:0;border-left:3px solid #ff5a1f;border-radius:0;color:#152f38;font-weight:800}
+body.operator-onboarding .stage-link:focus-visible{outline:2px solid #ff5a1f;outline-offset:2px}
+body.operator-onboarding .reviewer-link{margin:0 0 14px;text-align:right;font-size:13px;font-weight:650;color:#152f38}
+body.operator-onboarding .agreement-signing-status{margin:18px 0 22px;border-top:1px solid #e3e8e6;padding:17px 0;color:#28414b;font-size:13px}
+body.operator-onboarding .agreement-signing-status p{margin:7px 0 0;color:#667575}
+body.operator-onboarding .agreement-full-link{display:inline-block;font-size:13px;font-weight:700;color:#17404b;margin:4px 0 18px}
+body.operator-onboarding .agreement-view-meta{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;color:#55676b;font-size:12px;margin:4px 0 14px}
+body.operator-onboarding .agreement-preview{background:#fff;white-space:pre-wrap;overflow-wrap:anywhere;max-height:520px;overflow:auto;border:1px solid #d5dedb;border-radius:5px;padding:24px;font-size:13px;line-height:1.8;font-family:'DM Sans',sans-serif;color:#1a3239}
+body.operator-onboarding .signature-box{border-top:1px solid #e2e8e5}
+@media(max-width:940px){
+ body.operator-onboarding .application-layout{grid-template-columns:196px minmax(0,1fr);gap:20px}
+ body.operator-onboarding .application-card{padding:28px}
+ body.operator-onboarding .stage-link{font-size:12px}
+}
+@media(max-width:720px){
+ body.operator-onboarding .application-layout{grid-template-columns:minmax(0,1fr);gap:12px}
+ body.operator-onboarding .step-sidebar .stage-nav{flex-direction:row;border-left:0;border-bottom:1px solid #d2d9d7;gap:0;overflow-x:auto;padding:0 0 2px;scroll-snap-type:x mandatory}
+ body.operator-onboarding .stage-link,
+ body.operator-onboarding .stage-link:hover:not(.active){flex:none;width:auto;min-height:43px;margin:0 0 -1px;padding:10px 12px;border:0;border-bottom:2px solid transparent;font-size:12px;scroll-snap-align:start}
+ body.operator-onboarding .stage-link.active,
+ body.operator-onboarding .stage-link.active:hover{border:0;border-bottom:2px solid #ff5a1f;background:transparent}
+ body.operator-onboarding .application-card{padding:24px 18px;border-radius:8px}
+ body.operator-onboarding .onboarding-title{margin-bottom:24px;font-size:30px}
+ body.operator-onboarding .agreement-preview{max-height:56vh;padding:16px}
+}
