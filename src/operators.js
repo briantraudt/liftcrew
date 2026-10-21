@@ -62,7 +62,7 @@ async function save(){
 }
 async function move(next){
  await save();step=Math.max(0,Math.min(stepIds.length-1,next));persistStep(sessionStorage,app.id,step);render();
- if(stepIds[step]==='agreement'&&published&&!envelope)await prepareContract();
+ // Contract preparation is deliberate and only offered after earlier information is complete.
  root.querySelector('.application-card h2')?.scrollIntoView({block:'start',behavior:'smooth'});
 }
 
@@ -114,13 +114,13 @@ function render(){
  if(!user||!app){authView();return;}
  root.removeAttribute('aria-busy');setHeaderSignedIn(true);
  const edit=editable(app),stage=stageForStep(stepIds[step]);
- const views=[()=>businessView(p),()=>equipmentView(p),()=>operatorsView(p),contract,()=>insuranceView({docs,aiConsent,clearance}),()=>documentsView(p,docs),finish];
+ const views={business:()=>businessView(p),equipment:()=>equipmentView(p),operators:()=>operatorsView(p),insurance:()=>insuranceView({docs,aiConsent,clearance}),documents:()=>documentsView(p,docs),agreement:contract,finish};
  const status=clearance?.eligible?'Approved':app.status==='declined'?'Not approved':app.status==='submitted'?'Verification pending':app.status==='changes_requested'?'Updates needed':'In progress';
  root.innerHTML=`<div class="portal-heading"><h1>${edit?'Join the LiftCrew network':'Provider dashboard'}</h1>${reviewer?'<a href="/operator-review.html" class="text-btn">Provider management</a>':''}</div>${notice()}
  ${edit?`<div class="application-layout"><aside class="step-sidebar"><nav class="stage-nav" aria-label="Onboarding categories">
  ${onboardingStages.map((group,stageIndex)=>`<button type="button" class="stage-link ${stageIndex===stage?'active':''}" data-step="${stepIds.indexOf(group.steps[0])}" ${stageIndex===stage?'aria-current="step"':''}>${h(group.label)}</button>`).join('')}
  </nav></aside>
- <form id="provider-form" class="application-card" novalidate>${views[step]()}<div class="form-actions"><button type="button" class="text-btn" data-back ${step===0?'disabled':''}>Back</button><div><span class="save-state">${dirty?'Unsaved changes':'Saved'}</span><button type="button" class="btn secondary" data-save>Save</button>${step<stepIds.length-1?'<button type="button" class="btn" data-next>Save &amp; continue</button>':''}</div></div></form></div>`:statusPage()}`;
+ <form id="provider-form" class="application-card" novalidate>${views[stepIds[step]]()}<div class="form-actions"><button type="button" class="text-btn" data-back ${step===0?'disabled':''}>Back</button><div><span class="save-state">${dirty?'Unsaved changes':'Saved'}</span><button type="button" class="btn secondary" data-save>Save</button>${step<stepIds.length-1?'<button type="button" class="btn" data-next>Save &amp; continue</button>':''}</div></div></form></div>`:statusPage()}`;
  bind();
 }
 function bind(){
