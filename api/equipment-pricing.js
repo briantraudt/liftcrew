@@ -5,7 +5,7 @@ export function validatePriceRequest(input) {
  if(!['Forklift with operator','Crane with operator'].includes(input.service))return 'Choose a service.';
  if(!/^\d{5}$/.test(input.location||''))return 'Enter a five-digit ZIP code.';
  const days=Number(input.durationDays);
- if(!Number.isInteger(days)||days<1||days>30)return 'Choose between 1 and 30 days.';
+ if(!(days===0.5||(Number.isInteger(days)&&days>=1&&days<=30)))return 'Choose a half-day or 1–30 days.';
  if(input.service==='Forklift with operator'){
   const weight=Number(input.loadWeight),height=Number(input.liftHeight);
   if(!Number.isFinite(weight)||weight<=0||weight>100000||!Number.isFinite(height)||height<=0||height>100)return 'Enter a valid load weight and lift height.';
@@ -30,9 +30,10 @@ export function createPricingHandler({fetcher=fetch,env=process.env}={}){
     p_service:q.service,
     p_capacity:q.service==='Forklift with operator'?Number(q.loadWeight):null,
     p_height:q.service==='Forklift with operator'?Number(q.liftHeight):null,
-    p_duration_days:Number(q.durationDays)
+    p_duration_days:Math.ceil(Number(q.durationDays))
    },fetcher);
-   return res.status(200).json({ok:true,quote});
+   const selected=Number(q.durationDays)===0.5&&quote?.status==='matched'?{...quote,durationDays:0.5,billingPeriod:'halfDay',selectedTotal:quote.totals?.fourHour}:quote;
+   return res.status(200).json({ok:true,quote:selected});
   }catch{
    return res.status(503).json({error:'Pricing is temporarily unavailable. You can still request a quote.'});
   }
