@@ -18,8 +18,6 @@ begin
   if position('billingPeriod' in definition)>0 then raise exception 'Half-day price snapshot already installed: inspect before reapplying'; end if;
   if position(needle in definition)=0 then raise exception 'Unexpected pricing snapshot duration conversion'; end if;
   definition:=replace(definition,needle,$fragment$ceil(private.provider_number(p_details->>'durationDays'))::integer$fragment$);
-  needle:=$fragment$   (p_details->>'durationDays')$fragment$;
-  -- Above condition is intentionally absent: only the exact guarded integer cast is changed.
   needle:=$fragment$   snapshot:=public.quote_nearest_provider_equipment($fragment$;
   if position(needle in definition)=0 then raise exception 'Expected trusted pricing RPC call missing'; end if;
   needle:=$fragment$  );
