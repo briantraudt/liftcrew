@@ -47,6 +47,7 @@ export function renewalAlerts(profile,documents,clearance,now=new Date()){
   };
   if(clearance?.validUntil)add('Verified insurance coverage / provider clearance',clearance.validUntil,'insurance');
   for(const doc of documents||[])if(doc.active&&doc.expires_on)add(doc.filename||'Uploaded document',doc.expires_on,'documents');
+  for(const machine of profile?.equipment||[])if(machine.nextInspectionDue)add('Scheduled inspection / service — '+[machine.make,machine.model].filter(Boolean).join(' '),machine.nextInspectionDue,'equipment');
   for(const operator of profile?.operators||[]){
     const evaluated=toDate(operator.evaluationDate);
     if(!Number.isFinite(evaluated))continue;
