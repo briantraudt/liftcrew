@@ -54,7 +54,7 @@ test('insurance page uploads documents before consent and displays a single revi
 });
 test('operator portal uses native select, branded confirmation and 24-hour receipt',()=>{
  const src=readFileSync(new URL('../src/operators.js',import.meta.url),'utf8');
- const dlg=readFileSync(new URL('../src/operator-confirm-dialog.js',import.meta.url),'utf8');
+ const dlg=readFileSync(new URL('../src/operator-confirmation.js',import.meta.url),'utf8');
  assert(!src.includes("import './select.js'"));
  assert(!src.includes('if(!confirm('));
  assert(src.includes('confirmOperatorAction'));

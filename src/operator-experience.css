@@ -142,6 +142,47 @@ body.operator-onboarding .signature-box{border-top:1px solid #e2e8e5}
  body.operator-onboarding .agreement-preview{max-height:56vh;padding:16px}
 }
 
+/* Custom confirmation surface; native <dialog> provides focus trapping and Escape.
+   Visible content/buttons are LiftCrew-styled, never window.confirm. */
+.lc-confirm-dialog{
+ width:min(460px,calc(100vw - 32px));max-height:calc(100dvh - 40px);
+ margin:auto;padding:0;border:1px solid #d8e1dd;border-radius:16px;
+ background:#fff;color:#16343b;box-shadow:0 24px 80px rgba(10,31,40,.28);
+ overflow-y:auto
+}
+.lc-confirm-dialog::backdrop{background:rgba(12,32,42,.56);backdrop-filter:blur(3px)}
+.lc-confirm-content{padding:31px 31px 27px}
+.lc-confirm-icon{
+ display:grid;place-items:center;height:40px;width:40px;border-radius:12px;
+ background:#fff1e9;color:#dc5022;font-weight:800;font-size:22px
+}
+.lc-confirm-content h2{
+ font-family:Manrope,'DM Sans',sans-serif;letter-spacing:-.6px;
+ font-size:25px;line-height:1.25;margin:19px 0 10px
+}
+.lc-confirm-content p{font-size:14px;line-height:1.65;color:#52666a;margin:0;overflow-wrap:anywhere}
+.lc-confirm-actions{display:flex;justify-content:flex-end;gap:11px;margin-top:29px}
+.lc-confirm-actions button{
+ min-height:45px;padding:11px 19px;border-radius:9px;font:700 14px 'DM Sans',sans-serif;
+ cursor:pointer;transition:background .15s ease,border-color .15s ease
+}
+.lc-confirm-cancel{background:#fff;border:1px solid #c9d6d1;color:#25464c}
+.lc-confirm-cancel:hover{background:#f1f6f3}
+.lc-confirm-accept{background:#ff5a1f;border:1px solid #ff5a1f;color:white}
+.lc-confirm-accept:hover{background:#df4b18;border-color:#df4b18}
+.lc-confirm-dialog.is-caution .lc-confirm-icon{background:#fff2d7;color:#925900}
+.lc-confirm-actions button:focus-visible{outline:3px solid #ff5a1f;outline-offset:3px}
+@media(max-width:480px){
+ .lc-confirm-content{padding:24px 21px}
+ .lc-confirm-content h2{font-size:22px}
+ .lc-confirm-actions button{flex:1}
+}
+@media(prefers-reduced-motion:reduce){.lc-confirm-actions button{transition:none}}
+
+/* Keep the mileage explanation with its own machine-radius input. */
+body.operator-onboarding .machine-radius-field{min-width:0}
+body.operator-onboarding .machine-radius-field .field{margin-bottom:6px}
+body.operator-onboarding .machine-radius-field .field-hint{margin:0 0 18px;color:#596e70;font-size:11px;line-height:1.5}
 
 /* Final operator onboarding refinements: reliable native controls and balanced business layout. */
 body.operator-onboarding .business-wide-field{width:100%;margin:0 0 20px}
@@ -170,18 +211,9 @@ body.operator-onboarding .insurance-consent input{margin-top:0}
 body.operator-onboarding .provider-actions{margin:16px 0}
 body.operator-onboarding .insurance-requirements dl{margin-bottom:18px}
 body.operator-onboarding .thank-you-hero{margin-bottom:24px}
-.operator-confirm-dialog{position:fixed;max-width:min(440px,calc(100% - 32px));width:100%;margin:auto;padding:0;border:1px solid #dde6df;border-radius:11px;box-shadow:0 24px 70px #0519233d;color:#142f38;background:#fff}
-.operator-confirm-dialog::backdrop{background:rgba(6,23,30,.63)}
-.operator-confirm-content{padding:30px}
-.operator-confirm-dialog h2{font-family:Manrope,sans-serif;font-size:24px;letter-spacing:-.9px;margin:0 0 12px}
-.operator-confirm-dialog p{color:#556962;font-size:14px;line-height:1.65;margin:0 0 25px}
-.operator-dialog-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
-.operator-dialog-actions .btn{min-width:112px}
-.operator-dialog-danger{background:#b13c28;border-color:#b13c28;color:white}
-.operator-dialog-danger:hover{background:#942c1c;border-color:#942c1c}
 @media(max-width:720px){
  body.operator-onboarding .availability-day{grid-template-columns:1fr;gap:5px;padding:10px 0}
  body.operator-onboarding .availability-hours{padding-left:26px}
  body.operator-onboarding .availability-hours input{font-size:16px}
- .operator-confirm-content{padding:22px}
+ 
 }

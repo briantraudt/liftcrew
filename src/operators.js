@@ -1,7 +1,7 @@
 import {db,check,uploadDocument,downloadDocument,removeDocument} from './operator-api.js';
 import {emptyProfile,editable,escapeHtml as h,renewalIssues,renderRecord,validateFile} from './operator-data.js';
 import {providerSlots,extraProfileErrors,reviewHTML,saveAgreement} from './provider-ui.js';
-import {businessView,equipmentView,operatorsView,insuranceView,documentsView} from './onboarding-ui.js';
+import {businessView,equipmentView,operatorsView,insuranceView,documentsView,applicantReviewStatusHTML} from './onboarding-ui.js';
 import {stepIds,stepLabels,insuranceKinds,hasInsurancePacket,removeEquipmentAssignments,restoredStep,persistStep,validateInsuranceBatch} from './onboarding-model.js';
 import {CONFIRMATION_URL,OPERATOR_LOGIN_URL} from './operator-auth.js';
 import {onboardingStages,stageForStep,renewalAlerts,businessRadiusForMachines,normalizeMachineRadiusFallbacks} from './onboarding-experience.js';
@@ -9,7 +9,7 @@ import {validatePublishedAgreement} from './published-agreement-format.js';
 import {renderAgreementPreview} from './agreement-preview.js';
 import {setWeeklyAvailability} from './operator-availability.js';
 import {insurancePrecheck} from './insurance-precheck.js';
-import {confirmOperatorAction} from './operator-confirm-dialog.js';
+import {confirmOperatorAction} from './operator-confirmation.js';
 import './operator-flow.css';
 import './onboarding-compact.css';
 import './operator-experience.css';
@@ -232,12 +232,12 @@ async function startReview(retry){
  if(!hasInsurancePacket(docs))throw Error('Upload your insurance policy packet first.');
  await save();const {data,error}=await db.functions.invoke('insurance-review',{body:{applicationId:app.id,consent:true,retry}});
  if(error||!data?.reviewId)throw Error('Insurance review could not start. Your uploaded documents are saved. Try again later or contact LiftCrew.');
- clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));const element=root.querySelector('#insurance-review-status');if(element)element.innerHTML=reviewHTML(clearance.review,clearance.reviewCurrent);pollReview(data.reviewId);
+ clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));const element=root.querySelector('#insurance-review-status');if(element)element.innerHTML=applicantReviewStatusHTML(clearance.review,clearance.reviewCurrent);pollReview(data.reviewId);
 }
 function stopPoll(){pollEpoch++;clearTimeout(pollTimer);pollTimer=null;}
 function pollReview(id){
  stopPoll();const epoch=pollEpoch,applicationId=app.id,started=Date.now();
- const tick=async()=>{if(epoch!==pollEpoch||!user||app?.id!==applicationId)return;try{const result=check(await db.rpc('provider_clearance',{p_application_id:applicationId}));if(epoch!==pollEpoch||app?.id!==applicationId)return;clearance=result;envelope=result.envelope||envelope;const element=root.querySelector('#insurance-review-status');if(element)element.innerHTML=reviewHTML(result.review,result.reviewCurrent);if(!['queued','reading'].includes(result.review?.state)){render();return;}if(Date.now()-started>180000)return;}catch{if(Date.now()-started>180000)return;}pollTimer=setTimeout(tick,2500);};
+ const tick=async()=>{if(epoch!==pollEpoch||!user||app?.id!==applicationId)return;try{const result=check(await db.rpc('provider_clearance',{p_application_id:applicationId}));if(epoch!==pollEpoch||app?.id!==applicationId)return;clearance=result;envelope=result.envelope||envelope;const element=root.querySelector('#insurance-review-status');if(element)element.innerHTML=applicantReviewStatusHTML(result.review,result.reviewCurrent);if(!['queued','reading'].includes(result.review?.state)){render();return;}if(Date.now()-started>180000)return;}catch{if(Date.now()-started>180000)return;}pollTimer=setTimeout(tick,2500);};
  pollTimer=setTimeout(tick,800);
 }
 function scheduleServiceArea(){
