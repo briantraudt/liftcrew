@@ -61,7 +61,9 @@ async function load(){
   publishedAgreement=candidate;
  }catch{agreementPreviewError='The full agreement preview could not be verified here. Open the published agreement page instead.';}
  clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));envelope=clearance.envelope;
- step=restoredStep(sessionStorage,app.id);dirty=false;render();
+ step=restoredStep(sessionStorage,app.id);dirty=false;
+ await prepareWhenComplete();
+ render();
  if(clearance.review&&['queued','reading'].includes(clearance.review.state))pollReview(clearance.review.id);
 }
 async function save(){
@@ -71,9 +73,12 @@ async function save(){
  dirty=false;
 }
 async function move(next){
- await save();step=Math.max(0,Math.min(stepIds.length-1,next));persistStep(sessionStorage,app.id,step);render();
- // Contract preparation is deliberate and only offered after earlier information is complete.
- root.querySelector('.application-card h2')?.scrollIntoView({block:'start',behavior:'smooth'});
+ await save();
+ step=Math.max(0,Math.min(stepIds.length-1,next));
+ persistStep(sessionStorage,app.id,step);
+ await prepareWhenComplete();
+ render();
+ root.querySelector('.application-card h2, .onboarding-title')?.scrollIntoView({block:'start',behavior:'smooth'});
 }
 
 function beforeAgreementIssues(){
@@ -85,6 +90,16 @@ function beforeAgreementIssues(){
    .map(([, ,title])=>'Upload '+title),
   ...renewalIssues(p,docs)
  ];
+}
+async function prepareWhenComplete(){
+ if(stepIds[step]!=='agreement'||envelope||!published||beforeAgreementIssues().length)return;
+ try{
+  // Prepare a personalized reading copy only. No consent or signature is recorded here.
+  envelope=check(await db.rpc('prepare_provider_contract',{p_application_id:app.id}));
+ }catch{
+  // Keep the complete read-only published text visible. Preparation can be retried.
+  message='The published agreement is available to read. Personalized signing is temporarily unavailable.';
+ }
 }
 function contract(){
  const issues=beforeAgreementIssues(),signed=Boolean(envelope?.provider_signed_at);
@@ -148,7 +163,7 @@ function render(){
  ${edit?`<div class="application-layout"><aside class="step-sidebar"><nav class="stage-nav" aria-label="Onboarding categories">
  ${onboardingStages.map((group,stageIndex)=>`<button type="button" class="stage-link ${stageIndex===stage?'active':''}" data-step="${stepIds.indexOf(group.steps[0])}" ${stageIndex===stage?'aria-current="step"':''}>${h(group.label)}</button>`).join('')}
  </nav></aside>
- <form id="provider-form" class="application-card" novalidate>${stepIds[step]==='business'?'<h1 class="onboarding-title">Join the LiftCrew family</h1>':''}${views[stepIds[step]]()}<div class="form-actions"><button type="button" class="text-btn" data-back ${step===0?'disabled':''}>Back</button><div><span class="save-state">${dirty?'Unsaved changes':'Saved'}</span><button type="button" class="btn secondary" data-save>Save</button>${step<stepIds.length-1?'<button type="button" class="btn" data-next>'+(stepIds[step]==='agreement'?'Continue to submit':'Save &amp; continue')+'</button>':''}</div></div></form></div>`:statusPage()}`;
+ <form id="provider-form" class="application-card" novalidate>${stepIds[step]==='business'?'<h1 class="onboarding-title">Join the LiftCrew family</h1>':''}${views[stepIds[step]]()}<div class="form-actions"><button type="button" class="text-btn" data-back ${step===0?'disabled':''}>Back</button><div><span class="save-state">${dirty?'Unsaved changes':'Saved'}</span><button type="button" class="btn secondary" data-save>Save</button>${step<stepIds.length-1&&(stepIds[step]!=='agreement'||Boolean(envelope?.provider_signed_at))?'<button type="button" class="btn" data-next>'+(stepIds[step]==='agreement'?'Continue to submit':'Save &amp; continue')+'</button>':''}</div></div></form></div>`:statusPage()}`;
  bind();
 }
 function bind(){
