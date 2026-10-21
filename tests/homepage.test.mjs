@@ -13,6 +13,7 @@ test('desktop hero layout stays unchanged apart from approved service copy',()=>
     .replace('</a><span class="phone-badge"', '</a><button class="menu-toggle" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button>'+originalNav+'<span class="phone-badge"')
     .replace('class="explore-link" href="#how-it-works"','class="explore-link" href="#services"')
     .replace('action="/"', 'action="/quote.html"')
+    .replace('<option value="0.5">1/2 day (4 hours)</option>', '')
     .replace('<a class="button-outline" href="/operators.html?mode=signup">Operator Signup <span aria-hidden="true">→</span></a>', '<a class="button-outline" href="#how-it-works"><span class="play" aria-hidden="true">▶</span> See How It Works</a>')
     .replace('<option value="Crane with operator">Crane + Operator</option>', '')
     .replace('<h1><span>Big lifts.</span><span>Made simple.</span></h1><p class="hero-service">Crane <em>&amp;</em> forklift service. Operator included.</p>', '<p class="eyebrow light"><i></i> Equipment + operator. One request.</p><h1>Book a forklift or crane <em>today.</em></h1><p class="hero-sub">No dock, an oversized delivery, or heavy equipment to move? Tell us where and when. We’ll confirm the right equipment, availability, and a quote.</p>')
@@ -196,4 +197,9 @@ test('homepage secondary hero CTA opens operator registration, not a video or tu
  assert(!hero.includes('See How It Works'));
  assert(!hero.includes('class="play"'));
  assert.equal((hero.match(/Operator Signup/g)||[]).length,1);
+});
+
+test('half-day duration is offered in homepage booking with the four-hour meaning',()=>{
+ assert(html.includes('<option value="0.5">1/2 day (4 hours)</option>'));
+ assert(html.includes('name="durationDays"'));
 });
