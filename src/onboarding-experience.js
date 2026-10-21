@@ -24,7 +24,7 @@ export function machineRadius(businessRadius, override) {
   const ceiling=Number(businessRadius), machine=Number(override);
   if(!Number.isFinite(ceiling)||ceiling<=0) return null;
   // Per-machine settings may narrow but never enlarge the business-wide ceiling.
-  return String(override??'').trim() && Number.isFinite(machine) && machine>0 ? Math.min(ceiling,machine) : ceiling;
+  return String(override??'').trim() && /^\d+(\.\d+)?$/.test(String(override)) && Number.isFinite(machine) && machine>0 ? Math.min(ceiling,machine) : ceiling;
 }
 export function ratePreviewMarkup(equipment,businessRadius){
   const hourly=positiveRate(equipment.hourlyRate), four=positiveRate(equipment.fourHourRate), daily=positiveRate(equipment.dailyRate);
