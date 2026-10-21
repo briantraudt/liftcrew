@@ -13,6 +13,7 @@ test('a machine radius can narrow but never expand business-wide coverage',()=>{
  assert.equal(machineRadius(100,40),40);
  assert.equal(machineRadius(100,300),100);
  assert.equal(machineRadius(100,'invalid'),100);
+ assert.equal(machineRadius(100,'1e2'),100);
  assert.equal(machineRadius(0,20),null);
 });
 test('pricing warnings are advisory, not rate rejection',()=>{
