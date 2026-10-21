@@ -13,9 +13,9 @@ function prettyDate(value){
   return new Intl.DateTimeFormat('en-US',{month:'short',day:'numeric',year:'numeric'}).format(new Date(parts[0],parts[1]-1,parts[2]));
 }
 function endDateFromDays(date,days){
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isInteger(Number(days))||Number(days)<1||Number(days)>30)return '';
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||!(Number(days)===0.5||(Number.isInteger(Number(days))&&Number(days)>=1&&Number(days)<=30)))return '';
   const [year,month,day]=date.split('-').map(Number);
-  const result=new Date(Date.UTC(year,month-1,day+Number(days)-1));
+  const result=new Date(Date.UTC(year,month-1,day+Math.ceil(Number(days))-1));
   return result.toISOString().slice(0,10);
 }
 function syncDuration(target){

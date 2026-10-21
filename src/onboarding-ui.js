@@ -2,6 +2,7 @@ import {coverage,escapeHtml as h} from './operator-data.js';
 import {categories,insuranceSlots,providerSlots,reviewHTML} from './provider-ui.js';
 import {equipmentLabel,insuranceFiles} from './onboarding-model.js';
 import {defaultMachineRadius} from './onboarding-experience.js';
+import {weeklyAvailabilityMarkup} from './operator-availability.js';
 
 export function field(profile,path,label,type='text',options=null,optional=false){
  let value=path.split('.').reduce((object,key)=>object?.[key],profile)??'';
@@ -14,7 +15,24 @@ export function field(profile,path,label,type='text',options=null,optional=false
 
 export function businessView(profile){
  const f=(...args)=>field(profile,...args);
- return `<div class="form-grid">${f('business.legalName','Legal business name')}${f('business.dba','DBA / trade name','text',null,true)}${f('business.entityType','Business structure','text',['Sole proprietor','LLC','Corporation','Partnership','Other'])}${profile.business.entityType==='Other'?f('business.entityTypeOther','Describe your business structure'):''}${f('business.formationState','State of formation / registration')}${f('business.contactName','Primary contact full name')}${f('business.email','Business / notices email','email')}${f('business.phone','Business phone','tel')}${f('business.address','Street address')}${f('business.city','City')}${f('business.state','State')}${f('business.zip','Business ZIP code')}</div><div class="form-grid">${f('business.serviceArea','Travel restrictions or service notes','textarea',null,true)}${f('business.emergencyName','Emergency / dispatch contact')}${f('business.emergencyPhone','Emergency / dispatch phone','tel')}${f('business.availability','Usual availability / scheduling restrictions','textarea')}${f('business.website','Website','url',null,true)}</div>`;
+ return '<div class="form-grid">'+
+ f('business.legalName','Legal business name')+
+ f('business.dba','DBA / trade name','text',null,true)+
+ f('business.entityType','Business structure','text',['Sole proprietor','LLC','Corporation','Partnership','Other'])+
+ (profile.business.entityType==='Other'?f('business.entityTypeOther','Describe your business structure'):'')+
+ f('business.formationState','State of formation / registration')+
+ f('business.contactName','Primary contact full name')+
+ f('business.email','Business / notices email','email')+
+ f('business.phone','Business phone','tel')+
+ f('business.address','Street address')+
+ f('business.city','City')+
+ f('business.state','State')+
+ f('business.zip','Business ZIP code')+
+ f('business.emergencyName','Emergency / dispatch contact')+
+ f('business.emergencyPhone','Emergency / dispatch phone','tel')+
+ f('business.website','Website','url',null,true)+
+ '</div><div class="business-wide-field">'+f('business.serviceArea','Travel restrictions / service notes','textarea',null,true)+'</div>'+
+ weeklyAvailabilityMarkup(profile.business,h);
 }
 
 export function equipmentView(profile){
@@ -46,7 +64,15 @@ export function applicantReviewStatusHTML(review,current=true){
 }
 
 export function insuranceView({docs,aiConsent,clearance}){
- return `<h2>Insurance</h2><div class="insurance-requirements"><h3>Minimum insurance requirements</h3><dl>${coverage.map(([key,label,minimum])=>`<div><dt>${h(label)}</dt><dd>${h(minimum)}${key==='cgl'?'; $2M products / completed operations aggregate':''}</dd></div>`).join('')}</dl><details><summary>Required policy terms and endorsements</summary><p>Include policy declarations and wording, equipment schedules, and the additional-insured, primary/noncontributory and waiver-of-subrogation endorsements required by Schedule A. Lift Crew LLC must have the required insured status. Working owners must be covered. Deductibles or retentions over $10,000 require a written exception.</p><p>A certificate alone does not establish coverage. The signed agreement controls; crane work requires a separate specialty rider.</p></details></div><label class="check insurance-consent"><input type="checkbox" data-ai-consent ${aiConsent?'checked':''}><span>I authorize LiftCrew to review my insurance documents, including the automated checks described in the <a href="/operator-privacy.html" target="_blank" rel="noopener">privacy notice</a>.</span></label><div class="insurance-packet">${uploadSlot(docs,insuranceSlots[0],'insurance')}</div><div class="provider-actions"><button type="button" class="btn" data-review-insurance>Review my insurance</button></div><div id="insurance-review-status">${applicantReviewStatusHTML(clearance?.review,clearance?.reviewCurrent)}</div>`;
+ const review=applicantReviewStatusHTML(clearance?.review,clearance?.reviewCurrent);
+ return '<h2>Insurance Requirements</h2>'+
+  '<div class="insurance-requirements"><dl>'+coverage.map(([key,label,minimum])=>
+   '<div><dt>'+h(label)+'</dt><dd>'+h(minimum)+(key==='cgl'?'; $2M completed operations aggregate':'')+'</dd></div>').join('')+
+  '</dl></div>'+
+  '<div class="insurance-packet">'+uploadSlot(docs,insuranceSlots[0],'insurance')+'</div>'+
+  '<label class="check insurance-consent"><input type="checkbox" data-ai-consent '+(aiConsent?'checked':'')+'><span>I authorize LiftCrew to review my insurance documents as described in the <a href="/operator-privacy.html" target="_blank" rel="noopener">privacy notice</a>.</span></label>'+
+  '<div class="provider-actions"><button type="button" class="btn" data-review-insurance>Submit insurance for review</button></div>'+
+  '<div id="insurance-review-status" aria-live="polite">'+review+'</div>';
 }
 
 export function documentsView(profile,docs){

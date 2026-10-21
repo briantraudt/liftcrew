@@ -18,7 +18,7 @@ let assertions=0;
 for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
  const browser=await playwright.launch({args:chromium.args,executablePath:await chromium.executablePath(),headless:true});
  try{
-  let application=fixture();const errors=[];
+  let application=fixture(),failNextSave=false;const errors=[];
   const context=await browser.newContext({viewport});
   await context.addInitScript(value=>localStorage.setItem('sb-exokcxcxmmsnqejzhxwf-auth-token',JSON.stringify(value)),session);
   await context.route('https://exokcxcxmmsnqejzhxwf.supabase.co/**',async route=>{
@@ -26,7 +26,7 @@ for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
    if(url.pathname==='/auth/v1/user')data=user;
    else if(url.pathname==='/auth/v1/logout')status=204;
    else if(url.pathname==='/rest/v1/operator_applications'){
-    if(request.method()==='PATCH'){application={...application,...request.postDataJSON()};data=application;}
+    if(request.method()==='PATCH'){if(failNextSave){failNextSave=false;status=409;data={code:'SAVE_REJECTED',message:'Synthetic save failed'};}else{application={...application,...request.postDataJSON()};data=application;}}
     else data=[application];
    }else if(url.pathname==='/rest/v1/operator_documents')data=[];
    else if(url.pathname==='/rest/v1/provider_contract_versions')data=[{id:'version-test',version:'synthetic'}];
@@ -38,23 +38,63 @@ for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
    await route.fulfill({status,headers:{'content-type':'application/json','access-control-allow-origin':'*'},body:status===204?'':JSON.stringify(data)});
   });
   const page=await context.newPage();page.setDefaultTimeout(10000);page.on('pageerror',error=>errors.push(error.message));
-  await page.goto(base+'/operators.html');await page.getByRole('heading',{name:'Your business',exact:true}).waitFor();
+  await page.goto(base+'/operators.html');await page.getByRole('heading',{name:'Join the LiftCrew family',exact:true}).waitFor();
   assert.equal(await page.locator('.op-header').getByText('For clients',{exact:true}).count(),0);assertions++;
   assert.equal(await page.locator('#service-area-result').count(),0);assertions++;
   assert.equal(await page.locator('.account-bar').count(),0);assertions++;
   await page.locator('.op-header').getByRole('button',{name:'Sign out'}).waitFor();assertions++;
   assert.equal(await page.locator('.stage-link').count(),4);assertions++;
-  const box=await page.locator('.application-card').boundingBox();assert(box.y<(viewport.width>720?270:380));assertions++;
+  await page.locator('[data-availability-day="mon"]').check();
+  await page.locator('[data-availability-time="mon"][data-time-part="start"]').fill('07:00');
+  await page.locator('[data-availability-time="mon"][data-time-part="end"]').fill('15:00');
+  assert.equal(await page.locator('[data-save]').count(),0);assertions++;
+  assert.equal(await page.locator('[data-next]').count(),0);assertions++;
+  assert.equal(await page.locator('[data-save-complete]').count(),1);assertions++;
+  await page.getByRole('button',{name:'Save & Complete',exact:true}).click();
+  await page.getByRole('heading',{name:'Your equipment',exact:true}).waitFor();
+  assert(application.profile.business.weeklyAvailability?.some(item=>item.day==='mon'&&item.start==='07:00'&&item.end==='15:00'));assertions++;
+  // A new browser tab has no sessionStorage; resume from localStorage and reload
+  // all actual form values from the mocked database (not copied from DOM state).
+  const reopened=await context.newPage();reopened.setDefaultTimeout(10000);
+  await reopened.goto(base+'/operators.html');
+  await reopened.getByRole('heading',{name:'Your equipment',exact:true}).waitFor();assertions++;
+  await reopened.locator('[data-step="0"]').click();
+  assert.equal(await reopened.locator('[data-availability-day="mon"]').isChecked(),true);assertions++;
+  assert.equal(await reopened.locator('[data-availability-time="mon"][data-time-part="start"]').inputValue(),'07:00');assertions++;
+  assert.equal(await reopened.locator('[data-availability-time="mon"][data-time-part="end"]').inputValue(),'15:00');assertions++;
+  await reopened.close();
+  const box=await page.locator('.application-card').boundingBox();assert(box, 'Application card missing after save; URL='+page.url()+' BODY='+JSON.stringify((await page.locator('body').innerText()).slice(0,1800))+' JS_ERRORS='+JSON.stringify(errors));assert(box.y<(viewport.width>720?270:380));assertions++;
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assertions++;
   await page.locator('[data-step="1"]').click();await page.getByRole('heading',{name:'Your equipment',exact:true}).waitFor();
   assert.equal(await page.locator('[data-equipment-permission]').count(),0);assertions++;
-  await page.locator('[data-next]').click();await page.getByRole('heading',{name:'Your operators',exact:true}).waitFor();
+  const select=page.locator('[data-field="equipment.0.category"]');
+  await select.selectOption('Other');
+  await page.locator('[data-field="equipment.0.categoryOther"]').fill('Specialty lift');
+  assert.equal(await page.locator('.lc-select-trigger').count(),0);assertions++;
+  await page.locator('[data-field="equipment.0.category"]').selectOption('Warehouse forklift');
+  await page.locator('[data-remove="equipment:1"]').click();
+  await page.getByRole('dialog').getByRole('heading',{name:'Remove machine?'}).waitFor();
+  assert.equal(await page.locator('dialog.lc-confirm-dialog').count(),1);assertions++;
+  await page.getByRole('dialog').getByRole('button',{name:'Cancel'}).click();
+  assert.equal(await page.locator('[data-remove="equipment:1"]').count(),1);assertions++;
+  // Failed database save must not advance or falsely report a successful save.
+  await page.locator('[data-field="equipment.0.make"]').fill('Synthetic modified machine');
+  failNextSave=true;
+  await page.getByRole('button',{name:'Save & Complete',exact:true}).click();
+  await page.getByRole('alert').getByText('Synthetic save failed').waitFor();assertions++;
+  assert.equal(await page.getByRole('heading',{name:'Your equipment',exact:true}).count(),1);assertions++;
+  assert.notEqual(application.profile.equipment[0].make,'Synthetic modified machine');assertions++;
+  await page.getByRole('button',{name:'Save & Complete',exact:true}).click();
+  await page.getByRole('heading',{name:'Your operators',exact:true}).waitFor();
+  assert.equal(application.profile.equipment[0].make,'Synthetic modified machine');assertions++;
   assert.equal(await page.locator('[data-equipment-permission]').count(),2);assertions++;
   assert.equal(await page.locator('[data-field="operators.0.equipmentTypes"]').count(),0);assertions++;
   await page.locator('[data-equipment-permission][value="machine-one"]').check();
-  await page.getByRole('button',{name:'Save',exact:true}).click();await page.getByText('Saved. You can return to complete onboarding.',{exact:true}).waitFor();
+  await page.getByRole('button',{name:'Save & Complete',exact:true}).click();
+  await page.getByRole('heading',{name:'Insurance Requirements',exact:true}).waitFor();
   assert.deepEqual(application.profile.operators[0].equipmentIds,['machine-one']);assertions++;
-  await page.locator('[data-step="3"]').click();await page.getByRole('heading',{name:'Insurance',exact:true}).waitFor();
+  await page.locator('[data-step="3"]').click();await page.getByRole('heading',{name:'Insurance Requirements',exact:true}).waitFor();
+  assert((await page.locator('.insurance-packet').boundingBox()).y < (await page.locator('.insurance-consent').boundingBox()).y);assertions++;
   assert.equal(await page.locator('input[type=file]').count(),1);assertions++;
   assert.equal(await page.locator('[data-field^="insurance.cgl"]').count(),0);assertions++;
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assertions++;

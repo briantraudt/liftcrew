@@ -77,3 +77,33 @@ test('customer form renders price previews, keeps quote submission and does not 
  assert(intake.includes("intakeRPC('create_priced_customer_request'"));
  assert(!intake.includes('req.body.deliveryFee'));
 });
+
+
+test('a half-day selects the verified four-hour rate while keeping the trusted server RPC integer',async()=>{
+ const q={...data,durationDays:'0.5'};
+ assert.equal(validatePriceRequest(q),null);
+ const handler=createPricingHandler({env,fetcher:async(url,opts)=>{
+  assert(url.endsWith('/rpc/quote_nearest_provider_equipment'));
+  const body=JSON.parse(opts.body);
+  assert.equal(body.p_duration_days,1);
+  return json({status:'matched',distanceMiles:12,deliveryFee:40,rates:{hourly:100,fourHour:320,daily:680},totals:{hourly:140,fourHour:360,daily:720},durationDays:1});
+ }});
+ const responseObj=response();await handler({method:'POST',headers:{},body:q},responseObj);
+ assert.equal(responseObj.code,200);
+ assert.equal(responseObj.body.quote.durationDays,0.5);
+ assert.equal(responseObj.body.quote.billingPeriod,'halfDay');
+ assert.equal(responseObj.body.quote.selectedTotal,360);
+ assert.equal(responseObj.body.quote.totals.daily,720);
+});
+
+test('half-day SQL migration anchors match the deployed-style original pricing function',()=>{
+ const original=readFileSync(new URL('../supabase/migrations/20261020160000_equipment_pricing.sql',import.meta.url),'utf8');
+ const migration=readFileSync(new URL('../supabase/migrations/20261021180000_customer_half_day.sql',import.meta.url),'utf8');
+ const quoteAnchor='  snapshot:=public.quote_nearest_provider_equipment(';
+ const snapshotBoundary='  );\n exception when others then';
+ assert(original.includes(quoteAnchor),'Original pricing function must contain actual two-space snapshot call');
+ assert(original.includes(snapshotBoundary),'Original pricing exception boundary must exist');
+ assert(migration.includes('needle:=$fragment$'+quoteAnchor+'$fragment$;'));
+ assert(migration.includes('needle:=$fragment$'+snapshotBoundary+'$fragment$;'));
+ assert(!migration.includes('needle:=$fragment$   snapshot:=public.quote_nearest_provider_equipment('));
+});

@@ -84,7 +84,7 @@ test('draft load saves normalized radius before contract preparation',async()=>{
  const code=readFileSync(new URL('../src/operators.js',import.meta.url),'utf8');
  assert(code.includes('const normalized=normalizeMachineRadiusFallbacks(p)'));
  const load=code.slice(code.indexOf('async function load(){'),code.indexOf('async function save(){'));
- const start=load.indexOf('step=restoredStep(sessionStorage,app.id);dirty=false;');
+ const start=load.indexOf('step=restoreDraftStep(app.id);dirty=false;');
  const save=load.indexOf('await save();',start);
  const refreshedClearance=load.indexOf("clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));",save);
  const preflight=load.indexOf('await prepareWhenComplete();',start);

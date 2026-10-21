@@ -7,7 +7,7 @@ export function validateBooking(input, today = new Date()) {
   if (!input || !bookingServices.includes(input.service)) return 'Choose a service.';
   if (!/^\d{5}$/.test(input.location || '')) return 'Enter a five-digit ZIP code.';
   const days = Number(input.durationDays);
-  if (!Number.isInteger(days) || days < 1 || days > 30) return 'Choose the number of days.';
+  if (!(days === 0.5 || (Number.isInteger(days) && days >= 1 && days <= 30))) return 'Choose a half-day or 1–30 days.';
   const date = /^\d{4}-\d{2}-\d{2}$/.test(input.date || '') ? new Date(input.date + 'T00:00:00Z') : null;
   const minimum = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   if (!date || !Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== input.date || input.date < minimum) return 'Choose today or a future date.';

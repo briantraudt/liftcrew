@@ -183,3 +183,37 @@ body.operator-onboarding .signature-box{border-top:1px solid #e2e8e5}
 body.operator-onboarding .machine-radius-field{min-width:0}
 body.operator-onboarding .machine-radius-field .field{margin-bottom:6px}
 body.operator-onboarding .machine-radius-field .field-hint{margin:0 0 18px;color:#596e70;font-size:11px;line-height:1.5}
+
+/* Final operator onboarding refinements: reliable native controls and balanced business layout. */
+body.operator-onboarding .business-wide-field{width:100%;margin:0 0 20px}
+body.operator-onboarding .business-wide-field .field{width:100%;margin-bottom:0}
+body.operator-onboarding .business-wide-field textarea{min-height:90px}
+body.operator-onboarding select{appearance:auto;-webkit-appearance:menulist;cursor:pointer}
+body.operator-onboarding select:focus-visible,
+body.operator-onboarding input:focus-visible,
+body.operator-onboarding textarea:focus-visible{outline:2px solid #ff5a1f;outline-offset:2px;border-color:#e7632b}
+body.operator-onboarding .availability-editor{border-top:1px solid #e3e8e6;padding-top:22px;margin-top:6px}
+body.operator-onboarding .availability-editor>h3{font-size:17px;letter-spacing:-.4px;margin:0 0 12px}
+body.operator-onboarding .availability-day-list{border-top:1px solid #e6eae8}
+body.operator-onboarding .availability-day{display:grid;grid-template-columns:minmax(115px,1fr) minmax(0,2fr);gap:20px;align-items:center;border-bottom:1px solid #e6eae8;min-height:63px;padding:8px 0}
+body.operator-onboarding .availability-day-toggle{display:flex;align-items:center;gap:10px;min-height:44px;font-size:13px;font-weight:650;cursor:pointer}
+body.operator-onboarding .availability-day-toggle input{margin:0;width:18px;height:18px;accent-color:#ff5a1f}
+body.operator-onboarding .availability-hours{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+body.operator-onboarding .availability-hours>label{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:600;color:#5c706b}
+body.operator-onboarding .availability-hours>label span{min-width:30px}
+body.operator-onboarding .availability-hours input{width:100%;max-width:190px;min-height:40px;height:40px;padding:7px 10px;background:white;border:1px solid #cedbd4;border-radius:6px;font-size:13px;cursor:text}
+body.operator-onboarding .availability-hours input:disabled{background:#f3f5f3;color:#95a39e;cursor:not-allowed}
+body.operator-onboarding .availability-note{font-size:12px;color:#6a7a73;margin:12px 0 0}
+body.operator-onboarding .availability-legacy{font-size:12px;color:#576d66;margin:10px 0 0}
+body.operator-onboarding .insurance-packet{margin-top:18px}
+body.operator-onboarding .insurance-consent{margin:16px 0;align-items:center}
+body.operator-onboarding .insurance-consent input{margin-top:0}
+body.operator-onboarding .provider-actions{margin:16px 0}
+body.operator-onboarding .insurance-requirements dl{margin-bottom:18px}
+body.operator-onboarding .thank-you-hero{margin-bottom:24px}
+@media(max-width:720px){
+ body.operator-onboarding .availability-day{grid-template-columns:1fr;gap:5px;padding:10px 0}
+ body.operator-onboarding .availability-hours{padding-left:26px}
+ body.operator-onboarding .availability-hours input{font-size:16px}
+ 
+}

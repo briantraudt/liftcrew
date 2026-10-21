@@ -52,7 +52,7 @@ export const craneSections = [
 ];
 export function validateCraneRequest(input, now = new Date()) {
   if(!input || typeof input !== 'object' || Array.isArray(input)) return {error:'Please check your request.'};
-  const fields=[{name:'location',label:'ZIP code',required:true},{name:'date',label:'Date',required:true},{name:'durationDays',label:'Number of days',type:'number',min:1,max:30,step:1,required:true},{name:'craneClass',label:'Crane preference'},...craneSections.flatMap(s=>s.fields)];
+  const fields=[{name:'location',label:'ZIP code',required:true},{name:'date',label:'Date',required:true},{name:'durationDays',label:'Duration in days',type:'number',min:0.5,max:30,required:true},{name:'craneClass',label:'Crane preference'},...craneSections.flatMap(s=>s.fields)];
   const data={service:CRANE_SERVICE};
   if(input.service!==CRANE_SERVICE)return {error:'Choose Crane + Operator.'};
   for(const field of fields){
@@ -80,6 +80,8 @@ export function validateCraneRequest(input, now = new Date()) {
   if(data.documentUrl){try{if(!['http:','https:'].includes(new URL(data.documentUrl).protocol))throw Error();}catch{return {error:'Enter an http or https link for photos / drawings.'};}}
   if(data.maxPathRadius!==null&&[data.pickupRadius,data.setRadius].some(v=>v!==null&&v>data.maxPathRadius))return {error:'The farthest radius must include both pickup and set-down.'};
   if(data.craneClass&&!/^170-\d{4}$/.test(data.craneClass))return {error:'Choose a listed crane or Help me choose.'};
-  data.endDate=new Date(date.getTime()+(data.durationDays-1)*86400000).toISOString().slice(0,10);
+  if(!(data.durationDays===0.5||(Number.isInteger(data.durationDays)&&data.durationDays>=1&&data.durationDays<=30)))return {error:'Choose a half-day or 1–30 days.'};
+  if(data.durationDays===0.5&&data.hoursPerDay!==4)return {error:'Half-day service is exactly 4 hours. Select a full day for longer work.'};
+  data.endDate=new Date(date.getTime()+(Math.ceil(data.durationDays)-1)*86400000).toISOString().slice(0,10);
   return {data};
 }
