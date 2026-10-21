@@ -1,6 +1,7 @@
 import {escapeHtml as h,documentSlots} from './operator-data.js';
 import {authorizationErrors} from './onboarding-model.js';
-export const insuranceSlots=[['insurance_packet','','Insurance policy packet','Include complete current policies, declarations, certificate, schedules and endorsements in one combined packet or several files. One document can support multiple coverage requirements.']];
+import {weeklyAvailabilityErrors} from './operator-availability.js';
+export const insuranceSlots=[['insurance_packet','','Insurance policy packet','Upload current insurance policies, certificates and required endorsements.']];
 export const categories=['Warehouse forklift','Rough-terrain forklift','Telehandler','Crane','Other'];
 export function providerSlots(profile){return [...insuranceSlots,...documentSlots(profile).filter(([kind])=>!['coi','endorsements','handling'].includes(kind))];}
 export function extraProfileErrors(profile){
@@ -10,6 +11,7 @@ export function extraProfileErrors(profile){
  if(!/^\d{5}$/.test(profile.business?.zip||''))errors.push('Enter a five-digit home / business ZIP');
  if(!(Number(profile.business?.radiusMiles)>0&&Number(profile.business.radiusMiles)<=3000))errors.push('Enter a service radius greater than zero and no more than 3,000 miles');
  if(profile.business?.entityType==='Other'&&!String(profile.business.entityTypeOther??'').trim())errors.push('Describe your other business structure');
+ errors.push(...weeklyAvailabilityErrors(profile.business));
  if(!profile.equipment?.length)errors.push('Add your equipment');
  for(const equipment of profile.equipment||[]){
   required(equipment,['category','make','model','serial','ownership','fuel','tires','attachments','transport','inspectionDate','baseZip','availability','replacementValue','widthIn','heightIn','weightLb'],'Equipment');
