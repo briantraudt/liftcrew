@@ -51,16 +51,27 @@ export function createBookingDetails(booking, onBack, onScheduleChange) {
   let completed = false;
   const today = new Date();
   form.elements.date.min = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  function syncCraneHalfDay(){
+    if(!isCrane)return;
+    const hours=form.elements.hoursPerDay;
+    if(!hours)return;
+    const half=Number(form.elements.durationDays.value)===0.5;
+    if(half)hours.value='4';
+    hours.readOnly=half;
+    hours.title=half?'Half-day is four hours': '';
+  }
   function updateSchedule(schedule) {
     const error = validateBooking(schedule);
     if (error || schedule.service !== booking.service) throw Error(error || 'Choose a service on the homepage.');
     for (const key of ['location', 'date', 'durationDays']) form.elements[key].value = schedule[key];
+    syncCraneHalfDay();
     refreshSelects(form);
     refreshPricing();
   }
   updateSchedule(booking);
   element.querySelectorAll('[data-back]').forEach(link => link.addEventListener('click', event => {event.preventDefault(); onBack();}));
   function syncSchedule() {
+    syncCraneHalfDay();
     const schedule = Object.fromEntries(new FormData(form));
     if (!validateBooking(schedule)) onScheduleChange(schedule);
   }
