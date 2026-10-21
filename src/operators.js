@@ -38,10 +38,29 @@ let recovering=false,reviewer=false,busy=false,dirty=false,aiConsent=false,pollT
 let message='',errorMessage='',authEmail='',areaTimer=null,areaVersion=0;
 const areaCache=new Map();
 const notice=()=>`<div id="provider-message" role="status" aria-live="polite">${message?`<p class="notice success">${h(message)}</p>`:''}</div><div id="provider-error" role="alert">${errorMessage?`<p class="notice error">${h(errorMessage)}</p>`:''}</div>`;
-function markDirty(){dirty=true;if(clearance)clearance.reviewCurrent=false;}
+function stepComplete(){
+ if(!p)return false;
+ const current=stepIds[step],form=root.querySelector('#provider-form');
+ if(form&&[...form.querySelectorAll('input,select,textarea')].some(input=>!input.disabled&&!input.validity.valid))return false;
+ if(['business','equipment','operators'].includes(current))return extraProfileErrors(p,current).length===0;
+ if(current==='insurance')return insurancePrecheck(docs,clearance).ready;
+ if(current==='documents')return providerSlots(p).filter(([kind])=>kind!=='insurance_packet').every(([kind,id])=>docs.some(doc=>doc.active&&doc.kind===kind&&doc.entity_id===id))&&renewalIssues(p,docs).length===0;
+ if(current==='agreement')return Boolean(envelope?.provider_signed_at);
+ if(current==='finish')return beforeAgreementIssues().length===0&&Boolean(envelope?.provider_signed_at);
+ return false;
+}
+function updateCompletion(){
+ const next=root.querySelector('[data-save-complete]');
+ if(next)next.disabled=busy||!stepComplete();
+ const submit=root.querySelector('#provider-form button[type=submit]');
+ if(submit){submit.disabled=busy||!stepComplete();submit.setAttribute('aria-disabled',String(submit.disabled));}
+ const insurance=root.querySelector('[data-review-insurance]');
+ if(insurance)insurance.disabled=busy||!aiConsent||!hasInsurancePacket(docs);
+}
+function markDirty(){dirty=true;if(clearance)clearance.reviewCurrent=false;updateCompletion();}
 function set(path,value){const parts=path.split('.');let object=p;for(const key of parts.slice(0,-1))object=object[key]??={};object[parts.at(-1)]=value;markDirty();}
 function fail(error){errorMessage=error.message||'Unable to complete this action. Your saved information is retained.';const target=root.querySelector('#provider-error');if(target){target.innerHTML=`<p class="notice error">${h(errorMessage)}</p>`;target.scrollIntoView({block:'center'});}else authView();}
-async function run(action){if(busy)return;busy=true;message='';errorMessage='';const buttons=[...root.querySelectorAll('button')].map(button=>[button,button.disabled]);buttons.forEach(([button])=>button.disabled=true);try{await action();}catch(error){fail(error);}finally{busy=false;buttons.forEach(([button,disabled])=>{if(button.isConnected)button.disabled=disabled;});}}
+async function run(action){if(busy)return;busy=true;message='';errorMessage='';const buttons=[...root.querySelectorAll('button')].map(button=>[button,button.disabled]);buttons.forEach(([button])=>button.disabled=true);try{await action();}catch(error){fail(error);}finally{busy=false;buttons.forEach(([button,disabled])=>{if(button.isConnected)button.disabled=disabled;});updateCompletion();}}
 
 function authView(){
  setHeaderSignedIn(false);
@@ -194,7 +213,7 @@ function render(){
  ${onboardingStages.map((group,stageIndex)=>`<button type="button" class="stage-link ${stageIndex===stage?'active':''}" data-step="${stepIds.indexOf(group.steps[0])}" ${stageIndex===stage?'aria-current="step"':''}>${h(group.label)}</button>`).join('')}
  </nav></aside>
  <form id="provider-form" class="application-card" novalidate>${stepIds[step]==='business'?'<h1 class="onboarding-title">Join the LiftCrew family</h1>':''}${views[stepIds[step]]()}<div class="form-actions"><button type="button" class="text-btn" data-back ${step===0?'disabled':''}>Back</button><div>${step<stepIds.length-1?'<button type="button" class="btn" data-save-complete>Save &amp; Complete</button>':''}</div></div></form></div>`:statusPage()}`;
- bind();
+ bind();updateCompletion();
 }
 function bind(){
  scheduleServiceArea();
@@ -206,6 +225,7 @@ function bind(){
  root.querySelectorAll('[data-fix]').forEach(button=>button.onclick=()=>run(()=>move(Number(button.dataset.fix))));
  root.querySelector('[data-back]')?.addEventListener('click',()=>run(()=>move(step-1)));
  root.querySelector('[data-save-complete]')?.addEventListener('click',()=>run(async()=>{
+  if(!stepComplete())return;
   // This action only saves the editable draft; never sign or submit on the user's behalf.
   if(stepIds[step]==='agreement'&&!envelope?.provider_signed_at){
    await save();message='Progress saved. Sign the personalized agreement to continue.';render();return;
@@ -216,6 +236,8 @@ function bind(){
  root.querySelectorAll('[data-remove]').forEach(button=>button.onclick=()=>run(async()=>{const [key,index]=button.dataset.remove.split(':');const label=key==='equipment'?'machine':'operator';if(!await confirmOperatorAction({title:'Remove '+label+'?',message:'This removes the '+label+' from the active application. Previously uploaded records remain available for audit.',confirmLabel:'Remove '+label,showIcon:key!=='equipment',danger:true}))return;if(key==='equipment')removeEquipmentAssignments(p,p.equipment[Number(index)].id);p[key].splice(Number(index),1);markDirty();render();}));
  root.querySelector('[data-prepare]')?.addEventListener('click',()=>run(prepareContract));
  root.querySelectorAll('[data-agreement-download]').forEach(button=>button.onclick=()=>saveAgreement(envelope));
+ root.querySelector('#provider-form')?.addEventListener('input',updateCompletion);
+ root.querySelector('#provider-form')?.addEventListener('change',updateCompletion);
  bindSignature();
  root.querySelector('[data-ai-consent]')?.addEventListener('change',event=>{aiConsent=event.target.checked;});
  root.querySelectorAll('[data-upload-button]').forEach(button=>button.onclick=()=>run(async()=>{
@@ -235,13 +257,13 @@ function bind(){
  root.querySelectorAll('[data-reopen-step]').forEach(button=>button.addEventListener('click',()=>run(async()=>{if(!await confirmOperatorAction({title:'Update provider profile?',message:'Reopening pauses job eligibility until LiftCrew verifies the updated application.',confirmLabel:'Reopen application'}))return;check(await db.rpc('reopen_provider_application',{p_application_id:app.id}));const index=stepIds.indexOf(button.dataset.reopenStep);persistDraftStep(app.id,index<0?0:index);await load();})));
  root.querySelector('[data-reopen]')?.addEventListener('click',()=>run(async()=>{if(!await confirmOperatorAction({title:'Reopen application?',message:'Your approval will be paused until LiftCrew reviews the updated records.',confirmLabel:'Reopen application'}))return;check(await db.rpc('reopen_provider_application',{p_application_id:app.id}));step=0;persistDraftStep(app.id,0);await load();}));
 
- root.querySelector('#provider-form')?.addEventListener('submit',event=>{event.preventDefault();if(stepIds[step]!=='finish')return;const form=new FormData(event.target);run(async()=>{const acknowledgements=Object.fromEntries(Object.keys(certifications).map(key=>[key,form.get('ack-'+key)==='on']));if(Object.values(acknowledgements).some(value=>!value))throw Error('Complete every application certification.');await save();check(await db.rpc('submit_operator_application',{application_id:app.id,typed_name:String(form.get('typed-name')||'').trim(),signer_title:String(form.get('signer-title')||'').trim(),acknowledgements}));await load();message='Your application was submitted successfully.';render();});});
+ root.querySelector('#provider-form')?.addEventListener('submit',event=>{event.preventDefault();if(stepIds[step]!=='finish'||!stepComplete())return;const form=new FormData(event.target);run(async()=>{const acknowledgements=Object.fromEntries(Object.keys(certifications).map(key=>[key,form.get('ack-'+key)==='on']));if(Object.values(acknowledgements).some(value=>!value))throw Error('Complete every application certification.');await save();check(await db.rpc('submit_operator_application',{application_id:app.id,typed_name:String(form.get('typed-name')||'').trim(),signer_title:String(form.get('signer-title')||'').trim(),acknowledgements}));await load();message='Your application was submitted successfully.';render();});});
 }
 function bindSignature(){
  const scroller=root.querySelector('#contract-text'),sign=root.querySelector('[data-sign-contract]');if(!scroller||!sign)return;
  let reachedEnd=false;
- const update=()=>{reachedEnd||=scroller.scrollTop+scroller.clientHeight>=scroller.scrollHeight-12;sign.disabled=!(reachedEnd&&root.querySelector('[name=read-contract]').checked&&root.querySelector('[name=esign-consent]').checked);root.querySelector('#scroll-status').textContent=reachedEnd?'End of agreement reached. Confirm your review and signing consent below.':'Scroll through the agreement to enable signing.';};
- scroller.onscroll=update;root.querySelector('[name=read-contract]').onchange=update;root.querySelector('[name=esign-consent]').onchange=update;requestAnimationFrame(update);
+ const update=()=>{reachedEnd||=scroller.scrollTop+scroller.clientHeight>=scroller.scrollHeight-12;sign.disabled=!(reachedEnd&&root.querySelector('[name=read-contract]').checked&&root.querySelector('[name=esign-consent]').checked&&root.querySelector('[name=signature]').value.trim()&&root.querySelector('[name=signature-title]').value.trim());root.querySelector('#scroll-status').textContent=reachedEnd?'End of agreement reached. Confirm your review and signing consent below.':'Scroll through the agreement to enable signing.';};
+ root.querySelector('[name=signature]').oninput=update;root.querySelector('[name=signature-title]').oninput=update;scroller.onscroll=update;root.querySelector('[name=read-contract]').onchange=update;root.querySelector('[name=esign-consent]').onchange=update;requestAnimationFrame(update);
  sign.onclick=()=>run(async()=>{if(beforeAgreementIssues().length)throw Error('Complete the required information and documents before signing.');if(!reachedEnd)throw Error('Read the complete agreement first.');const name=root.querySelector('[name=signature]').value.trim(),title=root.querySelector('[name=signature-title]').value.trim();envelope=check(await db.rpc('sign_provider_contract',{p_envelope_id:envelope.id,p_name:name,p_title:title,p_read:root.querySelector('[name=read-contract]').checked,p_consent:root.querySelector('[name=esign-consent]').checked}));step=stepIds.indexOf('finish');persistDraftStep(app.id,step);message='Agreement signed. Review the final certifications and submit your application.';render();});
 }
 

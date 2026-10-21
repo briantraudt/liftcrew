@@ -4,14 +4,17 @@ import {weeklyAvailabilityErrors} from './operator-availability.js';
 export const insuranceSlots=[['insurance_packet','','Insurance policy packet','Upload current insurance policies, certificates and required endorsements.']];
 export const categories=['Warehouse forklift','Rough-terrain forklift','Telehandler','Crane','Other'];
 export function providerSlots(profile){return [...insuranceSlots,...documentSlots(profile).filter(([kind])=>!['coi','endorsements','handling'].includes(kind))];}
-export function extraProfileErrors(profile){
+export function extraProfileErrors(profile,section=null){
  const errors=[];
  const required=(object,keys,label)=>keys.forEach(key=>{if(!String(object?.[key]??'').trim())errors.push(`${label}: ${key.replace(/[A-Z]/g,letter=>' '+letter.toLowerCase())}`);});
+ if(!section||section==='business'){
  required(profile.business,['legalName','entityType','formationState','address','city','state','zip','contactName','email','phone','radiusMiles','emergencyName','emergencyPhone','availability'],'Business');
  if(!/^\d{5}$/.test(profile.business?.zip||''))errors.push('Enter a five-digit home / business ZIP');
  if(!(Number(profile.business?.radiusMiles)>0&&Number(profile.business.radiusMiles)<=3000))errors.push('Enter a service radius greater than zero and no more than 3,000 miles');
  if(profile.business?.entityType==='Other'&&!String(profile.business.entityTypeOther??'').trim())errors.push('Describe your other business structure');
  errors.push(...weeklyAvailabilityErrors(profile.business));
+ }
+ if(!section||section==='equipment'){
  if(!profile.equipment?.length)errors.push('Add your equipment');
  for(const equipment of profile.equipment||[]){
   required(equipment,['category','make','model','serial','ownership','fuel','tires','attachments','transport','inspectionDate','baseZip','availability','replacementValue','widthIn','heightIn','weightLb'],'Equipment');
@@ -26,9 +29,12 @@ export function extraProfileErrors(profile){
   if(['Warehouse forklift','Rough-terrain forklift','Telehandler'].includes(equipment.category)&&!(Number(equipment.loadCenter)>0))errors.push('Forklift load center must be positive');
   if(equipment.category==='Crane'&&!(Number(equipment.workingRadiusFt)>0))errors.push('Crane working radius must be positive');
  }
+ }
+ if(!section||section==='operators'){
  if(!profile.operators?.length)errors.push('Add an operator');
  for(const operator of profile.operators||[]){required(operator,['name','relationship','trainingDate','trainer','evaluationDate','evaluator'],'Operator');if(operator.adult!=='yes')errors.push('Confirm each operator is at least 18');for(const key of ['trainingDate','evaluationDate'])if(operator[key]&&operator[key]>new Date().toISOString().slice(0,10))errors.push('Operator '+key+' cannot be in the future');}
  errors.push(...authorizationErrors(profile));
+ }
  return [...new Set(errors)];
 }
 export function reviewHTML(review,current=true){

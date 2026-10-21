@@ -14,11 +14,14 @@ const encode=value=>Buffer.from(JSON.stringify(value)).toString('base64url');
 const token=encode({alg:'HS256',typ:'JWT'})+'.'+encode({sub:user.id,aud:'authenticated',role:'authenticated',exp:Math.floor(Date.now()/1000)+3600})+'.synthetic-signature';
 const session={access_token:token,refresh_token:'synthetic-refresh',expires_at:Math.floor(Date.now()/1000)+3600,expires_in:3600,token_type:'bearer',user};
 const fixture=()=>({id:'22222222-2222-4222-8222-222222222222',user_id:user.id,status:'draft',revision:0,profile:{business:{zip:'78703',radiusMiles:50,legalName:'Synthetic Test LLC'},equipment:[{id:'machine-one',make:'Toyota',model:'8FGU25',category:'Warehouse forklift',serial:'TEST-1'},{id:'machine-two',make:'JLG',model:'G6',category:'Telehandler',serial:'TEST-2'}],operators:[{id:'operator-one',name:'Synthetic Operator',equipmentIds:[]}],insurance:{inputMode:'packet',maximumLoadValue:250000}}});
+const completeProfile={business:{legalName:'Example Lift LLC',entityType:'LLC',formationState:'TX',address:'Synthetic test address',contactName:'Test Operator',phone:'555-0100',emergencyName:'Test Dispatch',emergencyPhone:'555-0101',availability:'Weekdays',city:'Austin',state:'TX',zip:'78701',email:'test@example.com',radiusMiles:'50'},equipment:[{id:'machine-1',category:'Warehouse forklift',make:'Example',model:'Model',serial:'TEST',ownership:'Owned',fuel:'Propane',tires:'Paved',attachments:'None',transport:'Third-party hauler',inspectionDate:'2026-10-01',capacity:5000,liftHeight:15,loadCenter:24,baseZip:'78701',hourlyRate:125,fourHourRate:440,dailyRate:725,availability:'Weekdays',replacementValue:90000,widthIn:42,heightIn:85,weightLb:9000}],operators:[{id:'operator-1',name:'Example Operator',relationship:'Employee',trainingDate:'2026-01-01',trainer:'Example Trainer',evaluationDate:'2026-01-01',evaluator:'Example Evaluator',adult:'yes',equipmentIds:['machine-1']}],insurance:{inputMode:'packet'}};
+const originalFixture=fixture;
+const completeFixture=()=>{const a=originalFixture();a.profile.business={...completeProfile.business,legalName:'Synthetic Test LLC'};a.profile.equipment=a.profile.equipment.map(e=>({...completeProfile.equipment[0],...e}));a.profile.operators=a.profile.operators.map(o=>({...completeProfile.operators[0],...o}));return a;};
 let assertions=0;
 for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
  const browser=await playwright.launch({args:chromium.args,executablePath:await chromium.executablePath(),headless:true});
  try{
-  let application=fixture(),failNextSave=false;const errors=[];
+  let application=completeFixture(),failNextSave=false;const errors=[];
   const context=await browser.newContext({viewport});
   await context.addInitScript(value=>localStorage.setItem('sb-exokcxcxmmsnqejzhxwf-auth-token',JSON.stringify(value)),session);
   await context.route('https://exokcxcxmmsnqejzhxwf.supabase.co/**',async route=>{
@@ -39,6 +42,10 @@ for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
   });
   const page=await context.newPage();page.setDefaultTimeout(10000);page.on('pageerror',error=>errors.push(error.message));
   await page.goto(base+'/operators.html');await page.getByRole('heading',{name:'Join the LiftCrew family',exact:true}).waitFor();
+  await page.locator('[data-field="business.legalName"]').fill('');
+  assert.equal(await page.locator('[data-save-complete]').isDisabled(),true);assertions++;
+  await page.locator('[data-field="business.legalName"]').fill('Synthetic Test LLC');
+  assert.equal(await page.locator('[data-save-complete]').isEnabled(),true);assertions++;
   assert.equal(await page.locator('.op-header').getByText('For clients',{exact:true}).count(),0);assertions++;
   assert.equal(await page.locator('#service-area-result').count(),0);assertions++;
   assert.equal(await page.locator('.account-bar').count(),0);assertions++;
@@ -67,6 +74,12 @@ for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assertions++;
   await page.locator('[data-step="1"]').click();await page.getByRole('heading',{name:'Your equipment',exact:true}).waitFor();
   assert.equal(await page.locator('[data-equipment-permission]').count(),0);assertions++;
+  const heading=await page.locator('.equipment-heading').boundingBox(),add=await page.locator('[data-add="equipment"]').boundingBox();
+  assert(add.x+add.width>heading.x+heading.width-2);assertions++;
+  await page.locator('[data-field="equipment.0.make"]').fill('');
+  assert.equal(await page.locator('[data-save-complete]').isDisabled(),true);assertions++;
+  await page.locator('[data-field="equipment.0.make"]').fill('Toyota');
+  assert.equal(await page.locator('[data-save-complete]').isEnabled(),true);assertions++;
   const select=page.locator('[data-field="equipment.0.category"]');
   await select.selectOption('Other');
   await page.locator('[data-field="equipment.0.categoryOther"]').fill('Specialty lift');
@@ -89,12 +102,17 @@ for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
   assert.equal(application.profile.equipment[0].make,'Synthetic modified machine');assertions++;
   assert.equal(await page.locator('[data-equipment-permission]').count(),2);assertions++;
   assert.equal(await page.locator('[data-field="operators.0.equipmentTypes"]').count(),0);assertions++;
+  assert.equal(await page.locator('[data-save-complete]').isDisabled(),true);assertions++;
   await page.locator('[data-equipment-permission][value="machine-one"]').check();
+  assert.equal(await page.locator('[data-save-complete]').isEnabled(),true);assertions++;
   await page.getByRole('button',{name:'Save & Complete',exact:true}).click();
   await page.getByRole('heading',{name:'Insurance Requirements',exact:true}).waitFor();
   assert.deepEqual(application.profile.operators[0].equipmentIds,['machine-one']);assertions++;
   await page.locator('[data-step="3"]').click();await page.getByRole('heading',{name:'Insurance Requirements',exact:true}).waitFor();
   assert((await page.locator('.insurance-packet').boundingBox()).y < (await page.locator('.insurance-consent').boundingBox()).y);assertions++;
+  assert.equal(await page.locator('[data-review-insurance]').innerText(),'Submit');assertions++;
+  assert.equal(await page.locator('[data-review-insurance]').isDisabled(),true);assertions++;
+  assert.equal(await page.locator('[data-save-complete]').isDisabled(),true);assertions++;
   assert.equal(await page.locator('input[type=file]').count(),1);assertions++;
   assert.equal(await page.locator('[data-field^="insurance.cgl"]').count(),0);assertions++;
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assertions++;
