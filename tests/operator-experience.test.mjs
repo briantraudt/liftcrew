@@ -26,8 +26,8 @@ test('renewal notices show upcoming and overdue evidence without claiming approv
  const profile={operators:[{name:'Alex',evaluationDate:'2023-11-01'}]};
  const docs=[{active:true,filename:'inspection.pdf',expires_on:'2026-10-19'}, {active:false,filename:'old.pdf',expires_on:'2020-01-01'}];
  const alerts=renewalAlerts(profile,docs,{validUntil:'2026-11-02'},now);
- assert.deepEqual(alerts.map(x=>x.label),['inspection.pdf','Verified insurance coverage / provider clearance','Practical evaluation — Alex']);
+ assert.deepEqual(alerts.map(x=>x.label),['inspection.pdf','Practical evaluation — Alex','Verified insurance coverage / provider clearance']);
  assert.equal(alerts[0].severity,'urgent');
  assert.equal(alerts[1].severity,'soon');
- assert.equal(alerts[2].step,'operators');
+ assert.equal(alerts[1].step,'operators');
 });
