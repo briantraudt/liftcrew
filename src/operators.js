@@ -148,7 +148,7 @@ function render(){
  ${edit?`<div class="application-layout"><aside class="step-sidebar"><nav class="stage-nav" aria-label="Onboarding categories">
  ${onboardingStages.map((group,stageIndex)=>`<button type="button" class="stage-link ${stageIndex===stage?'active':''}" data-step="${stepIds.indexOf(group.steps[0])}" ${stageIndex===stage?'aria-current="step"':''}>${h(group.label)}</button>`).join('')}
  </nav></aside>
- <form id="provider-form" class="application-card" novalidate>${stepIds[step]==='business'?'<h1 class="onboarding-title">Join the LiftCrew family</h1>':''}${views[stepIds[step]]()}<div class="form-actions"><button type="button" class="text-btn" data-back ${step===0?'disabled':''}>Back</button><div><span class="save-state">${dirty?'Unsaved changes':'Saved'}</span><button type="button" class="btn secondary" data-save>Save</button>${step<stepIds.length-1?'<button type="button" class="btn" data-next>${stepIds[step]==='agreement'?'Continue to submit':'Save &amp; continue'}</button>':''}</div></div></form></div>`:statusPage()}`;
+ <form id="provider-form" class="application-card" novalidate>${stepIds[step]==='business'?'<h1 class="onboarding-title">Join the LiftCrew family</h1>':''}${views[stepIds[step]]()}<div class="form-actions"><button type="button" class="text-btn" data-back ${step===0?'disabled':''}>Back</button><div><span class="save-state">${dirty?'Unsaved changes':'Saved'}</span><button type="button" class="btn secondary" data-save>Save</button>${step<stepIds.length-1?'<button type="button" class="btn" data-next>'+(stepIds[step]==='agreement'?'Continue to submit':'Save &amp; continue')+'</button>':''}</div></div></form></div>`:statusPage()}`;
  bind();
 }
 function bind(){
