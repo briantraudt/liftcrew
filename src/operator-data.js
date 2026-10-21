@@ -37,7 +37,7 @@ export function renewalIssues(p,docs=[]){
  const issues=[];
  for(const [k,l] of coverage)if(p.insurance?.inputMode!=='packet'&&p.insurance?.[k]?.expiry&&p.insurance[k].expiry<today)issues.push(l+' has expired');
  for(const o of p.operators||[])if(o.evaluationDate&&o.evaluationDate<cutoff.toISOString().slice(0,10))issues.push((o.name||'Operator')+' needs a current evaluation');
- for(const d of docs)if(d.active&&d.expires_on&&d.expires_on<today)issues.push(d.filename+' has expired');
+ for(const d of docs)if(d.active&&d.expires_on&&d.expires_on<=today)issues.push(d.filename+' has expired');
  return issues;
 }
 export function validateFile(file){

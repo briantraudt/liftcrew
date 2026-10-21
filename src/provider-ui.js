@@ -14,12 +14,14 @@ export function extraProfileErrors(profile){
   required(equipment,['category','make','model','serial','ownership','fuel','tires','attachments','transport','inspectionDate','baseZip','availability','replacementValue','widthIn','heightIn','weightLb'],'Equipment');
   for(const key of ['capacity','liftHeight','replacementValue','widthIn','heightIn','weightLb'])if(!(Number(equipment[key])>0))errors.push(`Equipment ${key} must be positive`);
   if(!/^\d{5}$/.test(equipment.baseZip||''))errors.push('Enter a five-digit equipment ZIP code');
+  const radius=String(equipment.radiusMilesOverride??'').trim();if(radius&&(!Number.isFinite(Number(radius))||Number(radius)<=0||Number(radius)>Number(profile.business.radiusMiles)))errors.push('Equipment radius must be positive and no greater than your business maximum');
+  if(equipment.inspectionDate&&equipment.inspectionDate>new Date().toISOString().slice(0,10))errors.push('Equipment inspection date cannot be in the future');
   for(const key of ['hourlyRate','fourHourRate','dailyRate']){const rate=String(equipment[key]??'').trim();if(!/^\d+(\.\d{1,2})?$/.test(rate)||Number(rate)<=0||Number(rate)>100000)errors.push('Enter a valid '+key.replace(/[A-Z]/g,c=>' '+c.toLowerCase())+' between $0.01 and $100,000');}
   if(equipment.category!=='Crane'&&!(Number(equipment.loadCenter)>0))errors.push('Forklift load center must be positive');
   if(equipment.category==='Crane'&&!(Number(equipment.workingRadiusFt)>0))errors.push('Crane working radius must be positive');
  }
  if(!profile.operators?.length)errors.push('Add an operator');
- for(const operator of profile.operators||[]){required(operator,['name','relationship','trainingDate','trainer','evaluationDate','evaluator'],'Operator');if(operator.adult!=='yes')errors.push('Confirm each operator is at least 18');}
+ for(const operator of profile.operators||[]){required(operator,['name','relationship','trainingDate','trainer','evaluationDate','evaluator'],'Operator');if(operator.adult!=='yes')errors.push('Confirm each operator is at least 18');for(const key of ['trainingDate','evaluationDate'])if(operator[key]&&operator[key]>new Date().toISOString().slice(0,10))errors.push('Operator '+key+' cannot be in the future');}
  errors.push(...authorizationErrors(profile));
  return [...new Set(errors)];
 }
