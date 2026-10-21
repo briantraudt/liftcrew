@@ -217,3 +217,18 @@ body.operator-onboarding .thank-you-hero{margin-bottom:24px}
  body.operator-onboarding .availability-hours input{font-size:16px}
  
 }
+/* Keep the editing shell in the viewport; only the application form scrolls. */
+@media screen{
+ body.operator-onboarding:has(#provider-form){height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+ body.operator-onboarding:has(#provider-form) .op-header{flex:none;width:100%;margin:0}
+ body.operator-onboarding:has(#provider-form) .op-main{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;padding-bottom:18px}
+ body.operator-onboarding:has(#provider-form) #app{flex:1;min-height:0;display:flex;flex-direction:column}
+ body.operator-onboarding:has(#provider-form) #app>.notice{flex:none;max-height:20dvh;overflow:auto}
+ body.operator-onboarding:has(#provider-form) .application-layout{flex:1;min-height:0;grid-template-rows:minmax(0,1fr);align-items:stretch}
+ body.operator-onboarding:has(#provider-form) .step-sidebar{position:static;min-height:0;max-height:100%;overflow-y:auto}
+ body.operator-onboarding #provider-form{min-height:0;overflow-y:auto;overscroll-behavior-y:contain;scroll-padding-block:24px 100px}
+ body.operator-onboarding:has(#provider-form) .op-footer{display:none}
+}
+@media screen and (max-width:720px){
+ body.operator-onboarding:has(#provider-form) .application-layout{grid-template-rows:auto minmax(0,1fr)}
+}
