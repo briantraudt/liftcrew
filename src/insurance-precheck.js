@@ -8,5 +8,9 @@ export function insurancePrecheck(docs=[],clearance=null){
   if(review.state==='complete'&&review.result?.outcome==='document_pass')
     return {ready:true,kind:'document_pass',message:'Your insurance document checks passed. Final coverage verification is completed by LiftCrew.'};
   if(review.result?.outcome==='needs_changes')return {ready:false,kind:'needs_changes',message:'Your insurance documents do not yet show the required coverage. Please update them and run a new review.'};
-  return {ready:false,kind:'manual_review',message:'Your insurance needs specialist verification. LiftCrew must resolve the outstanding checks before onboarding can continue.'};
+  // An inconclusive or unavailable automated service must never trap the provider
+  // before staff can receive the completed application. Staff still independently
+  // verify authenticity, limits and endorsements before any job eligibility.
+  if(review.state==='manual_review'||review.result?.outcome==='manual_review')return {ready:true,kind:'manual_pending',message:'Your documents need a LiftCrew specialist review. You can finish the application; this does not approve your insurance or permit work.'};
+  return {ready:false,kind:'unresolved',message:'Insurance review is not finished. Refresh the status or retry review.'};
 }
