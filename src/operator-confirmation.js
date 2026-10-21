@@ -8,6 +8,7 @@ export function confirmOperatorAction({
  message,
  confirmLabel='Remove',
  intent='danger',
+ showIcon=true,
 }){
  return new Promise(resolve=>{
   if(document.querySelector('dialog.lc-confirm-dialog[open]')){resolve(false);return;}
@@ -17,7 +18,7 @@ export function confirmOperatorAction({
   dialog.setAttribute('aria-labelledby','lc-confirm-title');
   dialog.setAttribute('aria-describedby','lc-confirm-description');
   dialog.innerHTML=`<div class="lc-confirm-content">
-    <span class="lc-confirm-icon" aria-hidden="true">!</span>
+    ${showIcon?'<span class="lc-confirm-icon" aria-hidden="true">!</span>':''}
     <h2 id="lc-confirm-title"></h2>
     <p id="lc-confirm-description"></p>
     <div class="lc-confirm-actions">
