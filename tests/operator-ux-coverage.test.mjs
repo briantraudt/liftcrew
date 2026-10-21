@@ -38,10 +38,12 @@ test('insurance precheck allows only a current document-check pass and never gra
  const pass={reviewCurrent:true,review:{state:'complete',result:{outcome:'document_pass'}}};
  assert.equal(insurancePrecheck(docs,pass).ready,true);
  for(const c of [{...pass,reviewCurrent:false},{reviewCurrent:true,review:{state:'reading'}},{reviewCurrent:true,review:{state:'manual_review',result:{outcome:'manual_review'}}},{reviewCurrent:true,review:{state:'complete',result:{outcome:'needs_changes'}}}]){
-  assert.equal(insurancePrecheck(docs,c).ready,false);
+  assert.equal(insurancePrecheck(docs,c).ready,c.review?.state==='manual_review');
  }
  assert.equal(insurancePrecheck([],pass).ready,false);
  assert.match(insurancePrecheck(docs,pass).message,/Final coverage verification/);
+ const manual=insurancePrecheck(docs,{reviewCurrent:true,review:{state:'manual_review',result:{outcome:'manual_review'}}});
+ assert.equal(manual.kind,'manual_pending');assert.equal(manual.ready,true);assert.match(manual.message,/does not approve/);
 });
 test('insurance page uploads documents before consent and displays a single review action',()=>{
  const html=insuranceView({docs:[],aiConsent:false,clearance:null});
