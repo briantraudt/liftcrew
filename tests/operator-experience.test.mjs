@@ -7,6 +7,8 @@ test('four displayed stages preserve every original step exactly once',()=>{
  assert.deepEqual(ids,['business','equipment','operators','insurance','documents','agreement','finish']);
  assert.equal(stageForStep('insurance'),2);
  assert.equal(stageForStep('finish'),3);
+ assert.equal(stageForStep('agreement'),3);
+ assert.equal(stageForStep('insurance'),2);
 });
 test('each machine radius is independent and legacy radius is a fallback',()=>{
  assert.equal(machineRadius(100,''),100);
