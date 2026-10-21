@@ -4,7 +4,7 @@ import {providerSlots,extraProfileErrors,reviewHTML,saveAgreement} from './provi
 import {businessView,equipmentView,operatorsView,insuranceView,documentsView} from './onboarding-ui.js';
 import {stepIds,stepLabels,insuranceKinds,hasInsurancePacket,removeEquipmentAssignments,restoredStep,persistStep,validateInsuranceBatch} from './onboarding-model.js';
 import {CONFIRMATION_URL,OPERATOR_LOGIN_URL} from './operator-auth.js';
-import {onboardingStages,stageForStep,ratePreviewMarkup,renewalAlerts,businessRadiusForMachines,normalizeMachineRadiusFallbacks} from './onboarding-experience.js';
+import {onboardingStages,stageForStep,renewalAlerts,businessRadiusForMachines,normalizeMachineRadiusFallbacks} from './onboarding-experience.js';
 import {validatePublishedAgreement} from './published-agreement-format.js';
 import {renderAgreementPreview} from './agreement-preview.js';
 import {setWeeklyAvailability} from './operator-availability.js';
@@ -185,7 +185,7 @@ function render(){
 }
 function bind(){
  scheduleServiceArea();
- root.querySelectorAll('[data-field]').forEach(element=>element.oninput=()=>{set(element.dataset.field,element.value);if(element.dataset.field.startsWith('business.'))envelope=null;if(['business.entityType'].includes(element.dataset.field)||element.dataset.field.endsWith('.category')||element.dataset.field.endsWith('.fuel')){render();return;}const rateMatch=/^equipment\.(\d+)\.(hourlyRate|fourHourRate|dailyRate|radiusMilesOverride)$/.exec(element.dataset.field);if(rateMatch){const preview=root.querySelector('#rate-preview-'+rateMatch[1]);if(preview)preview.innerHTML=ratePreviewMarkup(p.equipment[Number(rateMatch[1])],p.business.radiusMiles);}if(element.dataset.field==='business.radiusMiles')root.querySelectorAll('.rate-preview').forEach((preview,index)=>preview.innerHTML=ratePreviewMarkup(p.equipment[index],p.business.radiusMiles));});
+ root.querySelectorAll('[data-field]').forEach(element=>element.oninput=()=>{set(element.dataset.field,element.value);if(element.dataset.field.startsWith('business.'))envelope=null;if(['business.entityType'].includes(element.dataset.field)||element.dataset.field.endsWith('.category')||element.dataset.field.endsWith('.fuel')){render();return;}});
  root.querySelectorAll('[data-availability-day]').forEach(element=>element.onchange=()=>{const day=element.dataset.availabilityDay;setWeeklyAvailability(p.business,day,{enabled:element.checked});markDirty();element.closest('.availability-day')?.querySelectorAll('[data-availability-time]').forEach(input=>input.disabled=!element.checked);});
  root.querySelectorAll('[data-availability-time]').forEach(element=>element.onchange=()=>{setWeeklyAvailability(p.business,element.dataset.availabilityTime,{[element.dataset.timePart]:element.value});markDirty();});
  root.querySelectorAll('[data-equipment-permission]').forEach(element=>element.onchange=()=>{const index=Number(element.dataset.equipmentPermission);p.operators[index].equipmentIds=[...root.querySelectorAll(`[data-equipment-permission="${index}"]:checked`)].map(input=>input.value);delete p.operators[index].equipmentTypes;markDirty();});
