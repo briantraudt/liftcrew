@@ -185,7 +185,7 @@ function render(){
 }
 function bind(){
  scheduleServiceArea();
- root.querySelectorAll('[data-field]').forEach(element=>element.oninput=()=>{set(element.dataset.field,element.value);if(element.dataset.field.startsWith('business.'))envelope=null;if(['business.entityType'].includes(element.dataset.field)||element.dataset.field.endsWith('.category')||element.dataset.field.endsWith('.fuel')){render();return;}});
+ root.querySelectorAll('[data-field]').forEach(element=>{const onValue=()=>{set(element.dataset.field,element.value);if(element.dataset.field.startsWith('business.'))envelope=null;if(['business.entityType'].includes(element.dataset.field)||element.dataset.field.endsWith('.category')||element.dataset.field.endsWith('.fuel')){render();return;}};if(element.tagName==='SELECT')element.onchange=onValue;else element.oninput=onValue;});
  root.querySelectorAll('[data-availability-day]').forEach(element=>element.onchange=()=>{const day=element.dataset.availabilityDay;setWeeklyAvailability(p.business,day,{enabled:element.checked});markDirty();element.closest('.availability-day')?.querySelectorAll('[data-availability-time]').forEach(input=>input.disabled=!element.checked);});
  root.querySelectorAll('[data-availability-time]').forEach(element=>element.onchange=()=>{setWeeklyAvailability(p.business,element.dataset.availabilityTime,{[element.dataset.timePart]:element.value});markDirty();});
  root.querySelectorAll('[data-equipment-permission]').forEach(element=>element.onchange=()=>{const index=Number(element.dataset.equipmentPermission);p.operators[index].equipmentIds=[...root.querySelectorAll(`[data-equipment-permission="${index}"]:checked`)].map(input=>input.value);delete p.operators[index].equipmentTypes;markDirty();});
