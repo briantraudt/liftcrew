@@ -14,3 +14,16 @@ const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:
 const env={CUSTOMER_INTAKE_KEY:'synthetic-intake-secret-for-isolated-unit-tests'};
 test('API stores the normalized inquiry before reporting success, even without email configuration',async()=>{const calls=[];const fetcher=async(url,options)=>{calls.push({url,options});return url.endsWith('/create_priced_customer_request')?json(JSON.parse(options.body).p_id):json(null);};const res=response();await createCraneHandler({fetcher,env})({method:'POST',headers:{},body:{...validRequest,forgedAdmin:'true'}},res);assert.equal(res.code,200);assert(res.body.reference);const saved=calls.find(c=>c.url.endsWith('/create_priced_customer_request'));assert(saved);const body=JSON.parse(saved.options.body);assert.equal(body.p_details.loadWeight,6000);assert.equal(body.p_details.forgedAdmin,undefined);assert.equal(calls[0].url,saved.url);});
 test('API never reports success when saving fails and rejects absent catalog classes',async()=>{let res=response();await createCraneHandler({fetcher:async()=>json({},500),env})({method:'POST',headers:{},body:validRequest},res);assert.equal(res.code,503);assert(!res.body.ok);res=response();await createCraneHandler({fetcher:async()=>json([]),env})({method:'POST',headers:{},body:{...validRequest,craneClass:'170-9050'}},res);assert.equal(res.code,400);res=response();await createCraneHandler({env})({method:'GET'},res);assert.equal(res.code,405);});
+
+test('half-day crane requests require precisely four hours of work',()=>{
+ const half={...validRequest,durationDays:'0.5',hoursPerDay:'4'};
+ const normalized=validateCraneRequest(half,now);
+ assert(!normalized.error,normalized.error||'');
+ assert.equal(normalized.data.durationDays,0.5);
+ assert.equal(normalized.data.hoursPerDay,4);
+ assert.equal(normalized.data.endDate,half.date);
+ for(const hours of ['1','3.5','8','24']){
+  assert.match(validateCraneRequest({...half,hoursPerDay:hours},now).error||'',/exactly 4 hours/);
+ }
+ assert(!validateCraneRequest({...validRequest,durationDays:'1',hoursPerDay:'8'},now).error);
+});
