@@ -232,3 +232,11 @@ body.operator-onboarding .thank-you-hero{margin-bottom:24px}
 @media screen and (max-width:720px){
  body.operator-onboarding:has(#provider-form) .application-layout{grid-template-rows:auto minmax(0,1fr)}
 }
+body.operator-onboarding .equipment-heading{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px}
+body.operator-onboarding .equipment-heading h2{margin:0}
+body.operator-onboarding .equipment-heading .btn{flex:none}
+body.operator-onboarding .insurance-submit-row{display:flex;align-items:center;justify-content:space-between;gap:18px;background:#f7f8f1;border-radius:12px;padding:16px;margin:16px 0}
+body.operator-onboarding .insurance-submit-row .insurance-consent{margin:0;flex:1}
+body.operator-onboarding .insurance-submit-row>.btn{flex:none}
+body.operator-onboarding .btn:disabled{background:#e0e4e3;border-color:#e0e4e3;color:#667572;opacity:1;cursor:not-allowed}
+@media(max-width:480px){body.operator-onboarding .equipment-heading{align-items:flex-start}body.operator-onboarding .equipment-heading h2{min-width:0;font-size:25px}body.operator-onboarding .equipment-heading .btn{padding:10px;font-size:12px}body.operator-onboarding .insurance-submit-row{gap:10px;padding:12px}}

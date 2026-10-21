@@ -104,3 +104,13 @@ test('supporting document titles show sequential machine numbers',()=>{
  assert(slots.some(([kind,id,title])=>kind==='equipment_photo'&&id==='one'&&title==='Machine 1 — Equipment photos'));
  assert(slots.some(([kind,id,title])=>kind==='inspection'&&id==='two'&&title==='Machine 2 — Inspection / maintenance records'));
 });
+
+test('step validation is scoped without relaxing full-profile validation',async()=>{
+ const {extraProfileErrors}=await import('../src/provider-ui.js');
+ const p={business:{legalName:'Test',entityType:'LLC',formationState:'TX',address:'Test',city:'Austin',state:'TX',zip:'78701',contactName:'Test',email:'test@example.com',phone:'5550100',radiusMiles:25,emergencyName:'Test',emergencyPhone:'5550101',availability:'Weekdays'},equipment:[],operators:[]};
+ assert.deepEqual(extraProfileErrors(p,'business'),[]);
+ assert(extraProfileErrors(p,'equipment').includes('Add your equipment'));
+ assert(extraProfileErrors(p,'operators').includes('Add an operator'));
+ assert(extraProfileErrors(p).includes('Add your equipment'));
+ p.business.legalName='';assert(extraProfileErrors(p,'business').length>0);
+});

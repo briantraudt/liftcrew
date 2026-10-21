@@ -40,3 +40,12 @@ test('business form and portal heading are not duplicated',()=>{
  assert(page.includes('Join the LiftCrew family'));
  assert(!page.includes('Join the LiftCrew network'));
 });
+
+test('personalized agreement hides preparation caption and version while retaining complete terms',()=>{
+ const body='Complete synthetic agreement';
+ const html=renderAgreementPreview({body,version:'provider-unique-version'},{personalized:true});
+ assert(html.includes(body));
+ assert(!html.includes('Prepared for your business'));
+ assert(!html.includes('provider-unique-version'));
+ assert(html.includes('aria-label="Complete provider agreement, read only"'));
+});
