@@ -13,6 +13,7 @@ test('desktop hero layout stays unchanged apart from approved service copy',()=>
     .replace('</a><span class="phone-badge"', '</a><button class="menu-toggle" aria-label="Open navigation" aria-expanded="false"><span></span><span></span><span></span></button>'+originalNav+'<span class="phone-badge"')
     .replace('class="explore-link" href="#how-it-works"','class="explore-link" href="#services"')
     .replace('action="/"', 'action="/quote.html"')
+    .replace('<a class="button-outline" href="/operators.html?mode=signup">Operator Signup <span aria-hidden="true">→</span></a>', '<a class="button-outline" href="#how-it-works"><span class="play" aria-hidden="true">▶</span> See How It Works</a>')
     .replace('<option value="Crane with operator">Crane + Operator</option>', '')
     .replace('<h1><span>Big lifts.</span><span>Made simple.</span></h1><p class="hero-service">Crane <em>&amp;</em> forklift service. Operator included.</p>', '<p class="eyebrow light"><i></i> Equipment + operator. One request.</p><h1>Book a forklift or crane <em>today.</em></h1><p class="hero-sub">No dock, an oversized delivery, or heavy equipment to move? Tell us where and when. We’ll confirm the right equipment, availability, and a quote.</p>')
     .replace('<p class="hero-included">Equipment + operator included.</p>', '')
@@ -187,4 +188,12 @@ test('short-phone fallback covers the 375x460 regression and its neighboring hei
   assert(compact.includes('.one-page .hero:before,.one-page .hero>.lc-process{display:none}'));
   assert(compact.includes('.one-page .hero>.hero-actions{grid-row:3}'));
   assert(!mobileCss.includes('@media(max-width:600px) and (max-height:450px)'));
+});
+
+test('homepage secondary hero CTA opens operator registration, not a video or tutorial',()=>{
+ const hero=html.slice(html.indexOf('<div class="hero-actions">'),html.indexOf('<div class="trust-row">'));
+ assert(hero.includes('<a class="button-outline" href="/operators.html?mode=signup">Operator Signup'));
+ assert(!hero.includes('See How It Works'));
+ assert(!hero.includes('class="play"'));
+ assert.equal((hero.match(/Operator Signup/g)||[]).length,1);
 });
