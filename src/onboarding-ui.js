@@ -1,11 +1,11 @@
 import {coverage,escapeHtml as h} from './operator-data.js';
 import {categories,insuranceSlots,providerSlots,reviewHTML} from './provider-ui.js';
 import {equipmentLabel,insuranceFiles} from './onboarding-model.js';
-import {ratePreviewMarkup} from './onboarding-experience.js';
+import {ratePreviewMarkup,defaultMachineRadius} from './onboarding-experience.js';
 
 export function field(profile,path,label,type='text',options=null,optional=false){
  let value=path.split('.').reduce((object,key)=>object?.[key],profile)??'';
- if(path.endsWith('.radiusMilesOverride') && !String(value).trim())value=profile.business?.radiusMiles??25;
+ if(path.endsWith('.radiusMilesOverride') && !String(value).trim())value=defaultMachineRadius(profile);
  const zip=path==='business.zip'||path.endsWith('.baseZip');
  const priceField=/\.(hourlyRate|fourHourRate|dailyRate)$/.test(path);
  const attributes=type==='number'?(priceField?'min="0.01" step="0.01" inputmode="decimal"':`min="0" step="any" ${path==='business.radiusMiles'?'max="3000"':''}`):zip?'inputmode="numeric" pattern="[0-9]{5}" maxlength="5"':'maxlength="300"';

@@ -26,6 +26,24 @@ export function machineRadius(businessRadius, override) {
   if(String(override??'').trim() && /^\d+(\.\d+)?$/.test(String(override)) && Number.isFinite(machine) && machine>0 && machine<=3000)return machine;
   return Number.isFinite(ceiling)&&ceiling>0?ceiling:null;
 }
+// Persist exactly the default shown in a cleared machine-radius input. Mutates only
+// missing/blank machine radii; explicit invalid values must still fail validation.
+export function defaultMachineRadius(profile){
+ const raw=String(profile?.business?.radiusMiles??'').trim();
+ const n=Number(raw);
+ return /^\d+(\.\d+)?$/.test(raw)&&n>0&&n<=3000?raw:'25';
+}
+export function normalizeMachineRadiusFallbacks(profile){
+ const fallback=defaultMachineRadius(profile);
+ let changed=false;
+ for(const equipment of profile?.equipment||[]){
+  if(!String(equipment.radiusMilesOverride??'').trim()){
+   equipment.radiusMilesOverride=fallback;
+   changed=true;
+  }
+ }
+ return changed;
+}
 export function businessRadiusForMachines(profile){
  const original=Number(profile?.business?.radiusMiles);
  const fallback=Number.isFinite(original)&&original>0&&original<=3000?original:25;
