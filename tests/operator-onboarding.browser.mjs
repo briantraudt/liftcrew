@@ -37,7 +37,8 @@ for(const viewport of [{width:320,height:640},{width:390,height:844},{width:430,
    else if(url.pathname.startsWith('/storage/v1/object/'))data={Key:'synthetic'};
    else if(url.pathname==='/rest/v1/provider_contract_versions')data=[{id:'version-test',version:'synthetic'}];
    else if(url.pathname==='/rest/v1/rpc/is_operator_reviewer')data=false;
-   else if(url.pathname==='/rest/v1/rpc/provider_clearance')data={eligible:false,blockers:['Verification required'],envelope:prepared,review,reviewCurrent:true};
+   else if(url.pathname==='/rest/v1/rpc/provider_clearance')data={eligible:false,blockers:['Verification required'],envelope:prepared||{id:null,body:null,sha256:null,provider_signed_at:null},review,reviewCurrent:true};
+   else if(url.pathname==='/rest/v1/rpc/prepare_provider_contract'){prepared={id:'33333333-3333-4333-8333-333333333333',body:demoAgreementBody,version:'synthetic-personal-version',sha256:demoPublished.sha256,provider_name:'Synthetic Operator',provider_title:'Owner'};data=prepared;}
    else if(url.pathname==='/rest/v1/rpc/sign_provider_contract'){const body=request.postDataJSON();assert.equal(body.p_name,'Synthetic Operator');assert.equal(body.p_read,true);assert.equal(body.p_consent,true);prepared={...prepared,provider_signed_at:new Date().toISOString()};data=prepared;}
    else if(url.pathname==='/rest/v1/rpc/submit_operator_application'){const body=request.postDataJSON();assert(Object.values(body.acknowledgements).every(Boolean));assert.equal(body.typed_name,'Synthetic Operator');application={...application,status:'submitted',revision:1};data=application.id;}
    else if(url.pathname==='/rest/v1/rpc/provider_status')data={status:application.status};
@@ -151,8 +152,8 @@ for(const viewport of [{width:320,height:640},{width:390,height:844},{width:430,
   await resume('insurance');assert.equal(await page.locator('[data-save-complete]').isEnabled(),true);
   await resume('documents');await layout();await roundtrip('Supporting documents');assert.equal(await page.locator('[data-save-complete]').isEnabled(),true);
   const missingDoc=documents.pop();await page.reload();await page.locator('#provider-form').waitFor();assert.equal(await page.locator('[data-save-complete]').isDisabled(),true);documents.push(missingDoc);
-  prepared={body:demoAgreementBody,version:'synthetic-personal-version',sha256:demoPublished.sha256,provider_name:'Synthetic Operator',provider_title:'Owner'};
-  await resume('agreement');await layout();await roundtrip('Review & sign');assert.equal(await page.locator('.agreement-view-meta').count(),0);assert.equal(await page.locator('[data-save-complete]').isDisabled(),true);
+  prepared=null; // Match the live empty-composite response; the page must prepare a real envelope.
+  await resume('agreement');await layout();await roundtrip('Review & sign');assert(prepared?.id);assert((await page.locator('.signature-audit').innerText()).includes(demoPublished.sha256));assert.equal(await page.locator('.agreement-view-meta').count(),0);assert.equal(await page.locator('[data-save-complete]').isDisabled(),true);
   await page.locator('#contract-text').evaluate(el=>{el.scrollTop=el.scrollHeight;el.dispatchEvent(new Event('scroll'));});
   await page.locator('[name=read-contract]').check();await page.locator('[name=esign-consent]').check();
   assert.equal(await page.locator('[data-sign-contract]').isDisabled(),true);
