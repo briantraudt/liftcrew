@@ -4,7 +4,7 @@ import {providerSlots,extraProfileErrors,reviewHTML,saveAgreement} from './provi
 import {businessView,equipmentView,operatorsView,insuranceView,documentsView} from './onboarding-ui.js';
 import {stepIds,stepLabels,insuranceKinds,hasInsurancePacket,removeEquipmentAssignments,restoredStep,persistStep,validateInsuranceBatch} from './onboarding-model.js';
 import {CONFIRMATION_URL,OPERATOR_LOGIN_URL} from './operator-auth.js';
-import {onboardingStages,stageForStep,ratePreviewMarkup,renewalAlerts} from './onboarding-experience.js';
+import {onboardingStages,stageForStep,ratePreviewMarkup,renewalAlerts,businessRadiusForMachines} from './onboarding-experience.js';
 import './operator-flow.css';
 import './onboarding-compact.css';
 import './operator-experience.css';
@@ -56,9 +56,7 @@ async function load(){
 }
 async function save(){
  if(!app||!editable(app)||!dirty)return;
- const fallback=Number(p.business?.radiusMiles)||25;
- const radii=(p.equipment||[]).map(e=>{const raw=String(e.radiusMilesOverride??'').trim(),n=Number(raw);return raw&&Number.isFinite(n)&&n>0&&n<=3000?n:fallback;});
- if(radii.length)p.business.radiusMiles=Math.max(...radii);
+ p.business.radiusMiles=businessRadiusForMachines(p);
  app=check(await db.from('operator_applications').update({profile:p}).eq('id',app.id).eq('status',app.status).select().single());
  dirty=false;
 }

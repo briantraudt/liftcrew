@@ -22,9 +22,19 @@ export function priceWarnings(equipment) {
 }
 export function machineRadius(businessRadius, override) {
   const ceiling=Number(businessRadius), machine=Number(override);
-  if(!Number.isFinite(ceiling)||ceiling<=0) return null;
-  // The hidden legacy business radius is synchronized to the largest per-machine radius on save.
-  return String(override??'').trim() && /^\d+(\.\d+)?$/.test(String(override)) && Number.isFinite(machine) && machine>0 && machine<=3000 ? machine : ceiling;
+  // The legacy business-wide field is retained only for compatibility with older profiles.
+  if(String(override??'').trim() && /^\d+(\.\d+)?$/.test(String(override)) && Number.isFinite(machine) && machine>0 && machine<=3000)return machine;
+  return Number.isFinite(ceiling)&&ceiling>0?ceiling:null;
+}
+export function businessRadiusForMachines(profile){
+ const original=Number(profile?.business?.radiusMiles);
+ const fallback=Number.isFinite(original)&&original>0&&original<=3000?original:25;
+ const radii=(profile?.equipment||[]).map(machine=>{
+  const raw=String(machine.radiusMilesOverride??'').trim();
+  if(!/^\d+(\.\d+)?$/.test(raw))return fallback;
+  const value=Number(raw);return value>0&&value<=3000?value:fallback;
+ });
+ return radii.length?Math.max(...radii):fallback;
 }
 export function ratePreviewMarkup(equipment,businessRadius){
   const hourly=positiveRate(equipment.hourlyRate), four=positiveRate(equipment.fourHourRate), daily=positiveRate(equipment.dailyRate);
