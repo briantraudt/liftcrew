@@ -1,7 +1,7 @@
 import {escapeHtml as h,documentSlots} from './operator-data.js';
 import {authorizationErrors} from './onboarding-model.js';
 export const insuranceSlots=[['insurance_packet','','Insurance policy packet','Include complete current policies, declarations, certificate, schedules and endorsements in one combined packet or several files. One document can support multiple coverage requirements.']];
-export const categories=['Warehouse forklift','Rough-terrain forklift','Telehandler','Crane'];
+export const categories=['Warehouse forklift','Rough-terrain forklift','Telehandler','Crane','Other'];
 export function providerSlots(profile){return [...insuranceSlots,...documentSlots(profile).filter(([kind])=>!['coi','endorsements','handling'].includes(kind))];}
 export function extraProfileErrors(profile){
  const errors=[];
@@ -9,16 +9,19 @@ export function extraProfileErrors(profile){
  required(profile.business,['legalName','entityType','formationState','address','city','state','zip','contactName','email','phone','radiusMiles','emergencyName','emergencyPhone','availability'],'Business');
  if(!/^\d{5}$/.test(profile.business?.zip||''))errors.push('Enter a five-digit home / business ZIP');
  if(!(Number(profile.business?.radiusMiles)>0&&Number(profile.business.radiusMiles)<=3000))errors.push('Enter a service radius greater than zero and no more than 3,000 miles');
+ if(profile.business?.entityType==='Other'&&!String(profile.business.entityTypeOther??'').trim())errors.push('Describe your other business structure');
  if(!profile.equipment?.length)errors.push('Add your equipment');
  for(const equipment of profile.equipment||[]){
   required(equipment,['category','make','model','serial','ownership','fuel','tires','attachments','transport','inspectionDate','baseZip','availability','replacementValue','widthIn','heightIn','weightLb'],'Equipment');
+  if(equipment.category==='Other'&&!String(equipment.categoryOther??'').trim())errors.push('Describe the other equipment category');
+  if(equipment.fuel==='Other'&&!String(equipment.fuelOther??'').trim())errors.push('Describe the other fuel or power source');
   for(const key of ['capacity','liftHeight','replacementValue','widthIn','heightIn','weightLb'])if(!(Number(equipment[key])>0))errors.push(`Equipment ${key} must be positive`);
   if(!/^\d{5}$/.test(equipment.baseZip||''))errors.push('Enter a five-digit equipment ZIP code');
-  const radius=String(equipment.radiusMilesOverride??'').trim();if(radius&&(!/^\d+(\.\d+)?$/.test(radius)||Number(radius)<=0||Number(radius)>Number(profile.business.radiusMiles)))errors.push('Equipment radius must be positive and no greater than your business maximum');
+  const radius=String(equipment.radiusMilesOverride??profile.business?.radiusMiles??'').trim();if(!/^\d+(\.\d+)?$/.test(radius)||Number(radius)<=0||Number(radius)>3000)errors.push('Enter a service radius for each machine between 1 and 3,000 miles');
   if(equipment.inspectionDate&&equipment.inspectionDate>new Date().toISOString().slice(0,10))errors.push('Equipment inspection date cannot be in the future');
   if(equipment.nextInspectionDue&&equipment.inspectionDate&&equipment.nextInspectionDue<equipment.inspectionDate)errors.push('Next scheduled equipment inspection cannot be before the last inspection');
   for(const key of ['hourlyRate','fourHourRate','dailyRate']){const rate=String(equipment[key]??'').trim();if(!/^\d+(\.\d{1,2})?$/.test(rate)||Number(rate)<=0||Number(rate)>100000)errors.push('Enter a valid '+key.replace(/[A-Z]/g,c=>' '+c.toLowerCase())+' between $0.01 and $100,000');}
-  if(equipment.category!=='Crane'&&!(Number(equipment.loadCenter)>0))errors.push('Forklift load center must be positive');
+  if(['Warehouse forklift','Rough-terrain forklift','Telehandler'].includes(equipment.category)&&!(Number(equipment.loadCenter)>0))errors.push('Forklift load center must be positive');
   if(equipment.category==='Crane'&&!(Number(equipment.workingRadiusFt)>0))errors.push('Crane working radius must be positive');
  }
  if(!profile.operators?.length)errors.push('Add an operator');

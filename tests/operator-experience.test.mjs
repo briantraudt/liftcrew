@@ -1,20 +1,28 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {onboardingStages,stageForStep,machineRadius,priceWarnings,renewalAlerts,ratePreviewMarkup} from '../src/onboarding-experience.js';
+import {onboardingStages,stageForStep,machineRadius,businessRadiusForMachines,priceWarnings,renewalAlerts,ratePreviewMarkup} from '../src/onboarding-experience.js';
 
 test('four displayed stages preserve every original step exactly once',()=>{
  const ids=onboardingStages.flatMap(stage=>stage.steps);
- assert.deepEqual(ids,['business','equipment','operators','agreement','insurance','documents','finish']);
+ assert.deepEqual(ids,['business','equipment','operators','insurance','documents','agreement','finish']);
  assert.equal(stageForStep('insurance'),2);
  assert.equal(stageForStep('finish'),3);
+ assert.equal(stageForStep('agreement'),3);
+ assert.equal(stageForStep('insurance'),2);
 });
-test('a machine radius can narrow but never expand business-wide coverage',()=>{
+test('each machine radius is independent and legacy radius is a fallback',()=>{
  assert.equal(machineRadius(100,''),100);
  assert.equal(machineRadius(100,40),40);
- assert.equal(machineRadius(100,300),100);
+ assert.equal(machineRadius(100,300),300);
  assert.equal(machineRadius(100,'invalid'),100);
  assert.equal(machineRadius(100,'1e2'),100);
- assert.equal(machineRadius(0,20),null);
+ assert.equal(machineRadius(0,20),20);
+});
+test('the legacy ceiling follows the largest machine radius without expanding individual machines',()=>{
+ const p={business:{radiusMiles:50},equipment:[{radiusMilesOverride:25},{radiusMilesOverride:75}]};
+ assert.equal(businessRadiusForMachines(p),75);
+ assert.equal(machineRadius(75,25),25);
+ assert.equal(businessRadiusForMachines({business:{radiusMiles:50},equipment:[{}]}),50);
 });
 test('pricing warnings are advisory, not rate rejection',()=>{
  assert.equal(priceWarnings({hourlyRate:100,fourHourRate:500,dailyRate:200}).length,2);
