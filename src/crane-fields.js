@@ -81,6 +81,7 @@ export function validateCraneRequest(input, now = new Date()) {
   if(data.maxPathRadius!==null&&[data.pickupRadius,data.setRadius].some(v=>v!==null&&v>data.maxPathRadius))return {error:'The farthest radius must include both pickup and set-down.'};
   if(data.craneClass&&!/^170-\d{4}$/.test(data.craneClass))return {error:'Choose a listed crane or Help me choose.'};
   if(!(data.durationDays===0.5||(Number.isInteger(data.durationDays)&&data.durationDays>=1&&data.durationDays<=30)))return {error:'Choose a half-day or 1–30 days.'};
+  if(data.durationDays===0.5&&data.hoursPerDay!==4)return {error:'Half-day service is exactly 4 hours. Select a full day for longer work.'};
   data.endDate=new Date(date.getTime()+(Math.ceil(data.durationDays)-1)*86400000).toISOString().slice(0,10);
   return {data};
 }
