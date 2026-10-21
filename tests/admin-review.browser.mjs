@@ -44,6 +44,8 @@ for(const width of [320,390,768,1440]){
  await page.locator('[name=feedback]').fill('TEST ONLY suspend');await page.locator('#record-decision').click();await page.getByText(/Suspended · changes requested · revision/).waitFor();assert.equal(decisions[1].decision,'changes_requested');
  await page.reload();await page.getByRole('button',{name:/TEST ONLY Provider/}).click();await page.getByRole('heading',{name:'Decision & submission history'}).waitFor();
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2),false);
+ for(const group of await page.locator('.profile-group>summary').all())await group.click();
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2),false);
  const badge=await page.locator('.account-bar .tag').boundingBox();assert(badge.height<70);
  await page.screenshot({path:`../../outputs/liftcrew-admin-${width}.png`,fullPage:true});assert.deepEqual(errors,[]);
  console.log(`PASS ${width}px: signed-in nav, sections, badges, countersign, approval gating, approval, suspension, reload and no horizontal overflow`);
