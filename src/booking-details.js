@@ -34,7 +34,7 @@ export function createBookingDetails(booking, onBack, onScheduleChange) {
     <section class="details-card"><h2>Your booking</h2><div class="details-grid">
       <div><label for="detail-location">ZIP code</label><input id="detail-location" name="location" required pattern="[0-9]{5}" maxlength="5" inputmode="numeric" autocomplete="postal-code"></div>
       <div><label for="detail-date">Date</label><input id="detail-date" name="date" type="date" required></div>
-      <div><label for="detail-durationDays">Number of days</label><select id="detail-durationDays" name="durationDays" required>${Array.from({length:30}, (_, i) => `<option value="${i + 1}">${i + 1} ${i ? 'days' : 'day'}</option>`).join('')}</select></div>
+      <div><label for="detail-durationDays">Duration</label><select id="detail-durationDays" name="durationDays" required><option value="0.5">1/2 day (4 hours)</option>${Array.from({length:30}, (_, i) => `<option value="${i + 1}">${i + 1} ${i ? 'days' : 'day'}</option>`).join('')}</select></div>
       ${isCrane ? '<div class="wide"><label for="detail-craneClass">Crane preference</label><select id="detail-craneClass" name="craneClass"><option value="">Help me choose</option></select><p class="field-note" data-catalog-note role="status"></p></div>' : ''}
     </div></section>
     ${sections.map(section => `<section class="details-card"><h2>${section.title}</h2><div class="details-grid">${section.fields.map(renderField).join('')}</div></section>`).join('')}
