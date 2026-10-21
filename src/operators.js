@@ -66,13 +66,27 @@ async function move(next){
  root.querySelector('.application-card h2')?.scrollIntoView({block:'start',behavior:'smooth'});
 }
 
+function beforeAgreementIssues(){
+ return [
+  ...extraProfileErrors(p),
+  ...providerSlots(p).filter(([kind,id])=>!(kind==='insurance_packet'
+    ?hasInsurancePacket(docs)
+    :docs.some(doc=>doc.active&&doc.kind===kind&&doc.entity_id===id)))
+   .map(([, ,title])=>'Upload '+title),
+  ...renewalIssues(p,docs)
+ ];
+}
 function contract(){
  if(!published&&!envelope)return '<h2>Read & sign</h2><div class="notice"><strong>LiftCrew is finalizing the provider agreement.</strong><p>Your details and documents can be saved. Signing and work approval remain unavailable until the completed agreement is published.</p></div>';
- if(!envelope)return '<h2>Read & sign</h2><p>Save your business, equipment and operator details, then prepare your personalized agreement.</p><button type="button" class="btn" data-prepare>Prepare my agreement</button>';
+ if(!envelope){
+  const issues=beforeAgreementIssues();
+  if(issues.length)return `<h2>Read &amp; sign</h2><div class="notice"><strong>Complete your application before signing.</strong><p>Enter your business, equipment, operator, insurance and supporting documents first. Your agreement will be prepared with the final information.</p><p>${issues.length} requirement${issues.length===1?'':'s'} outstanding. Use the other sections to finish before returning here.</p></div>`;
+  return '<h2>Read &amp; sign</h2><p>All required information has been entered. Prepare your personalized agreement, review the complete terms, and sign.</p><button type="button" class="btn" data-prepare>Prepare my agreement</button>';
+ }
  const signed=Boolean(envelope.provider_signed_at);
  return `<h2>${signed?'Your signed agreement':'Read & sign'}</h2><p class="muted">${signed?'Your signature is recorded. Download and keep a copy.':'Read the complete agreement and Schedule A. Scroll to the end before signing. Scrolling does not replace reading the terms.'}</p><div class="contract-text" id="contract-text" tabindex="0" role="region" aria-label="Complete provider agreement">${h(envelope.body)}</div>${signed?`<div class="notice success">Signed by ${h(envelope.provider_name)}, ${h(envelope.provider_title)} on ${h(new Date(envelope.provider_signed_at).toLocaleString())}. ${envelope.liftcrew_signed_at?'LiftCrew has countersigned.':'Awaiting LiftCrew countersignature.'}</div><button type="button" class="btn secondary" data-agreement-download>Download agreement & signature record</button>`:`<div class="signature-box"><p id="scroll-status" role="status">Scroll through the agreement to enable signing.</p><label class="check"><input type="checkbox" name="read-contract"><span>I have read the complete agreement, including the insurance schedule, and am authorized to bind this provider.</span></label><label class="check"><input type="checkbox" name="esign-consent"><span>I consent to electronic records and signatures. Typing my name and selecting “Sign agreement” is my signature, not an application acknowledgment. I can download and retain a copy. To use paper instead, contact LiftCrew before signing.</span></label><div class="form-grid"><label class="field"><span>Full legal name</span><input name="signature" autocomplete="name" maxlength="200"></label><label class="field"><span>Title / signing authority</span><input name="signature-title" maxlength="100"></label></div><button type="button" class="btn" data-sign-contract disabled>Sign agreement</button></div>`}<p class="signature-audit">Document SHA-256: ${h(envelope.sha256)}</p>`;
 }
-async function prepareContract(){await save();envelope=check(await db.rpc('prepare_provider_contract',{p_application_id:app.id}));render();}
+async function prepareContract(){await save();if(beforeAgreementIssues().length)throw Error('Complete all business, machine, operator, insurance and supporting records before preparing the agreement.');envelope=check(await db.rpc('prepare_provider_contract',{p_application_id:app.id}));render();}
 function applicationSummary(){return `<div class="summary-grid"><section><h3>Business</h3><p>${h(p.business.legalName||'Not entered')}<br>${h(p.business.contactName)} · ${h(p.business.phone)}<br>${h(p.business.city)}, ${h(p.business.state)} ${h(p.business.zip)}</p></section><section><h3>Equipment & people</h3><p>${p.equipment.length} machine(s) · ${p.operators.length} operator(s)</p><p>${p.equipment.map(equipment=>h([equipment.make,equipment.model].filter(Boolean).join(' '))).join('<br>')}</p></section><section><h3>Records</h3><p>${docs.filter(doc=>doc.active).length} uploads<br>${envelope?.provider_signed_at?'Agreement signed':'Agreement signature required'}</p></section></div>`;}
 function finish(){
  const issues=[
