@@ -1,0 +1,34 @@
+name: LiftCrew operator browser smoke
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'operators.html'
+      - 'src/**'
+      - 'tests/operator-onboarding.browser.mjs'
+      - '.github/workflows/operator-browser-smoke.yml'
+jobs:
+  operator-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Install isolated synthetic-browser test dependencies
+        run: npm install --no-save --ignore-scripts playwright-core @sparticuz/chromium
+      - run: npm run build
+      - name: Start local preview (no production credentials)
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 >/tmp/liftcrew-preview.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/operators.html >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/liftcrew-preview.log
+          exit 1
+      - name: Test authenticated onboarding with mocked Supabase on desktop and mobile
+        run: node tests/operator-onboarding.browser.mjs
