@@ -16,6 +16,7 @@ export function extraProfileErrors(profile){
   if(!/^\d{5}$/.test(equipment.baseZip||''))errors.push('Enter a five-digit equipment ZIP code');
   const radius=String(equipment.radiusMilesOverride??'').trim();if(radius&&(!Number.isFinite(Number(radius))||Number(radius)<=0||Number(radius)>Number(profile.business.radiusMiles)))errors.push('Equipment radius must be positive and no greater than your business maximum');
   if(equipment.inspectionDate&&equipment.inspectionDate>new Date().toISOString().slice(0,10))errors.push('Equipment inspection date cannot be in the future');
+  if(equipment.nextInspectionDue&&equipment.inspectionDate&&equipment.nextInspectionDue<equipment.inspectionDate)errors.push('Next scheduled equipment inspection cannot be before the last inspection');
   for(const key of ['hourlyRate','fourHourRate','dailyRate']){const rate=String(equipment[key]??'').trim();if(!/^\d+(\.\d{1,2})?$/.test(rate)||Number(rate)<=0||Number(rate)>100000)errors.push('Enter a valid '+key.replace(/[A-Z]/g,c=>' '+c.toLowerCase())+' between $0.01 and $100,000');}
   if(equipment.category!=='Crane'&&!(Number(equipment.loadCenter)>0))errors.push('Forklift load center must be positive');
   if(equipment.category==='Crane'&&!(Number(equipment.workingRadiusFt)>0))errors.push('Crane working radius must be positive');
