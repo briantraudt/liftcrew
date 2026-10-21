@@ -49,7 +49,7 @@ for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
   await page.locator('[data-availability-time="mon"][data-time-part="end"]').fill('15:00');
   await page.getByRole('button',{name:'Save',exact:true}).click();
   assert(application.profile.business.weeklyAvailability?.some(item=>item.day==='mon'&&item.start==='07:00'&&item.end==='15:00'));assertions++;
-  const box=await page.locator('.application-card').boundingBox();assert(box.y<(viewport.width>720?270:380));assertions++;
+  const box=await page.locator('.application-card').boundingBox();assert(box, 'Application card missing after save; URL='+page.url()+' BODY='+JSON.stringify((await page.locator('body').innerText()).slice(0,1800))+' JS_ERRORS='+JSON.stringify(errors));assert(box.y<(viewport.width>720?270:380));assertions++;
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assertions++;
   await page.locator('[data-step="1"]').click();await page.getByRole('heading',{name:'Your equipment',exact:true}).waitFor();
   assert.equal(await page.locator('[data-equipment-permission]').count(),0);assertions++;
