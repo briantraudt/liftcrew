@@ -125,7 +125,7 @@ function finish(){
  ];
  if(!envelope?.provider_signed_at)issues.push({message:'Sign the finalized provider agreement',step:'agreement'});
  const missing=issues.length>0;
- return `<h2>Review &amp; submit</h2><p class="muted">Check your details and complete every outstanding requirement. Submitting is not approval to accept work.</p>
+ return `<h2>Submit application</h2>
  ${applicationSummary()}
  ${missing?`<div class="notice error"><strong>${issues.length} item${issues.length===1?'':'s'} to finish before submitting</strong><ul class="issue-list">${issues.map(issue=>`<li><button type="button" class="issue-link" data-fix="${stepIds.indexOf(issue.step)}">→ ${h(issue.message)}</button></li>`).join('')}</ul></div>`:'<div class="notice success"><strong>Ready to submit for LiftCrew verification.</strong> Your application is complete for submission, not yet approved or work-eligible.</div>'}
  <details><summary>Review all saved business, machine and personnel details</summary>${renderRecord(p)}</details>
