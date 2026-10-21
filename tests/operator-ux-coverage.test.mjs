@@ -27,7 +27,7 @@ test('structured availability validates days and valid ranges while retaining ol
  setWeeklyAvailability(b,'mon',{enabled:false});
  assert(weeklyAvailabilityErrors(b).some(s=>/at least one/.test(s)));
  const legacy={availability:'Weekdays'};
- assert.equal(readWeeklyAvailability(legacy).length,5);
+ assert.equal(readWeeklyAvailability(legacy).length,0);
  assert.deepEqual(weeklyAvailabilityErrors(legacy),[]);
  assert(businessView({business:legacy}).includes('Standard availability'));
  assert(!businessView({business:legacy}).includes('Usual availability / scheduling restrictions'));
@@ -82,4 +82,26 @@ test('half-day booking accepted at 4 hours but unsupported fractional days rejec
  const sql=readFileSync(new URL('../supabase/migrations/20261021180000_customer_half_day.sql',import.meta.url),'utf8');
  assert(sql.includes("p_details->>'durationDays'"));
  assert(sql.includes('billingPeriod'));
+});
+
+
+test('legacy availability is not overwritten with invented 8–5 hours',()=>{
+ const b={availability:'Weekdays 7:00–15:00; call first'};
+ const html=weeklyAvailabilityMarkup(b);
+ assert(html.includes('Weekdays 7:00–15:00; call first'));
+ assert.equal((html.match(/data-availability-day="mon" checked/g)||[]).length,0);
+ assert.equal(readWeeklyAvailability(b).length,0);
+ assert.equal(b.availability,'Weekdays 7:00–15:00; call first');
+ setWeeklyAvailability(b,'mon',{enabled:true});
+ assert.equal(b.availabilityNotes,'Weekdays 7:00–15:00; call first');
+ setWeeklyAvailability(b,'mon',{start:'07:00'});
+ setWeeklyAvailability(b,'mon',{end:'15:00'});
+ assert.match(b.availability,/MON 07:00–15:00/);
+ assert(weeklyAvailabilityMarkup(b).includes('Weekdays 7:00–15:00; call first'));
+});
+test('staff request inbox displays four-hour selected total instead of day price',()=>{
+ const code=readFileSync(new URL('../src/customer-inbox.js',import.meta.url),'utf8');
+ assert(code.includes("q.billingPeriod==='halfDay'"));
+ assert(code.includes('q.selectedTotal??q.totals?.fourHour'));
+ assert(code.includes('Half-day (4 hours)'));
 });
