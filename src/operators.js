@@ -7,10 +7,13 @@ import {CONFIRMATION_URL,OPERATOR_LOGIN_URL} from './operator-auth.js';
 import {onboardingStages,stageForStep,ratePreviewMarkup,renewalAlerts,businessRadiusForMachines,normalizeMachineRadiusFallbacks} from './onboarding-experience.js';
 import {validatePublishedAgreement} from './published-agreement-format.js';
 import {renderAgreementPreview} from './agreement-preview.js';
+import {setWeeklyAvailability} from './operator-availability.js';
+import {insurancePrecheck} from './insurance-precheck.js';
+import {confirmOperatorAction} from './operator-confirm-dialog.js';
 import './operator-flow.css';
 import './onboarding-compact.css';
 import './operator-experience.css';
-import './select.js';
+// Use native <select> elements in the operator portal for reliable pointer, touch and keyboard interaction.
 
 const root=document.querySelector('#app');
 const headerSignout=document.querySelector('#portal-signout');
@@ -80,7 +83,13 @@ async function save(){
 }
 async function move(next){
  await save();
- step=Math.max(0,Math.min(stepIds.length-1,next));
+ const target=Math.max(0,Math.min(stepIds.length-1,next));
+ if(editable(app)&&['documents','finish'].includes(stepIds[target])){
+   clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));
+   const gate=insurancePrecheck(docs,clearance);
+   if(!gate.ready){step=stepIds.indexOf('insurance');persistStep(sessionStorage,app.id,step);errorMessage=gate.message;render();return;}
+ }
+ step=target;
  persistStep(sessionStorage,app.id,step);
  await prepareWhenComplete();
  render();
@@ -94,7 +103,8 @@ function beforeAgreementIssues(){
     ?hasInsurancePacket(docs)
     :docs.some(doc=>doc.active&&doc.kind===kind&&doc.entity_id===id)))
    .map(([, ,title])=>'Upload '+title),
-  ...renewalIssues(p,docs)
+  ...renewalIssues(p,docs),
+  ...(!insurancePrecheck(docs,clearance).ready?[insurancePrecheck(docs,clearance).message]:[])
  ];
 }
 async function prepareWhenComplete(){
@@ -111,13 +121,13 @@ function contract(){
  const issues=beforeAgreementIssues(),signed=Boolean(envelope?.provider_signed_at);
  const preview=envelope?.body?envelope:publishedAgreement;
  const previewMarkup=renderAgreementPreview(preview,{personalized:Boolean(envelope)});
- const fullAgreementLink='<a class="agreement-full-link" href="/operator-agreement.html" target="_blank" rel="noopener">Read the complete published agreement in a new tab</a>';
+ const fullAgreementLink='';
  const title=signed?'Agreement signed':'Review & sign';
  const heading='<h2>'+title+'</h2>';
  const visibleTerms=previewMarkup+fullAgreementLink;
  if(!preview)return heading+'<div class="notice" role="status">'+h(agreementPreviewError||'The published agreement is temporarily unavailable.')+'</div>'+fullAgreementLink;
  if(signed)return heading+visibleTerms+`<div class="notice success">Signed by ${h(envelope.provider_name)} on ${h(new Date(envelope.provider_signed_at).toLocaleString())}. ${envelope.liftcrew_signed_at?'LiftCrew has countersigned.':'Awaiting LiftCrew countersignature.'}</div><button type="button" class="btn secondary" data-agreement-download>Download signed agreement & audit</button>`;
- if(issues.length)return heading+visibleTerms+`<div class="agreement-signing-status" role="status"><strong>Available to read now. Signing is locked until the application is complete.</strong><p>${issues.length} required item${issues.length===1?'':'s'} remain. Finish your business, equipment, personnel, insurance and document details before signing.</p></div>`;
+ if(issues.length)return heading+visibleTerms;
  if(!envelope)return heading+visibleTerms+'<button type="button" class="btn" data-prepare>Prepare personalized agreement for signing</button>';
  return heading+visibleTerms+`<div class="signature-box"><p id="scroll-status" role="status">Review the agreement above and scroll to the end before signing.</p><label class="check"><input type="checkbox" name="read-contract"><span>I have read the complete agreement, including Schedule A, and am authorized to bind this provider.</span></label><label class="check"><input type="checkbox" name="esign-consent"><span>I consent to electronic records and signatures. Typing my name and selecting Sign agreement constitutes my signature. I can download a copy and can request a paper process before signing.</span></label><div class="form-grid"><label class="field"><span>Full legal name</span><input name="signature" autocomplete="name" maxlength="200"></label><label class="field"><span>Title / signing authority</span><input name="signature-title" maxlength="100"></label></div><button type="button" class="btn" data-sign-contract disabled>Sign agreement</button></div><p class="signature-audit">Document SHA-256: ${h(envelope.sha256)}</p>`;
 }
@@ -127,7 +137,8 @@ function finish(){
  const issues=[
   ...extraProfileErrors(p).map(message=>({message,step:/operator|evaluation|training|authorized equipment/i.test(message)?'operators':/business|service radius|home.*zip/i.test(message)?'business':'equipment'})),
   ...providerSlots(p).filter(([kind,id])=>!(kind==='insurance_packet'?hasInsurancePacket(docs):docs.some(doc=>doc.active&&doc.kind===kind&&doc.entity_id===id))).map(([kind,id,title])=>({message:'Upload '+title,step:kind==='insurance_packet'?'insurance':'documents'})),
-  ...renewalIssues(p,docs).map(message=>({message,step:/operator|evaluation/i.test(message)?'operators':/insurance|coverage/i.test(message)?'insurance':'documents'}))
+  ...renewalIssues(p,docs).map(message=>({message,step:/operator|evaluation/i.test(message)?'operators':/insurance|coverage/i.test(message)?'insurance':'documents'})),
+  ...(!insurancePrecheck(docs,clearance).ready?[{message:insurancePrecheck(docs,clearance).message,step:'insurance'}]:[])
  ];
  if(!envelope?.provider_signed_at)issues.push({message:'Sign the finalized provider agreement',step:'agreement'});
  const missing=issues.length>0;
@@ -143,8 +154,8 @@ function finish(){
 function statusPage(){
  const eligible=clearance?.eligible===true;
  const alerts=renewalAlerts(p,docs,clearance);
- const title=eligible?'Approved for job matching':app.status==='declined'?'Not approved':app.status==='changes_requested'?'Corrections required':app.status==='submitted'?'Under review':'Your provider account';
- return `<div class="dashboard-hero"><span class="dashboard-kicker">LiftCrew provider portal</span><h2>${h(title)}</h2><p>${eligible?'Your profile is eligible for matching while your verified records remain current. Each job still requires site checks and an accepted work order.':'Your records are safely stored. LiftCrew verifies qualifications, insurance and signatures separately before work becomes eligible.'}</p></div>
+ const title=eligible?'Approved for job matching':app.status==='declined'?'Not approved':app.status==='changes_requested'?'Corrections required':app.status==='submitted'?'Application received':'Your provider account';
+ return `<div class="dashboard-hero"><span class="dashboard-kicker">LiftCrew provider portal</span><h2>${app.status==='submitted'?'Thank you for joining the LiftCrew family!':h(title)}</h2><p>${app.status==='submitted'?'We have received your operator application. A member of our team will be in touch within 24 hours to confirm your application and next steps. Your application is under review; you are not yet approved to accept work.':eligible?'Your profile is eligible for matching while your verified records remain current. Each job still requires site checks and an accepted work order.':'Your records are safely stored. LiftCrew verifies qualifications, insurance and signatures separately before work becomes eligible.'}</p></div>
  <div class="dashboard-metrics"><article><strong>${p.equipment.length}</strong><span>Registered machines</span></article><article><strong>${p.operators.length}</strong><span>Listed operators</span></article><article><strong>${docs.filter(doc=>doc.active).length}</strong><span>Active documents</span></article></div>
  <section class="dashboard-section"><h3>Approval &amp; next steps</h3>
  ${eligible?`<div class="notice success">Provider clearance currently valid${clearance.validUntil?' through '+h(clearance.validUntil):''}. Final suitability, work order and any specialty authorization are verified for each job.</div>`:`<div class="notice"><strong>Not yet eligible for work.</strong>${(clearance?.blockers||[]).map(value=>'<p>• '+h(value)+'</p>').join('')||'<p>LiftCrew will review the submitted application.</p>'}</div>`}
@@ -175,6 +186,8 @@ function render(){
 function bind(){
  scheduleServiceArea();
  root.querySelectorAll('[data-field]').forEach(element=>element.oninput=()=>{set(element.dataset.field,element.value);if(element.dataset.field.startsWith('business.'))envelope=null;if(['business.entityType'].includes(element.dataset.field)||element.dataset.field.endsWith('.category')||element.dataset.field.endsWith('.fuel')){render();return;}const rateMatch=/^equipment\.(\d+)\.(hourlyRate|fourHourRate|dailyRate|radiusMilesOverride)$/.exec(element.dataset.field);if(rateMatch){const preview=root.querySelector('#rate-preview-'+rateMatch[1]);if(preview)preview.innerHTML=ratePreviewMarkup(p.equipment[Number(rateMatch[1])],p.business.radiusMiles);}if(element.dataset.field==='business.radiusMiles')root.querySelectorAll('.rate-preview').forEach((preview,index)=>preview.innerHTML=ratePreviewMarkup(p.equipment[index],p.business.radiusMiles));});
+ root.querySelectorAll('[data-availability-day]').forEach(element=>element.onchange=()=>{const day=element.dataset.availabilityDay;setWeeklyAvailability(p.business,day,{enabled:element.checked});markDirty();element.closest('.availability-day')?.querySelectorAll('[data-availability-time]').forEach(input=>input.disabled=!element.checked);});
+ root.querySelectorAll('[data-availability-time]').forEach(element=>element.onchange=()=>{setWeeklyAvailability(p.business,element.dataset.availabilityTime,{[element.dataset.timePart]:element.value});markDirty();});
  root.querySelectorAll('[data-equipment-permission]').forEach(element=>element.onchange=()=>{const index=Number(element.dataset.equipmentPermission);p.operators[index].equipmentIds=[...root.querySelectorAll(`[data-equipment-permission="${index}"]:checked`)].map(input=>input.value);delete p.operators[index].equipmentTypes;markDirty();});
  root.querySelectorAll('[data-step]').forEach(button=>button.onclick=()=>run(()=>move(Number(button.dataset.step))));
  root.querySelectorAll('[data-fix]').forEach(button=>button.onclick=()=>run(()=>move(Number(button.dataset.fix))));
@@ -182,7 +195,7 @@ function bind(){
  root.querySelector('[data-next]')?.addEventListener('click',()=>run(()=>move(step+1)));
  root.querySelector('[data-save]')?.addEventListener('click',()=>run(async()=>{await save();message='Saved. You can return to complete onboarding.';render();}));
  root.querySelectorAll('[data-add]').forEach(button=>button.onclick=()=>{const key=button.dataset.add;if(p[key].length>=20){fail(Error('Contact LiftCrew for fleets with more than 20 entries.'));return;}p[key].push({id:crypto.randomUUID(),...(key==='equipment'?{baseZip:p.business.zip||'',radiusMilesOverride:p.business.radiusMiles||25}:{equipmentIds:[]})});markDirty();render();});
- root.querySelectorAll('[data-remove]').forEach(button=>button.onclick=()=>{if(!confirm('Remove this entry? Its uploaded records are retained for audit.'))return;const [key,index]=button.dataset.remove.split(':');if(key==='equipment')removeEquipmentAssignments(p,p.equipment[Number(index)].id);p[key].splice(Number(index),1);markDirty();render();});
+ root.querySelectorAll('[data-remove]').forEach(button=>button.onclick=()=>run(async()=>{const [key,index]=button.dataset.remove.split(':');const label=key==='equipment'?'machine':'operator';if(!await confirmOperatorAction({title:'Remove '+label+'?',message:'This removes the '+label+' from the active application. Previously uploaded records remain available for audit.',confirmLabel:'Remove '+label,danger:true}))return;if(key==='equipment')removeEquipmentAssignments(p,p.equipment[Number(index)].id);p[key].splice(Number(index),1);markDirty();render();}));
  root.querySelector('[data-prepare]')?.addEventListener('click',()=>run(prepareContract));
  root.querySelectorAll('[data-agreement-download]').forEach(button=>button.onclick=()=>saveAgreement(envelope));
  bindSignature();
@@ -194,17 +207,17 @@ function bind(){
   if(packet){validateInsuranceBatch(docs,files);p.insurance.inputMode='packet';markDirty();}
   await save();
   try{for(const file of files)docs.push(await uploadDocument(app,file,input.dataset.kind,input.dataset.entity,root.querySelector('#expiry-'+index)?.value||null));}finally{render();}
-  message='Documents uploaded securely.';render();if(packet&&aiConsent)await startReview(false);
+  message='Documents uploaded securely.';render();// Review starts only after the operator explicitly authorizes processing and submits it.
  }));
  root.querySelectorAll('[data-download]').forEach(button=>button.onclick=()=>run(()=>downloadDocument(docs.find(doc=>doc.id===button.dataset.download))));
- root.querySelectorAll('[data-delete]').forEach(button=>button.onclick=()=>run(async()=>{if(!confirm('Remove this document from the current application?'))return;const doc=docs.find(item=>item.id===button.dataset.delete);await removeDocument(app,doc);docs=docs.filter(item=>item.id!==doc.id);clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));render();}));
+ root.querySelectorAll('[data-delete]').forEach(button=>button.onclick=()=>run(async()=>{if(!await confirmOperatorAction({title:'Remove document?',message:'Remove this file from the active application? Previous audit records are preserved as required.',confirmLabel:'Remove document',danger:true}))return;const doc=docs.find(item=>item.id===button.dataset.delete);await removeDocument(app,doc);docs=docs.filter(item=>item.id!==doc.id);clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));render();}));
  root.querySelector('[data-review-insurance]')?.addEventListener('click',()=>run(()=>startReview(true)));
- root.querySelector('[data-manual-review]')?.addEventListener('click',()=>{message='Your documents are saved. Complete the remaining steps and submit for LiftCrew review.';render();});
+ 
  root.querySelector('[data-refresh]')?.addEventListener('click',()=>run(load));
- root.querySelectorAll('[data-reopen-step]').forEach(button=>button.addEventListener('click',()=>run(async()=>{if(!confirm('Reopening will pause approval and job eligibility until LiftCrew reviews the changes again. Continue?'))return;check(await db.rpc('reopen_provider_application',{p_application_id:app.id}));const index=stepIds.indexOf(button.dataset.reopenStep);persistStep(sessionStorage,app.id,index<0?0:index);await load();})));
- root.querySelector('[data-reopen]')?.addEventListener('click',()=>run(async()=>{if(!confirm('Updating your application pauses work eligibility until the new details are approved. Continue?'))return;check(await db.rpc('reopen_provider_application',{p_application_id:app.id}));step=0;persistStep(sessionStorage,app.id,0);await load();}));
+ root.querySelectorAll('[data-reopen-step]').forEach(button=>button.addEventListener('click',()=>run(async()=>{if(!await confirmOperatorAction({title:'Update provider profile?',message:'Reopening pauses job eligibility until LiftCrew verifies the updated application.',confirmLabel:'Reopen application'}))return;check(await db.rpc('reopen_provider_application',{p_application_id:app.id}));const index=stepIds.indexOf(button.dataset.reopenStep);persistStep(sessionStorage,app.id,index<0?0:index);await load();})));
+ root.querySelector('[data-reopen]')?.addEventListener('click',()=>run(async()=>{if(!await confirmOperatorAction({title:'Reopen application?',message:'Your approval will be paused until LiftCrew reviews the updated records.',confirmLabel:'Reopen application'}))return;check(await db.rpc('reopen_provider_application',{p_application_id:app.id}));step=0;persistStep(sessionStorage,app.id,0);await load();}));
 
- root.querySelector('#provider-form')?.addEventListener('submit',event=>{event.preventDefault();if(stepIds[step]!=='finish')return;const form=new FormData(event.target);run(async()=>{const acknowledgements=Object.fromEntries(Object.keys(certifications).map(key=>[key,form.get('ack-'+key)==='on']));if(Object.values(acknowledgements).some(value=>!value))throw Error('Complete every application certification.');await save();check(await db.rpc('submit_operator_application',{application_id:app.id,typed_name:String(form.get('typed-name')||'').trim(),signer_title:String(form.get('signer-title')||'').trim(),acknowledgements}));await load();message='Application submitted. Your status will update here.';render();if(aiConsent)await startReview(false);});});
+ root.querySelector('#provider-form')?.addEventListener('submit',event=>{event.preventDefault();if(stepIds[step]!=='finish')return;const form=new FormData(event.target);run(async()=>{const acknowledgements=Object.fromEntries(Object.keys(certifications).map(key=>[key,form.get('ack-'+key)==='on']));if(Object.values(acknowledgements).some(value=>!value))throw Error('Complete every application certification.');await save();check(await db.rpc('submit_operator_application',{application_id:app.id,typed_name:String(form.get('typed-name')||'').trim(),signer_title:String(form.get('signer-title')||'').trim(),acknowledgements}));await load();message='Your application was submitted successfully.';render();});});
 }
 function bindSignature(){
  const scroller=root.querySelector('#contract-text'),sign=root.querySelector('[data-sign-contract]');if(!scroller||!sign)return;
@@ -215,16 +228,16 @@ function bindSignature(){
 }
 
 async function startReview(retry){
- if(!aiConsent)throw Error('Authorize AI processing above, or choose human review.');
+ if(!aiConsent)throw Error('Authorize LiftCrew to review your insurance documents above.');
  if(!hasInsurancePacket(docs))throw Error('Upload your insurance policy packet first.');
  await save();const {data,error}=await db.functions.invoke('insurance-review',{body:{applicationId:app.id,consent:true,retry}});
- if(error||!data?.reviewId)throw Error('Automated review could not start. Your documents are saved. Try again later or complete onboarding for human review.');
+ if(error||!data?.reviewId)throw Error('Insurance review could not start. Your uploaded documents are saved. Try again later or contact LiftCrew.');
  clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));const element=root.querySelector('#insurance-review-status');if(element)element.innerHTML=reviewHTML(clearance.review,clearance.reviewCurrent);pollReview(data.reviewId);
 }
 function stopPoll(){pollEpoch++;clearTimeout(pollTimer);pollTimer=null;}
 function pollReview(id){
  stopPoll();const epoch=pollEpoch,applicationId=app.id,started=Date.now();
- const tick=async()=>{if(epoch!==pollEpoch||!user||app?.id!==applicationId)return;try{const result=check(await db.rpc('provider_clearance',{p_application_id:applicationId}));if(epoch!==pollEpoch||app?.id!==applicationId)return;clearance=result;envelope=result.envelope||envelope;const element=root.querySelector('#insurance-review-status');if(element)element.innerHTML=reviewHTML(result.review,result.reviewCurrent);if(!['queued','reading'].includes(result.review?.state)||Date.now()-started>180000)return;}catch{if(Date.now()-started>180000)return;}pollTimer=setTimeout(tick,2500);};
+ const tick=async()=>{if(epoch!==pollEpoch||!user||app?.id!==applicationId)return;try{const result=check(await db.rpc('provider_clearance',{p_application_id:applicationId}));if(epoch!==pollEpoch||app?.id!==applicationId)return;clearance=result;envelope=result.envelope||envelope;const element=root.querySelector('#insurance-review-status');if(element)element.innerHTML=reviewHTML(result.review,result.reviewCurrent);if(!['queued','reading'].includes(result.review?.state)){render();return;}if(Date.now()-started>180000)return;}catch{if(Date.now()-started>180000)return;}pollTimer=setTimeout(tick,2500);};
  pollTimer=setTimeout(tick,800);
 }
 function scheduleServiceArea(){
