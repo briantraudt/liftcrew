@@ -30,3 +30,33 @@ test('machine labels stay sequential and Other selections require descriptions',
  assert(equipmentView(p).includes('data-field="equipment.0.categoryOther"'));
  assert(!businessView(p).includes('data-field="business.radiusMiles"'));
 });
+
+
+test('page routing looks up screens by stable step ID after agreement moves last',()=>{
+ const source=readFileSync(new URL('../src/operators.js',import.meta.url),'utf8');
+ assert(source.includes('views[stepIds[step]]()'));
+ assert(source.includes('agreement:contract'));
+ assert(source.includes('beforeAgreementIssues()'));
+ const ids=stepIds.join(',');
+ assert.equal(ids,'business,equipment,operators,insurance,documents,agreement,finish');
+});
+test('the operator header shows sign-out only for authenticated users',()=>{
+ const html=readFileSync(new URL('../operators.html',import.meta.url),'utf8');
+ const js=readFileSync(new URL('../src/operators.js',import.meta.url),'utf8');
+ assert(html.includes('id="portal-signout"'));
+ assert(!html.includes('Operator portal</a>'));
+ assert(js.includes('setHeaderSignedIn(true)'));
+ assert(js.includes('setHeaderSignedIn(false)'));
+ assert(!js.includes('h(user.email)'));
+ assert(!js.includes('class="account-bar"'));
+});
+test('Other equipment reveals description and avoids automatic matching',()=>{
+ const p=profile();
+ p.equipment[0].category='Other';p.equipment[0].fuel='Other';
+ const html=equipmentView(p);
+ assert(html.includes('data-field="equipment.0.categoryOther"'));
+ assert(html.includes('data-field="equipment.0.fuelOther"'));
+ const mig=readFileSync(new URL('../supabase/migrations/20261021160651_provider_other_equipment_explicit_and_matching_exclusion.sql',import.meta.url),'utf8');
+ assert(mig.includes("'Other'"));
+ assert(mig.includes("e.value->>'category' in ('Warehouse forklift','Rough-terrain forklift','Telehandler')"));
+});
