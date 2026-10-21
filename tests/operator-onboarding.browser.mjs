@@ -60,7 +60,7 @@ for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
   await page.locator('[data-field="equipment.0.category"]').selectOption('Warehouse forklift');
   await page.locator('[data-remove="equipment:1"]').click();
   await page.getByRole('dialog').getByRole('heading',{name:'Remove machine?'}).waitFor();
-  assert.equal(await page.locator('dialog.operator-confirm-dialog').count(),1);assertions++;
+  assert.equal(await page.locator('dialog.lc-confirm-dialog').count(),1);assertions++;
   await page.getByRole('dialog').getByRole('button',{name:'Cancel'}).click();
   assert.equal(await page.locator('[data-remove="equipment:1"]').count(),1);assertions++;
   await page.locator('[data-next]').click();await page.getByRole('heading',{name:'Your operators',exact:true}).waitFor();
