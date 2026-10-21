@@ -18,14 +18,15 @@ export function attachPricingPreview(form,box){
   const grid=create('div','price-estimate-grid');
   for(const [label,rate,total] of [
    ['Hourly',rates.hourly,days===1?totals.hourly:null],
-   ['4 hours',rates.fourHour,days===1?totals.fourHour:null],
-   ['Daily',rates.daily,totals.daily]
+   ['Half-day (4 hours)',rates.fourHour,days===1||days===0.5?totals.fourHour:null],
+   ['Daily',rates.daily,days===0.5?null:totals.daily]
   ]){
    const card=create('div','price-estimate-option');
    card.append(create('span','price-estimate-label',label),create('strong','',money(rate)+(label==='Daily'?' / day':'')));
    if(total!==null)card.append(create('small','',label==='Daily'&&days>1?days+' days + delivery: '+money(total):'Including delivery: '+money(total)));
    grid.append(card);
   }
+  if(days===0.5)grid.append(create('p','field-note','Four-hour equipment rate, plus applicable delivery.'));
   const fee=create('p','price-delivery',Number(quote.deliveryFee)>0?'Estimated round-trip travel: '+money(quote.deliveryFee)+' · '+Number(quote.excessRoundTripMiles).toFixed(1)+' billable miles × $2':'Estimated round-trip travel: Free within 25 miles');
   const foot=create('p','field-note',quote.basis||'Estimated using ZIP centers; final road mileage and availability must be confirmed.');
   output.replaceChildren(title,detail,grid,fee,foot);
