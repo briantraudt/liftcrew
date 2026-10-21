@@ -1,9 +1,9 @@
-export const stepIds=['business','equipment','operators','agreement','insurance','documents','finish'];
-export const stepLabels=['Your business','Equipment','Operators','Read & sign','Insurance','Supporting documents','Finish onboarding'];
+export const stepIds=['business','equipment','operators','insurance','documents','agreement','finish'];
+export const stepLabels=['Your business','Equipment','Operators','Insurance','Supporting documents','Read & sign','Finish onboarding'];
 export const insuranceKinds=['insurance_packet','coi','declarations','endorsements','handling','owner_coverage','equipment_coverage'];
 export const insuranceFiles=docs=>docs.filter(d=>d.active&&insuranceKinds.includes(d.kind));
 export const hasInsurancePacket=docs=>insuranceFiles(docs).length>0;
-export const equipmentLabel=(equipment,index)=>[equipment.make,equipment.model].filter(Boolean).join(' ')||`Machine ${index+1}`;
+export const equipmentLabel=(equipment,index)=>`Machine ${index+1}${[equipment.make,equipment.model].filter(Boolean).length?' · '+[equipment.make,equipment.model].filter(Boolean).join(' '):''}`;
 export function removeEquipmentAssignments(profile,id){
  for(const operator of profile.operators||[])operator.equipmentIds=(operator.equipmentIds||[]).filter(value=>value!==id);
 }
@@ -15,7 +15,9 @@ export function restoredStep(storage,applicationId){
  const current=storage.getItem('provider-step-v2-'+applicationId);
  if(current!==null)return Math.max(0,stepIds.indexOf(current));
  const legacy=storage.getItem('provider-step-'+applicationId);
- return legacy===null?0:([0,1,3,4,5,6][Number(legacy)]??0);
+ if(legacy===null)return 0;
+ const prior=['business','equipment','agreement','insurance','documents','finish'][Number(legacy)]||'business';
+ return Math.max(0,stepIds.indexOf(prior));
 }
 export function persistStep(storage,applicationId,step){storage.setItem('provider-step-v2-'+applicationId,stepIds[step]||stepIds[0]);}
 export function validateInsuranceBatch(existing,incoming){

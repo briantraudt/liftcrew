@@ -10,7 +10,7 @@ export const acknowledgements = {
  terms:'I have received and reviewed the provider agreement draft and its proposed insurance requirements. This application does not execute that draft, guarantee work or authorize dispatch. A completed agreement, required approvals and an accepted work order are required before work.',
  electronic:'I agree to submit this application and its certifications electronically under my typed name. I can access, download and retain the linked documents and print this application.'
 };
-export const emptyProfile=()=>({business:{},equipment:[{id:crypto.randomUUID()}],operators:[{id:crypto.randomUUID(),equipmentIds:[]}],insurance:{inputMode:'packet'}});
+export const emptyProfile=()=>({business:{radiusMiles:25},equipment:[{id:crypto.randomUUID(),radiusMilesOverride:25}],operators:[{id:crypto.randomUUID(),equipmentIds:[]}],insurance:{inputMode:'packet'}});
 export const editable=a=>['draft','changes_requested'].includes(a?.status);
 export const escapeHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function documentSlots(p){
@@ -47,8 +47,8 @@ export function validateFile(file){
  if(file.name.length>200)throw Error('Use a filename shorter than 200 characters.');
  return {'application/pdf':'pdf','image/jpeg':'jpg','image/png':'png','image/webp':'webp'}[file.type];
 }
-export function renderRecord(value){
- if(Array.isArray(value))return value.map((v,i)=>`<section class="record"><h3>Entry ${i+1}</h3>${renderRecord(v)}</section>`).join('');
- if(value&&typeof value==='object')return `<div class="table-scroll"><table>${Object.entries(value).filter(([k])=>!['id','serviceZipCodes'].includes(k)).map(([k,v])=>`<tr><th scope="row">${escapeHtml(({dba:'DBA',wc:'Workers’ compensation',cgl:'General liability',auto:'Auto liability',employers:'Employers’ liability',umbrella:'Umbrella / excess',handling:'Property being handled',equipmentIds:'Authorized equipment identifiers',adult:'At least 18 years old',capacity:'Rated capacity (lb)',loadCenter:'Load center (in)',liftHeight:'Maximum lift height (ft)'})[k]||k.replace(/[A-Z]/g,c=>' '+c.toLowerCase()).replace(/^./,c=>c.toUpperCase()))}</th><td>${v&&typeof v==='object'?renderRecord(v):escapeHtml(typeof v==='boolean'?(v?'Yes':'No'):v||'—')}</td></tr>`).join('')}</table></div>`;
+export function renderRecord(value,section=''){
+ if(Array.isArray(value))return value.map((v,i)=>`<section class="record"><h3>${section==='equipment'?'Machine':section==='operators'?'Operator':'Entry'} ${i+1}</h3>${renderRecord(v,section)}</section>`).join('');
+ if(value&&typeof value==='object')return `<div class="table-scroll"><table>${Object.entries(value).filter(([k])=>!['id','serviceZipCodes'].includes(k)).map(([k,v])=>`<tr><th scope="row">${escapeHtml(({dba:'DBA',wc:'Workers’ compensation',cgl:'General liability',auto:'Auto liability',employers:'Employers’ liability',umbrella:'Umbrella / excess',handling:'Property being handled',equipmentIds:'Authorized equipment identifiers',adult:'At least 18 years old',capacity:'Rated capacity (lb)',loadCenter:'Load center (in)',liftHeight:'Maximum lift height (ft)'})[k]||k.replace(/[A-Z]/g,c=>' '+c.toLowerCase()).replace(/^./,c=>c.toUpperCase()))}</th><td>${v&&typeof v==='object'?renderRecord(v,k):escapeHtml(typeof v==='boolean'?(v?'Yes':'No'):v||'—')}</td></tr>`).join('')}</table></div>`;
  return escapeHtml(value);
 }

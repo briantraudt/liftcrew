@@ -1,9 +1,9 @@
 // Presentation-only helpers. Never grant dispatch/approval eligibility here.
 export const onboardingStages = [
-  {label:'Your business', steps:['business']},
-  {label:'Equipment & operators', steps:['equipment','operators']},
-  {label:'Agreement & insurance', steps:['agreement','insurance']},
-  {label:'Review & submit', steps:['documents','finish']}
+  {label:'Business', steps:['business']},
+  {label:'Equipment & Operators', steps:['equipment','operators']},
+  {label:'Insurance & Documents', steps:['insurance','documents']},
+  {label:'Review & Sign', steps:['agreement','finish']}
 ];
 export const stageForStep = stepId => Math.max(0, onboardingStages.findIndex(stage=>stage.steps.includes(stepId)));
 
@@ -23,8 +23,8 @@ export function priceWarnings(equipment) {
 export function machineRadius(businessRadius, override) {
   const ceiling=Number(businessRadius), machine=Number(override);
   if(!Number.isFinite(ceiling)||ceiling<=0) return null;
-  // Per-machine settings may narrow but never enlarge the business-wide ceiling.
-  return String(override??'').trim() && /^\d+(\.\d+)?$/.test(String(override)) && Number.isFinite(machine) && machine>0 ? Math.min(ceiling,machine) : ceiling;
+  // The hidden legacy business radius is synchronized to the largest per-machine radius on save.
+  return String(override??'').trim() && /^\d+(\.\d+)?$/.test(String(override)) && Number.isFinite(machine) && machine>0 && machine<=3000 ? machine : ceiling;
 }
 export function ratePreviewMarkup(equipment,businessRadius){
   const hourly=positiveRate(equipment.hourlyRate), four=positiveRate(equipment.fourHourRate), daily=positiveRate(equipment.dailyRate);
