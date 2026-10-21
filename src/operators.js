@@ -18,6 +18,19 @@ import './operator-experience.css';
 const root=document.querySelector('#app');
 const headerSignout=document.querySelector('#portal-signout');
 function setHeaderSignedIn(signedIn){if(headerSignout)headerSignout.hidden=!signedIn;}
+// Only the current step ID is cached; application fields always load from Supabase.
+// Local storage resumes the step after a browser restart, while existing session
+// bookmarks take precedence for backwards compatibility.
+function restoreDraftStep(applicationId){
+ const key='provider-step-v2-'+applicationId;
+ const legacy='provider-step-'+applicationId;
+ if(sessionStorage.getItem(key)!==null||sessionStorage.getItem(legacy)!==null)return restoredStep(sessionStorage,applicationId);
+ try{return restoredStep(localStorage,applicationId)}catch{return 0;}
+}
+function persistDraftStep(applicationId,next){
+ persistStep(sessionStorage,applicationId,next);
+ try{persistStep(localStorage,applicationId,next)}catch{}
+}
 const certifications={accurate:'These details and documents are accurate and current. I will report changes and coverage lapses.',authority:'I am authorized to represent this provider and submit its personnel and business records.',safety:'Operators must be qualified for the machine and workplace. We will follow capacity limits, inspect equipment and stop unsafe work.',privacy:'I have read the application privacy notice and authorize LiftCrew to verify these records with my broker and other appropriate sources.',terms:'I signed the provider agreement. Work requires LiftCrew approval, both signatures, current coverage and an accepted work order. Crane/specialty work requires a separate signed rider.',electronic:'I intend to certify this application electronically under my typed name and can download and retain my agreement and records.'};
 let user=null,app=null,p=null,docs=[],clearance=null,envelope=null,published=null,publishedAgreement=null,agreementPreviewError='',step=0;
 let mode=new URLSearchParams(location.search).get('mode')==='signin'?'signin':'signup';
@@ -25,7 +38,7 @@ let recovering=false,reviewer=false,busy=false,dirty=false,aiConsent=false,pollT
 let message='',errorMessage='',authEmail='',areaTimer=null,areaVersion=0;
 const areaCache=new Map();
 const notice=()=>`<div id="provider-message" role="status" aria-live="polite">${message?`<p class="notice success">${h(message)}</p>`:''}</div><div id="provider-error" role="alert">${errorMessage?`<p class="notice error">${h(errorMessage)}</p>`:''}</div>`;
-function markDirty(){dirty=true;if(clearance)clearance.reviewCurrent=false;root.querySelectorAll('.save-state').forEach(element=>element.textContent='Unsaved changes');}
+function markDirty(){dirty=true;if(clearance)clearance.reviewCurrent=false;}
 function set(path,value){const parts=path.split('.');let object=p;for(const key of parts.slice(0,-1))object=object[key]??={};object[parts.at(-1)]=value;markDirty();}
 function fail(error){errorMessage=error.message||'Unable to complete this action. Your saved information is retained.';const target=root.querySelector('#provider-error');if(target){target.innerHTML=`<p class="notice error">${h(errorMessage)}</p>`;target.scrollIntoView({block:'center'});}else authView();}
 async function run(action){if(busy)return;busy=true;message='';errorMessage='';const buttons=[...root.querySelectorAll('button')].map(button=>[button,button.disabled]);buttons.forEach(([button])=>button.disabled=true);try{await action();}catch(error){fail(error);}finally{busy=false;buttons.forEach(([button,disabled])=>{if(button.isConnected)button.disabled=disabled;});}}
@@ -63,7 +76,7 @@ async function load(){
   if(digest!==candidate.sha256)throw Error('Published agreement integrity verification failed');
   publishedAgreement=candidate;
  }catch{agreementPreviewError='The full agreement preview could not be verified here. Open the published agreement page instead.';}
- step=restoredStep(sessionStorage,app.id);dirty=false;
+ step=restoreDraftStep(app.id);dirty=false;
  // Repair legacy blank machine radii before the agreement preflight reads this draft.
  await save();
  // Refresh the server fingerprint and review status *after* any normalization save.
@@ -87,10 +100,10 @@ async function move(next){
  if(editable(app)&&['documents','finish'].includes(stepIds[target])){
    clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));
    const gate=insurancePrecheck(docs,clearance);
-   if(!gate.ready){step=stepIds.indexOf('insurance');persistStep(sessionStorage,app.id,step);errorMessage=gate.message;render();return;}
+   if(!gate.ready){step=stepIds.indexOf('insurance');persistDraftStep(app.id,step);errorMessage=gate.message;render();return;}
  }
  step=target;
- persistStep(sessionStorage,app.id,step);
+ persistDraftStep(app.id,step);
  await prepareWhenComplete();
  render();
  root.querySelector('.application-card h2, .onboarding-title')?.scrollIntoView({block:'start',behavior:'smooth'});
@@ -180,7 +193,7 @@ function render(){
  ${edit?`<div class="application-layout"><aside class="step-sidebar"><nav class="stage-nav" aria-label="Onboarding categories">
  ${onboardingStages.map((group,stageIndex)=>`<button type="button" class="stage-link ${stageIndex===stage?'active':''}" data-step="${stepIds.indexOf(group.steps[0])}" ${stageIndex===stage?'aria-current="step"':''}>${h(group.label)}</button>`).join('')}
  </nav></aside>
- <form id="provider-form" class="application-card" novalidate>${stepIds[step]==='business'?'<h1 class="onboarding-title">Join the LiftCrew family</h1>':''}${views[stepIds[step]]()}<div class="form-actions"><button type="button" class="text-btn" data-back ${step===0?'disabled':''}>Back</button><div><span class="save-state">${dirty?'Unsaved changes':'Saved'}</span><button type="button" class="btn secondary" data-save>Save</button>${step<stepIds.length-1&&(stepIds[step]!=='agreement'||Boolean(envelope?.provider_signed_at))?'<button type="button" class="btn" data-next>'+(stepIds[step]==='agreement'?'Continue to submit':'Save &amp; continue')+'</button>':''}</div></div></form></div>`:statusPage()}`;
+ <form id="provider-form" class="application-card" novalidate>${stepIds[step]==='business'?'<h1 class="onboarding-title">Join the LiftCrew family</h1>':''}${views[stepIds[step]]()}<div class="form-actions"><button type="button" class="text-btn" data-back ${step===0?'disabled':''}>Back</button><div>${step<stepIds.length-1?'<button type="button" class="btn" data-save-complete>Save &amp; Complete</button>':''}</div></div></form></div>`:statusPage()}`;
  bind();
 }
 function bind(){
@@ -192,8 +205,13 @@ function bind(){
  root.querySelectorAll('[data-step]').forEach(button=>button.onclick=()=>run(()=>move(Number(button.dataset.step))));
  root.querySelectorAll('[data-fix]').forEach(button=>button.onclick=()=>run(()=>move(Number(button.dataset.fix))));
  root.querySelector('[data-back]')?.addEventListener('click',()=>run(()=>move(step-1)));
- root.querySelector('[data-next]')?.addEventListener('click',()=>run(()=>move(step+1)));
- root.querySelector('[data-save]')?.addEventListener('click',()=>run(async()=>{await save();message='Saved. You can return to complete onboarding.';render();}));
+ root.querySelector('[data-save-complete]')?.addEventListener('click',()=>run(async()=>{
+  // This action only saves the editable draft; never sign or submit on the user's behalf.
+  if(stepIds[step]==='agreement'&&!envelope?.provider_signed_at){
+   await save();message='Progress saved. Sign the personalized agreement to continue.';render();return;
+  }
+  await move(step+1);
+ }));
  root.querySelectorAll('[data-add]').forEach(button=>button.onclick=()=>{const key=button.dataset.add;if(p[key].length>=20){fail(Error('Contact LiftCrew for fleets with more than 20 entries.'));return;}p[key].push({id:crypto.randomUUID(),...(key==='equipment'?{baseZip:p.business.zip||'',radiusMilesOverride:p.business.radiusMiles||25}:{equipmentIds:[]})});markDirty();render();});
  root.querySelectorAll('[data-remove]').forEach(button=>button.onclick=()=>run(async()=>{const [key,index]=button.dataset.remove.split(':');const label=key==='equipment'?'machine':'operator';if(!await confirmOperatorAction({title:'Remove '+label+'?',message:'This removes the '+label+' from the active application. Previously uploaded records remain available for audit.',confirmLabel:'Remove '+label,danger:true}))return;if(key==='equipment')removeEquipmentAssignments(p,p.equipment[Number(index)].id);p[key].splice(Number(index),1);markDirty();render();}));
  root.querySelector('[data-prepare]')?.addEventListener('click',()=>run(prepareContract));
@@ -214,8 +232,8 @@ function bind(){
  root.querySelector('[data-review-insurance]')?.addEventListener('click',()=>run(()=>startReview(true)));
  
  root.querySelector('[data-refresh]')?.addEventListener('click',()=>run(load));
- root.querySelectorAll('[data-reopen-step]').forEach(button=>button.addEventListener('click',()=>run(async()=>{if(!await confirmOperatorAction({title:'Update provider profile?',message:'Reopening pauses job eligibility until LiftCrew verifies the updated application.',confirmLabel:'Reopen application'}))return;check(await db.rpc('reopen_provider_application',{p_application_id:app.id}));const index=stepIds.indexOf(button.dataset.reopenStep);persistStep(sessionStorage,app.id,index<0?0:index);await load();})));
- root.querySelector('[data-reopen]')?.addEventListener('click',()=>run(async()=>{if(!await confirmOperatorAction({title:'Reopen application?',message:'Your approval will be paused until LiftCrew reviews the updated records.',confirmLabel:'Reopen application'}))return;check(await db.rpc('reopen_provider_application',{p_application_id:app.id}));step=0;persistStep(sessionStorage,app.id,0);await load();}));
+ root.querySelectorAll('[data-reopen-step]').forEach(button=>button.addEventListener('click',()=>run(async()=>{if(!await confirmOperatorAction({title:'Update provider profile?',message:'Reopening pauses job eligibility until LiftCrew verifies the updated application.',confirmLabel:'Reopen application'}))return;check(await db.rpc('reopen_provider_application',{p_application_id:app.id}));const index=stepIds.indexOf(button.dataset.reopenStep);persistDraftStep(app.id,index<0?0:index);await load();})));
+ root.querySelector('[data-reopen]')?.addEventListener('click',()=>run(async()=>{if(!await confirmOperatorAction({title:'Reopen application?',message:'Your approval will be paused until LiftCrew reviews the updated records.',confirmLabel:'Reopen application'}))return;check(await db.rpc('reopen_provider_application',{p_application_id:app.id}));step=0;persistDraftStep(app.id,0);await load();}));
 
  root.querySelector('#provider-form')?.addEventListener('submit',event=>{event.preventDefault();if(stepIds[step]!=='finish')return;const form=new FormData(event.target);run(async()=>{const acknowledgements=Object.fromEntries(Object.keys(certifications).map(key=>[key,form.get('ack-'+key)==='on']));if(Object.values(acknowledgements).some(value=>!value))throw Error('Complete every application certification.');await save();check(await db.rpc('submit_operator_application',{application_id:app.id,typed_name:String(form.get('typed-name')||'').trim(),signer_title:String(form.get('signer-title')||'').trim(),acknowledgements}));await load();message='Your application was submitted successfully.';render();});});
 }
@@ -224,7 +242,7 @@ function bindSignature(){
  let reachedEnd=false;
  const update=()=>{reachedEnd||=scroller.scrollTop+scroller.clientHeight>=scroller.scrollHeight-12;sign.disabled=!(reachedEnd&&root.querySelector('[name=read-contract]').checked&&root.querySelector('[name=esign-consent]').checked);root.querySelector('#scroll-status').textContent=reachedEnd?'End of agreement reached. Confirm your review and signing consent below.':'Scroll through the agreement to enable signing.';};
  scroller.onscroll=update;root.querySelector('[name=read-contract]').onchange=update;root.querySelector('[name=esign-consent]').onchange=update;requestAnimationFrame(update);
- sign.onclick=()=>run(async()=>{if(beforeAgreementIssues().length)throw Error('Complete the required information and documents before signing.');if(!reachedEnd)throw Error('Read the complete agreement first.');const name=root.querySelector('[name=signature]').value.trim(),title=root.querySelector('[name=signature-title]').value.trim();envelope=check(await db.rpc('sign_provider_contract',{p_envelope_id:envelope.id,p_name:name,p_title:title,p_read:root.querySelector('[name=read-contract]').checked,p_consent:root.querySelector('[name=esign-consent]').checked}));step=stepIds.indexOf('finish');persistStep(sessionStorage,app.id,step);message='Agreement signed. Review the final certifications and submit your application.';render();});
+ sign.onclick=()=>run(async()=>{if(beforeAgreementIssues().length)throw Error('Complete the required information and documents before signing.');if(!reachedEnd)throw Error('Read the complete agreement first.');const name=root.querySelector('[name=signature]').value.trim(),title=root.querySelector('[name=signature-title]').value.trim();envelope=check(await db.rpc('sign_provider_contract',{p_envelope_id:envelope.id,p_name:name,p_title:title,p_read:root.querySelector('[name=read-contract]').checked,p_consent:root.querySelector('[name=esign-consent]').checked}));step=stepIds.indexOf('finish');persistDraftStep(app.id,step);message='Agreement signed. Review the final certifications and submit your application.';render();});
 }
 
 async function startReview(retry){

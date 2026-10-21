@@ -105,3 +105,22 @@ test('staff request inbox displays four-hour selected total instead of day price
  assert(code.includes('q.selectedTotal??q.totals?.fourHour'));
  assert(code.includes('Half-day (4 hours)'));
 });
+
+// The Save & Complete button is a draft-only state transition. The submit and
+// legal signature RPCs remain separate explicit actions.
+test('draft footer has one Save & Complete action without duplicate Save/Continue buttons',()=>{
+ const code=readFileSync(new URL('../src/operators.js',import.meta.url),'utf8');
+ assert(code.includes('data-save-complete>Save &amp; Complete'));
+ assert(!code.includes('data-save>Save'));
+ assert(!code.includes('data-next>'));
+ assert(!code.includes('class="save-state"'));
+ const start=code.indexOf("root.querySelector('[data-save-complete]')");
+ const end=code.indexOf("root.querySelectorAll('[data-add]')",start);
+ const callback=code.slice(start,end);
+ assert(start>0&&callback.includes('await move(step+1)'));
+ assert(callback.includes("await save()"));
+ assert(!callback.includes('submit_operator_application'));
+ assert(!callback.includes('sign_provider_contract'));
+ assert(code.includes('restoreDraftStep(app.id)'));
+ assert(code.includes('persistDraftStep(app.id,step)'));
+});
