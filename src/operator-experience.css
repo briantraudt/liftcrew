@@ -1,0 +1,64 @@
+/* Operator-specific design system, layered after the existing base styles. */
+body.operator-onboarding{background:#f5f6f2;color:#16353e}
+body.operator-onboarding .op-main{max-width:1260px;padding-top:28px;padding-bottom:70px}
+body.operator-onboarding .portal-heading{margin-bottom:20px}
+body.operator-onboarding .portal-heading h1{letter-spacing:-1.3px;font-size:clamp(29px,3vw,42px)}
+body.operator-onboarding .status-badge{border:1px solid #cad9d1;background:#e8ede9;color:#244b41}
+body.operator-onboarding .account-bar{border-bottom:1px solid #dbe4dd;padding:0 0 14px}
+body.operator-onboarding .onboarding-progress{height:6px;margin-bottom:22px;background:#dfe6de}
+body.operator-onboarding .application-layout{grid-template-columns:248px minmax(0,1fr);gap:28px}
+body.operator-onboarding .application-card{border-color:#dce5dc;border-radius:18px;padding:31px 37px;box-shadow:0 13px 32px #0d2e3408}
+body.operator-onboarding .application-card h2{font-size:clamp(25px,2.5vw,34px);letter-spacing:-1px}
+body.operator-onboarding .step-sidebar nav{gap:11px}
+body.operator-onboarding .stage-group{padding:15px 12px;border:1px solid #dfe5dd;border-radius:14px;background:#fbfcf9}
+body.operator-onboarding .stage-group.current{border-color:#f4aa90;background:#fff9f5;box-shadow:0 4px 22px #963d1510}
+body.operator-onboarding .stage-heading{display:flex;align-items:center;gap:10px;margin:0 6px 9px;font-size:12px;font-weight:800;color:#244c50;line-height:1.45}
+body.operator-onboarding .stage-number{display:grid;place-items:center;width:27px;height:27px;flex:none;border-radius:9px;background:#e3eae5;color:#163c40;font-size:11px}
+body.operator-onboarding .stage-group.current .stage-number{background:#ff5a1f;color:white}
+body.operator-onboarding .step-link{padding:8px 11px 8px 13px;min-height:35px;font-size:12px;margin-left:8px;line-height:1.35}
+body.operator-onboarding .step-link span{font-size:10px}
+body.operator-onboarding .step-link.active{background:#ffede3;color:#8b3817;font-weight:800}
+body.operator-onboarding .step-link.active span{color:#8b3817}
+body.operator-onboarding .step-eyebrow{margin:0 0 12px;text-transform:uppercase;letter-spacing:1.25px;font-size:10px;font-weight:800;color:#b34d24}
+body.operator-onboarding .form-section-title{margin:22px 0 16px;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#355958}
+body.operator-onboarding .form-section-title:first-of-type{margin-top:4px}
+body.operator-onboarding .field>span{font-size:12px;color:#284c49}
+body.operator-onboarding input:not([type=checkbox]),body.operator-onboarding select,body.operator-onboarding textarea{background:#fff;border-color:#cddbd3;border-radius:9px;min-height:48px}
+body.operator-onboarding .field-hint{line-height:1.6}
+body.operator-onboarding .record{border-color:#dfe7df;background:#fafcf8;border-radius:13px;margin:21px 0;padding:24px}
+body.operator-onboarding .equipment-details{background:#fff;border:1px solid #dce6dc;border-radius:11px;margin:19px 0;padding:0 18px}
+body.operator-onboarding .equipment-details>summary{padding:17px 0;font-size:13px;color:#31545a}
+body.operator-onboarding .equipment-details>.form-grid{padding:4px 0 16px}
+body.operator-onboarding .equipment-details[open]>summary{border-bottom:1px solid #e9eee7;margin-bottom:18px}
+body.operator-onboarding .equipment-rate-heading{margin-top:18px}
+body.operator-onboarding .rate-preview{border:1px solid #d7e4d9;border-radius:12px;padding:20px;margin:20px 0;background:#eff6ee}
+body.operator-onboarding .rate-preview-head{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:12px}
+body.operator-onboarding .rate-preview-head strong{font-size:15px}
+body.operator-onboarding .rate-preview-head span{font-size:11px;color:#507162}
+body.operator-onboarding .rate-preview-values{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+body.operator-onboarding .rate-preview-values>div{background:white;border:1px solid #dce8dd;border-radius:9px;padding:12px}
+body.operator-onboarding .rate-preview-values small{display:block;color:#647a70;font-size:11px;margin-bottom:4px}
+body.operator-onboarding .rate-preview-values strong{font-size:18px;letter-spacing:-.3px}
+body.operator-onboarding .rate-preview-foot{font-size:12px;color:#597066;line-height:1.6;margin:11px 0 0}
+body.operator-onboarding .rate-warning{font-size:12px;background:#fff7e8;border-left:3px solid #e89835;color:#684b20;padding:9px 12px;margin:10px 0 0}
+body.operator-onboarding .form-actions{background:#fffef9;position:sticky;bottom:0;z-index:2;margin:30px -12px -12px;padding:21px 12px 12px}
+body.operator-onboarding .issue-list{margin:11px 0 0;padding:0;list-style:none}
+body.operator-onboarding .issue-list li{border-bottom:1px solid #efded3}
+body.operator-onboarding .issue-link{display:flex;align-items:center;gap:8px;width:100%;text-align:left;color:#873d26;font-size:13px;padding:11px 1px;background:transparent;border:0;text-decoration:underline;text-underline-offset:3px}
+body.operator-onboarding .dashboard-hero{background:#12323e;color:#fff;padding:34px;border-radius:18px;margin-bottom:26px}
+body.operator-onboarding .dashboard-hero h2{color:white;margin:6px 0 9px}
+body.operator-onboarding .dashboard-hero p{color:#d7e4e1;max-width:710px;margin:0;font-size:14px}
+body.operator-onboarding .dashboard-kicker{font-size:10px;color:#ff9e71;letter-spacing:1.5px;text-transform:uppercase;font-weight:800}
+body.operator-onboarding .dashboard-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:21px 0}
+body.operator-onboarding .dashboard-metrics article{background:#fff;border:1px solid #e1e8df;border-radius:14px;padding:21px}
+body.operator-onboarding .dashboard-metrics strong{font-size:28px;line-height:1;display:block}
+body.operator-onboarding .dashboard-metrics span{color:#607269;font-size:12px;display:block;margin-top:6px}
+body.operator-onboarding .dashboard-section{padding:23px;border:1px solid #dbe5dc;border-radius:14px;background:white;margin-bottom:22px}
+body.operator-onboarding .dashboard-section h3{font-size:19px}
+body.operator-onboarding .dashboard-notice{margin:10px 0;border-bottom:1px solid #edf0eb;padding:10px 0;display:flex;justify-content:space-between;gap:10px;font-size:13px}
+body.operator-onboarding .dashboard-notice strong{color:#7b3918}
+body.operator-onboarding .dashboard-actions{display:flex;gap:11px;flex-wrap:wrap}
+body.operator-onboarding .dashboard-actions button{min-width:175px;justify-content:center}
+@media(max-width:940px){body.operator-onboarding .application-layout{grid-template-columns:198px minmax(0,1fr);gap:16px}body.operator-onboarding .application-card{padding:24px 25px}}
+@media(max-width:720px){body.operator-onboarding .op-main{padding:15px 15px 35px}body.operator-onboarding .application-layout{grid-template-columns:minmax(0,1fr);gap:13px}body.operator-onboarding .step-sidebar nav{flex-direction:row;overflow-x:auto;gap:9px;scroll-snap-type:x mandatory;padding-bottom:8px}body.operator-onboarding .stage-group{flex:0 0 185px;scroll-snap-align:start;padding:10px 9px}body.operator-onboarding .step-link{font-size:11px;padding:7px}body.operator-onboarding .application-card{padding:22px 18px}body.operator-onboarding .form-actions{margin:25px -8px -8px;padding:15px 8px 8px;align-items:center}body.operator-onboarding .dashboard-hero{padding:25px}body.operator-onboarding .dashboard-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}body.operator-onboarding .dashboard-metrics article{padding:12px 9px}body.operator-onboarding .dashboard-metrics strong{font-size:23px}body.operator-onboarding .dashboard-metrics span{font-size:10px}body.operator-onboarding .rate-preview-values{gap:5px}body.operator-onboarding .rate-preview-values>div{padding:10px 6px}body.operator-onboarding .rate-preview-values strong{font-size:14px}body.operator-onboarding .dashboard-actions button{width:100%}}
+@media(prefers-reduced-motion:reduce){body.operator-onboarding .form-actions{scroll-behavior:auto}}
