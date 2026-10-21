@@ -95,3 +95,15 @@ test('a half-day selects the verified four-hour rate while keeping the trusted s
  assert.equal(responseObj.body.quote.selectedTotal,360);
  assert.equal(responseObj.body.quote.totals.daily,720);
 });
+
+test('half-day SQL migration anchors match the deployed-style original pricing function',()=>{
+ const original=readFileSync(new URL('../supabase/migrations/20261020160000_equipment_pricing.sql',import.meta.url),'utf8');
+ const migration=readFileSync(new URL('../supabase/migrations/20261021180000_customer_half_day.sql',import.meta.url),'utf8');
+ const quoteAnchor='  snapshot:=public.quote_nearest_provider_equipment(';
+ const snapshotBoundary='  );\n exception when others then';
+ assert(original.includes(quoteAnchor),'Original pricing function must contain actual two-space snapshot call');
+ assert(original.includes(snapshotBoundary),'Original pricing exception boundary must exist');
+ assert(migration.includes('needle:=$fragment$'+quoteAnchor+'$fragment$;'));
+ assert(migration.includes('needle:=$fragment$'+snapshotBoundary+'$fragment$;'));
+ assert(!migration.includes('needle:=$fragment$   snapshot:=public.quote_nearest_provider_equipment('));
+});
