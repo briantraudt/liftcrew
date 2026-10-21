@@ -60,10 +60,12 @@ async function load(){
   if(digest!==candidate.sha256)throw Error('Published agreement integrity verification failed');
   publishedAgreement=candidate;
  }catch{agreementPreviewError='The full agreement preview could not be verified here. Open the published agreement page instead.';}
- clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));envelope=clearance.envelope;
  step=restoredStep(sessionStorage,app.id);dirty=false;
  // Repair legacy blank machine radii before the agreement preflight reads this draft.
  await save();
+ // Refresh the server fingerprint and review status *after* any normalization save.
+ // Never show a superseded insurance review as current.
+ clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));envelope=clearance.envelope;
  await prepareWhenComplete();
  render();
  if(clearance.review&&['queued','reading'].includes(clearance.review.state))pollReview(clearance.review.id);
