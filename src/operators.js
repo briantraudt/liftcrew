@@ -1,15 +1,16 @@
 import {db,check,uploadDocument,downloadDocument,removeDocument} from './operator-api.js';
 import {emptyProfile,editable,escapeHtml as h,renewalIssues,renderRecord,validateFile} from './operator-data.js';
 import {providerSlots,extraProfileErrors,reviewHTML,saveAgreement} from './provider-ui.js';
-import {businessView,equipmentView,operatorsView,insuranceView,documentsView} from './onboarding-ui.js';
+import {businessView,equipmentView,operatorsView,insuranceView,documentsView,applicantReviewStatusHTML} from './onboarding-ui.js';
 import {stepIds,stepLabels,insuranceKinds,hasInsurancePacket,removeEquipmentAssignments,restoredStep,persistStep,validateInsuranceBatch} from './onboarding-model.js';
 import {CONFIRMATION_URL,OPERATOR_LOGIN_URL} from './operator-auth.js';
-import {onboardingStages,stageForStep,ratePreviewMarkup,renewalAlerts,businessRadiusForMachines,normalizeMachineRadiusFallbacks} from './onboarding-experience.js';
+import {onboardingStages,stageForStep,renewalAlerts,businessRadiusForMachines,normalizeMachineRadiusFallbacks} from './onboarding-experience.js';
 import {validatePublishedAgreement} from './published-agreement-format.js';
 import {renderAgreementPreview} from './agreement-preview.js';
 import './operator-flow.css';
 import './onboarding-compact.css';
 import './operator-experience.css';
+import {confirmOperatorAction} from './operator-confirmation.js';
 import './select.js';
 
 const root=document.querySelector('#app');
@@ -174,7 +175,7 @@ function render(){
 }
 function bind(){
  scheduleServiceArea();
- root.querySelectorAll('[data-field]').forEach(element=>element.oninput=()=>{set(element.dataset.field,element.value);if(element.dataset.field.startsWith('business.'))envelope=null;if(['business.entityType'].includes(element.dataset.field)||element.dataset.field.endsWith('.category')||element.dataset.field.endsWith('.fuel')){render();return;}const rateMatch=/^equipment\.(\d+)\.(hourlyRate|fourHourRate|dailyRate|radiusMilesOverride)$/.exec(element.dataset.field);if(rateMatch){const preview=root.querySelector('#rate-preview-'+rateMatch[1]);if(preview)preview.innerHTML=ratePreviewMarkup(p.equipment[Number(rateMatch[1])],p.business.radiusMiles);}if(element.dataset.field==='business.radiusMiles')root.querySelectorAll('.rate-preview').forEach((preview,index)=>preview.innerHTML=ratePreviewMarkup(p.equipment[index],p.business.radiusMiles));});
+ root.querySelectorAll('[data-field]').forEach(element=>element.oninput=()=>{set(element.dataset.field,element.value);if(element.dataset.field.startsWith('business.'))envelope=null;if(['business.entityType'].includes(element.dataset.field)||element.dataset.field.endsWith('.category')||element.dataset.field.endsWith('.fuel')){render();return;}});
  root.querySelectorAll('[data-equipment-permission]').forEach(element=>element.onchange=()=>{const index=Number(element.dataset.equipmentPermission);p.operators[index].equipmentIds=[...root.querySelectorAll(`[data-equipment-permission="${index}"]:checked`)].map(input=>input.value);delete p.operators[index].equipmentTypes;markDirty();});
  root.querySelectorAll('[data-step]').forEach(button=>button.onclick=()=>run(()=>move(Number(button.dataset.step))));
  root.querySelectorAll('[data-fix]').forEach(button=>button.onclick=()=>run(()=>move(Number(button.dataset.fix))));
@@ -182,7 +183,20 @@ function bind(){
  root.querySelector('[data-next]')?.addEventListener('click',()=>run(()=>move(step+1)));
  root.querySelector('[data-save]')?.addEventListener('click',()=>run(async()=>{await save();message='Saved. You can return to complete onboarding.';render();}));
  root.querySelectorAll('[data-add]').forEach(button=>button.onclick=()=>{const key=button.dataset.add;if(p[key].length>=20){fail(Error('Contact LiftCrew for fleets with more than 20 entries.'));return;}p[key].push({id:crypto.randomUUID(),...(key==='equipment'?{baseZip:p.business.zip||'',radiusMilesOverride:p.business.radiusMiles||25}:{equipmentIds:[]})});markDirty();render();});
- root.querySelectorAll('[data-remove]').forEach(button=>button.onclick=()=>{if(!confirm('Remove this entry? Its uploaded records are retained for audit.'))return;const [key,index]=button.dataset.remove.split(':');if(key==='equipment')removeEquipmentAssignments(p,p.equipment[Number(index)].id);p[key].splice(Number(index),1);markDirty();render();});
+ root.querySelectorAll('[data-remove]').forEach(button=>button.onclick=()=>run(async()=>{
+  const [key,rawIndex]=button.dataset.remove.split(':'),index=Number(rawIndex);
+  if(!['equipment','operators'].includes(key)||!Number.isInteger(index)||!p[key]?.[index])return;
+  const machine=key==='equipment',item=machine?'machine':'operator',label=(machine?'Machine ':'Operator ')+(index+1);
+  const approved=await confirmOperatorAction({
+   title:'Remove '+item+'?',
+   message:'Remove '+label+' from this application? Uploaded records will still be retained for audit.',
+   confirmLabel:'Remove '+item
+  });
+  if(!approved)return;
+  if(machine)removeEquipmentAssignments(p,p.equipment[index].id);
+  p[key].splice(index,1);
+  markDirty();render();
+ }));
  root.querySelector('[data-prepare]')?.addEventListener('click',()=>run(prepareContract));
  root.querySelectorAll('[data-agreement-download]').forEach(button=>button.onclick=()=>saveAgreement(envelope));
  bindSignature();
@@ -197,12 +211,45 @@ function bind(){
   message='Documents uploaded securely.';render();if(packet&&aiConsent)await startReview(false);
  }));
  root.querySelectorAll('[data-download]').forEach(button=>button.onclick=()=>run(()=>downloadDocument(docs.find(doc=>doc.id===button.dataset.download))));
- root.querySelectorAll('[data-delete]').forEach(button=>button.onclick=()=>run(async()=>{if(!confirm('Remove this document from the current application?'))return;const doc=docs.find(item=>item.id===button.dataset.delete);await removeDocument(app,doc);docs=docs.filter(item=>item.id!==doc.id);clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));render();}));
+ root.querySelectorAll('[data-delete]').forEach(button=>button.onclick=()=>run(async()=>{
+  const doc=docs.find(item=>item.id===button.dataset.delete);
+  if(!doc)return;
+  const approved=await confirmOperatorAction({
+   title:'Remove document?',
+   message:'Remove “'+(doc.filename||'this document')+'” from the current application? The submitted record will be retained for audit.',
+   confirmLabel:'Remove document'
+  });
+  if(!approved)return;
+  await removeDocument(app,doc);
+  docs=docs.filter(item=>item.id!==doc.id);
+  clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));
+  render();
+ }));
  root.querySelector('[data-review-insurance]')?.addEventListener('click',()=>run(()=>startReview(true)));
- root.querySelector('[data-manual-review]')?.addEventListener('click',()=>{message='Your documents are saved. Complete the remaining steps and submit for LiftCrew review.';render();});
+ 
  root.querySelector('[data-refresh]')?.addEventListener('click',()=>run(load));
- root.querySelectorAll('[data-reopen-step]').forEach(button=>button.addEventListener('click',()=>run(async()=>{if(!confirm('Reopening will pause approval and job eligibility until LiftCrew reviews the changes again. Continue?'))return;check(await db.rpc('reopen_provider_application',{p_application_id:app.id}));const index=stepIds.indexOf(button.dataset.reopenStep);persistStep(sessionStorage,app.id,index<0?0:index);await load();})));
- root.querySelector('[data-reopen]')?.addEventListener('click',()=>run(async()=>{if(!confirm('Updating your application pauses work eligibility until the new details are approved. Continue?'))return;check(await db.rpc('reopen_provider_application',{p_application_id:app.id}));step=0;persistStep(sessionStorage,app.id,0);await load();}));
+ root.querySelectorAll('[data-reopen-step]').forEach(button=>button.addEventListener('click',()=>run(async()=>{
+  if(!await confirmOperatorAction({
+    title:'Update your application?',
+    message:'Reopening your application pauses approval and job eligibility until LiftCrew reviews the changes again.',
+    confirmLabel:'Continue to edit',
+    intent:'caution'
+  }))return;
+  check(await db.rpc('reopen_provider_application',{p_application_id:app.id}));
+  const index=stepIds.indexOf(button.dataset.reopenStep);
+  persistStep(sessionStorage,app.id,index<0?0:index);
+  await load();
+ })));
+ root.querySelector('[data-reopen]')?.addEventListener('click',()=>run(async()=>{
+  if(!await confirmOperatorAction({
+    title:'Update your application?',
+    message:'Editing a submitted application pauses work eligibility until the updated records are approved.',
+    confirmLabel:'Continue to edit',
+    intent:'caution'
+  }))return;
+  check(await db.rpc('reopen_provider_application',{p_application_id:app.id}));
+  step=0;persistStep(sessionStorage,app.id,0);await load();
+ }));
 
  root.querySelector('#provider-form')?.addEventListener('submit',event=>{event.preventDefault();if(stepIds[step]!=='finish')return;const form=new FormData(event.target);run(async()=>{const acknowledgements=Object.fromEntries(Object.keys(certifications).map(key=>[key,form.get('ack-'+key)==='on']));if(Object.values(acknowledgements).some(value=>!value))throw Error('Complete every application certification.');await save();check(await db.rpc('submit_operator_application',{application_id:app.id,typed_name:String(form.get('typed-name')||'').trim(),signer_title:String(form.get('signer-title')||'').trim(),acknowledgements}));await load();message='Application submitted. Your status will update here.';render();if(aiConsent)await startReview(false);});});
 }
@@ -219,12 +266,12 @@ async function startReview(retry){
  if(!hasInsurancePacket(docs))throw Error('Upload your insurance policy packet first.');
  await save();const {data,error}=await db.functions.invoke('insurance-review',{body:{applicationId:app.id,consent:true,retry}});
  if(error||!data?.reviewId)throw Error('Automated review could not start. Your documents are saved. Try again later or complete onboarding for human review.');
- clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));const element=root.querySelector('#insurance-review-status');if(element)element.innerHTML=reviewHTML(clearance.review,clearance.reviewCurrent);pollReview(data.reviewId);
+ clearance=check(await db.rpc('provider_clearance',{p_application_id:app.id}));const element=root.querySelector('#insurance-review-status');if(element)element.innerHTML=applicantReviewStatusHTML(clearance.review,clearance.reviewCurrent);pollReview(data.reviewId);
 }
 function stopPoll(){pollEpoch++;clearTimeout(pollTimer);pollTimer=null;}
 function pollReview(id){
  stopPoll();const epoch=pollEpoch,applicationId=app.id,started=Date.now();
- const tick=async()=>{if(epoch!==pollEpoch||!user||app?.id!==applicationId)return;try{const result=check(await db.rpc('provider_clearance',{p_application_id:applicationId}));if(epoch!==pollEpoch||app?.id!==applicationId)return;clearance=result;envelope=result.envelope||envelope;const element=root.querySelector('#insurance-review-status');if(element)element.innerHTML=reviewHTML(result.review,result.reviewCurrent);if(!['queued','reading'].includes(result.review?.state)||Date.now()-started>180000)return;}catch{if(Date.now()-started>180000)return;}pollTimer=setTimeout(tick,2500);};
+ const tick=async()=>{if(epoch!==pollEpoch||!user||app?.id!==applicationId)return;try{const result=check(await db.rpc('provider_clearance',{p_application_id:applicationId}));if(epoch!==pollEpoch||app?.id!==applicationId)return;clearance=result;envelope=result.envelope||envelope;const element=root.querySelector('#insurance-review-status');if(element)element.innerHTML=applicantReviewStatusHTML(result.review,result.reviewCurrent);if(!['queued','reading'].includes(result.review?.state)||Date.now()-started>180000)return;}catch{if(Date.now()-started>180000)return;}pollTimer=setTimeout(tick,2500);};
  pollTimer=setTimeout(tick,800);
 }
 function scheduleServiceArea(){
