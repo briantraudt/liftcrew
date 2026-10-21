@@ -1,0 +1,36 @@
+/* Staff portal styles stay scoped to this page. */
+body:has(#review-app){background:#f5f7f7;color:#112d36}
+body:has(#review-app) .op-main{max-width:1240px;padding-top:28px}
+body:has(#review-app) .op-header{height:84px}
+body:has(#review-app) .op-header nav{align-items:center;gap:20px}
+body:has(#review-app) .op-header .text-btn{color:#fff;font-size:14px;min-height:44px}
+.staff-identity{color:#d5e2e5;font-size:12px;overflow-wrap:anywhere}
+#review-app h1{font-size:clamp(28px,3vw,40px);letter-spacing:-1px;margin-bottom:24px}
+#review-app h2{font-size:24px;letter-spacing:-.6px}
+#review-app .tag{display:inline-flex;align-items:center;justify-content:center;align-self:flex-start;flex:0 0 auto;width:auto;height:auto;min-height:26px;max-width:100%;border-radius:6px;padding:5px 10px;line-height:1.4;white-space:normal}
+#review-app .review-row{align-items:center;background:#fff;padding:20px}
+#review-app .review-row:hover{border-color:#79969e;background:#f9fcfc}
+#review-app .review-row strong{font-size:16px}
+#review-app .review-row small{font-size:13px;line-height:1.5}
+#review-app .account-bar{margin-bottom:20px;flex-wrap:wrap}
+#review-app .application-card{background:#fff;padding:0;overflow:clip}
+.review-nav{position:sticky;top:0;z-index:5;display:flex;gap:6px;overflow:auto;background:#f5f7f7;padding:12px 0;margin-bottom:16px;border-bottom:1px solid #dce2d7}
+.review-nav a{flex:none;min-height:44px;display:flex;align-items:center;padding:10px 13px;border-radius:7px;background:white;text-decoration:none;font-size:13px;font-weight:700}
+.review-nav a:hover{background:#e5edef}
+.review-section{padding:28px;scroll-margin-top:80px;border-bottom:1px solid #dce2d7;min-width:0}
+.review-section:last-child{border-bottom:0}
+.review-section>.notice:first-child{margin-top:0}
+#review-app .profile-group{padding:8px 0;text-transform:none}
+.profile-group>summary{text-transform:capitalize}
+#review-app table{table-layout:fixed;overflow-wrap:anywhere}
+#review-app td{padding:10px}
+#review-app .file-row{flex-wrap:wrap;align-items:center;background:#f5f7f7}
+#review-app .file-row .tag{margin-left:0}
+#review-app .file-name{flex:1;min-width:140px;min-height:44px}
+#review-app .provider-approval-fields{background:#f8faf9;margin:16px 0;padding:20px}
+#review-app [hidden]{display:none!important}
+#review-app .review-filters{display:grid;grid-template-columns:minmax(0,1fr) 240px auto}
+#review-app .review-filters input{max-width:none}
+#review-app .check{margin:16px 0}
+#review-app #record-decision{min-width:220px}
+@media(max-width:720px){body:has(#review-app) .op-main{padding:20px 16px 40px}body:has(#review-app) .op-header{padding:14px 16px;height:auto;min-height:76px}body:has(#review-app) .op-header img{width:120px}.staff-identity{display:none}#review-app .review-filters{grid-template-columns:minmax(0,1fr) auto}#review-app .review-filters>input{grid-column:1/-1}#review-app .review-row{flex-direction:column;align-items:flex-start;gap:12px}.review-section{padding:20px 16px}#review-app .provider-approval-fields{padding:14px}#review-app #record-decision{width:100%;min-width:0}#review-app .account-bar{font-size:12px}#review-app table table td{display:block;width:100%;border-bottom:0}#review-app table table tr{display:block;margin-bottom:8px}.review-nav{margin-inline:-16px;padding-inline:16px}#review-app .btn{white-space:normal}#review-app .provider-actions{margin-top:16px}}
