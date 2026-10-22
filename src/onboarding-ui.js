@@ -78,3 +78,10 @@ export function insuranceView({docs,aiConsent,clearance}){
 export function documentsView(profile,docs){
  return `<h2>Supporting documents</h2>${providerSlots(profile).slice(insuranceSlots.length).map((slot,index)=>uploadSlot(docs,slot,index)).join('')}`;
 }
+
+// Editable correction steps must retain the reviewer message shown on the dashboard.
+export function applicationFeedbackHTML(application){
+ if(application?.status!=='changes_requested')return '';
+ const feedback=String(application.feedback||'').trim();
+ return `<section class="notice" data-application-feedback aria-label="Application suspension"><strong>Application suspended — updates required</strong><p>You are not eligible for job matching. Review LiftCrew’s message before correcting and resubmitting your application.</p>${feedback?`<strong>Message from LiftCrew</strong><p>${h(feedback)}</p>`:'<p>Contact LiftCrew for the corrections required before resubmitting.</p>'}</section>`;
+}
