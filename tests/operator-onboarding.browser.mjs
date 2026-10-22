@@ -151,6 +151,13 @@ for(const viewport of [{width:320,height:640},{width:390,height:844},{width:430,
   review={state:'complete',result:{outcome:'document_pass'}};
   await resume('insurance');assert.equal(await page.locator('[data-save-complete]').isEnabled(),true);
   await resume('documents');await layout();await roundtrip('Supporting documents');assert.equal(await page.locator('[data-save-complete]').isEnabled(),true);
+  const controls=page.locator('.upload-inputs').first();
+  const fileBox=await controls.locator('input[type=file]').boundingBox(),dateBox=await controls.locator('input[type=date]').boundingBox();
+  assert(Math.abs(fileBox.y-dateBox.y)<2);assert(Math.abs(fileBox.width-dateBox.width)<2);assert(Math.abs(fileBox.height-dateBox.height)<2);
+  await controls.locator('input[type=file]').setInputFiles({name:'selected-qa.pdf',mimeType:'application/pdf',buffer:Buffer.from('%PDF test only')});
+  assert.equal(await controls.locator('[data-selected-files]').innerText(),'selected-qa.pdf');
+  await controls.locator('input[type=file]').setInputFiles([]);assert.equal(await controls.locator('[data-selected-files]').isVisible(),false);assertions+=5;
+
   const missingDoc=documents.pop();await page.reload();await page.locator('#provider-form').waitFor();assert.equal(await page.locator('[data-save-complete]').isDisabled(),true);documents.push(missingDoc);
   prepared=null; // Match the live empty-composite response; the page must prepare a real envelope.
   await resume('agreement');await layout();await roundtrip('Review & sign');assert(prepared?.id);assert((await page.locator('.signature-audit').innerText()).includes(demoPublished.sha256));assert.equal(await page.locator('.agreement-view-meta').count(),0);assert.equal(await page.locator('[data-save-complete]').isDisabled(),true);
