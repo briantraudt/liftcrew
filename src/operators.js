@@ -241,6 +241,7 @@ function bind(){
  root.querySelector('#provider-form')?.addEventListener('change',updateCompletion);
  bindSignature();
  root.querySelector('[data-ai-consent]')?.addEventListener('change',event=>{aiConsent=event.target.checked;});
+ root.querySelectorAll('[data-upload]').forEach(input=>input.addEventListener('change',()=>{const output=root.querySelector(`[data-selected-files="${input.dataset.upload}"]`);if(output){output.textContent=[...input.files].map(file=>file.name).join(', ');output.hidden=!input.files.length;}}));
  root.querySelectorAll('[data-upload-button]').forEach(button=>button.onclick=()=>run(async()=>{
   const index=button.dataset.uploadButton,input=root.querySelector(`[data-upload="${index}"]`),files=[...input.files];
   if(!files.length)throw Error('Choose a file first.');files.forEach(validateFile);
