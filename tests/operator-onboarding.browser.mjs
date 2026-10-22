@@ -165,6 +165,13 @@ for(const viewport of [{width:320,height:640},{width:390,height:844},{width:430,
   await page.locator('[name=typed-name]').fill('');assert.equal(await page.locator('button[type=submit]').isDisabled(),true);
   await page.locator('[name=typed-name]').fill('Synthetic Operator');await page.locator('button[type=submit]').click();await page.getByRole('heading',{name:'Provider dashboard',exact:true}).waitFor();assert.equal(application.status,'submitted');
   await page.locator('#portal-signout').click();await page.reload();await page.getByRole('heading',{name:'Operator log in',exact:true}).waitFor();await page.locator('[name=email]').fill(user.email);await page.locator('[name=password]').fill('Synthetic-test-password-123');await page.getByRole('button',{name:'Log in',exact:true}).click();await page.getByRole('heading',{name:'Provider dashboard',exact:true}).waitFor();assert.equal(application.status,'submitted');
+  application={...application,status:'changes_requested',feedback:'TEST ONLY — new mobile suspension reason <script>never execute</script>'};
+  await page.reload();await page.locator('[data-application-feedback]').waitFor();
+  assert((await page.locator('[data-application-feedback]').innerText()).includes(application.feedback));
+  assert.equal(await page.locator('[data-application-feedback] script').count(),0);await layout();
+  await page.locator('#portal-signout').click();await page.reload();await login();
+  await page.locator('[data-application-feedback]').waitFor();
+  assert((await page.locator('[data-application-feedback]').innerText()).includes(application.feedback));assertions+=3;
   await page.goto(base+'/operator-confirmed.html?case=direct');await page.getByRole('heading',{name:'Continue your onboarding',exact:true}).waitFor();assertions++;
   await page.goto(base+'/operator-confirmed.html?case=expired#error=expired');await page.getByRole('heading',{name:'Let’s get you back on track.',exact:true}).waitFor();assertions++;
   assert.equal(new URL(page.url()).hash,'');assertions++;

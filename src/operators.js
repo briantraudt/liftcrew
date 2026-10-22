@@ -1,7 +1,7 @@
 import {db,check,uploadDocument,downloadDocument,removeDocument} from './operator-api.js';
 import {emptyProfile,editable,escapeHtml as h,renewalIssues,renderRecord,validateFile} from './operator-data.js';
 import {providerSlots,extraProfileErrors,reviewHTML,saveAgreement} from './provider-ui.js';
-import {businessView,equipmentView,operatorsView,insuranceView,documentsView,applicantReviewStatusHTML} from './onboarding-ui.js';
+import {businessView,equipmentView,operatorsView,insuranceView,documentsView,applicantReviewStatusHTML,applicationFeedbackHTML} from './onboarding-ui.js';
 import {stepIds,stepLabels,insuranceKinds,hasInsurancePacket,removeEquipmentAssignments,restoredStep,persistStep,validateInsuranceBatch} from './onboarding-model.js';
 import {CONFIRMATION_URL,OPERATOR_LOGIN_URL} from './operator-auth.js';
 import {onboardingStages,stageForStep,renewalAlerts,businessRadiusForMachines,normalizeMachineRadiusFallbacks} from './onboarding-experience.js';
@@ -213,7 +213,7 @@ function render(){
  ${edit?`<div class="application-layout"><aside class="step-sidebar"><nav class="stage-nav" aria-label="Onboarding categories">
  ${onboardingStages.map((group,stageIndex)=>`<button type="button" class="stage-link ${stageIndex===stage?'active':''}" data-step="${stepIds.indexOf(group.steps[0])}" ${stageIndex===stage?'aria-current="step"':''}>${h(group.label)}</button>`).join('')}
  </nav></aside>
- <form id="provider-form" class="application-card" novalidate>${stepIds[step]==='business'?'<h1 class="onboarding-title">Join the LiftCrew family</h1>':''}${views[stepIds[step]]()}<div class="form-actions"><button type="button" class="text-btn" data-back ${step===0?'disabled':''}>Back</button><div>${step<stepIds.length-1?'<button type="button" class="btn" data-save-complete>Save &amp; Complete</button>':''}</div></div></form></div>`:statusPage()}`;
+ <form id="provider-form" class="application-card" novalidate>${stepIds[step]==='business'?'<h1 class="onboarding-title">Join the LiftCrew family</h1>':''}${applicationFeedbackHTML(app)}${views[stepIds[step]]()}<div class="form-actions"><button type="button" class="text-btn" data-back ${step===0?'disabled':''}>Back</button><div>${step<stepIds.length-1?'<button type="button" class="btn" data-save-complete>Save &amp; Complete</button>':''}</div></div></form></div>`:statusPage()}`;
  bind();updateCompletion();
 }
 function bind(){
